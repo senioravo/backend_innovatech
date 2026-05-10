@@ -5,6 +5,9 @@ require('dotenv').config();
 // AS-TASK-02: Importar rutas de autenticación para API Gateway
 const authRoutes = require('./routes/auth.routes');
 
+// AS-TASK-03: Importar rutas de Circuit Breaker
+const circuitBreakerRoutes = require('./routes/circuitBreaker.routes');
+
 const app = express();
 
 // Middlewares básicos
@@ -13,6 +16,9 @@ app.use(cors());
 
 // AS-TASK-02: Configurar rutas con prefijo /api/auth para API Gateway
 app.use('/api/auth', authRoutes);
+
+// AS-TASK-03: Configurar rutas de Circuit Breaker para pruebas
+app.use('/api/circuit-breaker', circuitBreakerRoutes);
 
 // Iniciar servidor
 const PORT = process.env.PORT || 3001;

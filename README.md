@@ -28,6 +28,18 @@ auth/
 - PUT `/api/auth/usuarios/:id/rol` - Asignar o cambiar rol de un usuario
 - GET `/api/auth/health` - Health check para monitoreo
 
+**Endpoints Circuit Breaker (AS-TASK-03):**
+- GET `/api/circuit-breaker/test/auth` - Probar Circuit Breaker con AuthService
+- GET `/api/circuit-breaker/test/project` - Probar Circuit Breaker con ProjectManager
+- GET `/api/circuit-breaker/stats` - Obtener estadísticas de Circuit Breakers
+
+**Circuit Breaker Configuration:**
+- Timeout: 3000ms
+- Error Threshold: 50%
+- Reset Timeout: 30s
+- Fallback: "Servicio no disponible"
+- Observabilidad: Logs integrados
+
 **Formato de respuesta JSON:**
 ```json
 {
@@ -52,3 +64,10 @@ npm run dev
   - Rutas con identificadores únicos (taskId)
   - Validación de respuesta JSON
   - Manejo de errores implementado
+- ✅ AS-TASK-03: Circuit Breaker para llamadas internas
+  - Implementado con librería Opossum
+  - Timeout: 3000ms, Error Threshold: 50%
+  - Fallback: "Servicio no disponible"
+  - Logs para observabilidad
+  - Variables de entorno configuradas
+  - Trazabilidad académica completa
