@@ -1,36 +1,100 @@
 // AS-TASK-02: Controlador de autenticación y autorización
 // Endpoints para integración con API Gateway
 
+// AS-TASK-04: Importar servicio de usuario
+const userService = require('../services/user.service');
+
 /**
  * POST /register - Registro de usuarios
+ * AS-TASK-04: Implementación completa con PostgreSQL y bcrypt
  */
 const register = async (req, res) => {
+  const startTime = Date.now();
+  
   try {
-    // TODO: Implementar lógica de registro
-    const { username, email, password, rol } = req.body;
+    const { nombre, email, password, rol } = req.body;
     
-    // Validación básica
-    if (!username || !email || !password) {
+    // Log de auditoría: Inicio de solicitud
+    console.log(`[AUTH-AUDIT] Solicitud de registro recibida - Email: ${email || 'N/A'} - IP: ${req.ip} - Timestamp: ${new Date().toISOString()}`);
+
+    // 1. Validar campos obligatorios
+    if (!nombre || !email || !password || !rol) {
+      console.warn(`[AUTH-AUDIT] Registro fallido - Campos faltantes - Email: ${email || 'N/A'}`);
       return res.status(400).json({
         success: false,
-        message: 'Faltan campos requeridos',
-        taskId: 'AS-TASK-02'
+        message: 'Campos obligatorios faltantes: nombre, email, password, rol',
+        taskId: 'AS-TASK-04',
+        data: null
       });
     }
 
-    // Respuesta temporal (endpoint en desarrollo)
+    // 2. Validar formato y estructura de datos (SOLID: Delegación a UserService)
+    const validation = userService.validateUserData({ nombre, email, password, rol });
+    if (!validation.valid) {
+      console.warn(`[AUTH-AUDIT] Registro fallido - Validación de datos - Email: ${email} - Errores: ${validation.errors.join(', ')}`);
+      return res.status(400).json({
+        success: false,
+        message: 'Datos de usuario inválidos',
+        taskId: 'AS-TASK-04',
+        data: { errors: validation.errors }
+      });
+    }
+
+    // 3. Verificar si el email ya existe (evitar duplicados)
+    const emailExists = await userService.emailExists(email);
+    if (emailExists) {
+      console.warn(`[AUTH-AUDIT] Registro fallido - Email duplicado - Email: ${email}`);
+      return res.status(400).json({
+        success: false,
+        message: 'El email ya está registrado en el sistema',
+        taskId: 'AS-TASK-04',
+        data: null
+      });
+    }
+
+    // 4. Crear usuario (bcrypt cifrado + INSERT en PostgreSQL)
+    const newUser = await userService.createUser({ nombre, email, password, rol });
+    
+    // Calcular tiempo de respuesta
+    const responseTime = Date.now() - startTime;
+
+    // Log de auditoría: Registro exitoso
+    console.log(`[AUTH-AUDIT] ✓ Usuario registrado exitosamente - ID: ${newUser.id} - Email: ${newUser.email} - Rol: ${newUser.rol} - Tiempo: ${responseTime}ms - Timestamp: ${new Date().toISOString()}`);
+
+    // 5. Responder con éxito (201 Created)
     res.status(201).json({
       success: true,
-      message: 'Endpoint /register en desarrollo',
-      taskId: 'AS-TASK-02',
-      data: { username, email, rol: rol || 'user' }
+      message: 'Usuario registrado exitosamente',
+      taskId: 'AS-TASK-04',
+      data: {
+        id: newUser.id,
+        nombre: newUser.nombre,
+        email: newUser.email,
+        rol: newUser.rol,
+        createdAt: newUser.created_at
+      }
     });
+
   } catch (error) {
+    // Log de auditoría: Error del servidor
+    console.error(`[AUTH-AUDIT] ✗ Error en registro - Email: ${req.body.email || 'N/A'} - Error: ${error.message} - Timestamp: ${new Date().toISOString()}`);
+    
+    // Manejo de errores de BD específicos
+    if (error.code === '23505') { // PostgreSQL unique constraint violation
+      return res.status(400).json({
+        success: false,
+        message: 'El email ya está registrado',
+        taskId: 'AS-TASK-04',
+        data: null
+      });
+    }
+
+    // Error genérico del servidor
     res.status(500).json({
       success: false,
-      message: 'Error en el servidor',
-      error: error.message,
-      taskId: 'AS-TASK-02'
+      message: 'Error interno del servidor al registrar usuario',
+      taskId: 'AS-TASK-04',
+      data: { error: error.message }
     });
   }
 };
