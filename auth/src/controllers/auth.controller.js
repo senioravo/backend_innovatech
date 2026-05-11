@@ -4,6 +4,9 @@
 // AS-TASK-04: Importar servicio de usuario
 const userService = require('../services/user.service');
 
+// AS-TASK-05: Importar jsonwebtoken para generación de JWT
+const jwt = require('jsonwebtoken');
+
 /**
  * POST /register - Registro de usuarios
  * AS-TASK-04: Implementación completa con PostgreSQL y bcrypt
@@ -101,32 +104,103 @@ const register = async (req, res) => {
 
 /**
  * POST /login - Inicio de sesión
+ * AS-TASK-05: Implementación completa con JWT
  */
 const login = async (req, res) => {
+  const startTime = Date.now();
+  
   try {
-    // TODO: Implementar lógica de login y generación de JWT
     const { email, password } = req.body;
     
+    // Log de auditoría: Inicio de solicitud
+    console.log(`[AUTH-AUDIT] Intento de login - Email: ${email || 'N/A'} - IP: ${req.ip} - Timestamp: ${new Date().toISOString()}`);
+
+    // 1. Validar campos obligatorios
     if (!email || !password) {
+      console.warn(`[AUTH-AUDIT] Login fallido - Campos faltantes - Email: ${email || 'N/A'}`);
       return res.status(400).json({
         success: false,
         message: 'Email y contraseña son requeridos',
-        taskId: 'AS-TASK-02'
+        taskId: 'AS-TASK-05',
+        data: null
       });
     }
 
+    // 2. Buscar usuario por email en la BD
+    const user = await userService.findByEmail(email);
+    
+    if (!user) {
+      // Log de auditoría: Usuario no encontrado
+      console.warn(`[AUTH-AUDIT] Login fallido - Usuario no encontrado - Email: ${email}`);
+      return res.status(401).json({
+        success: false,
+        message: 'Credenciales inválidas',
+        taskId: 'AS-TASK-05',
+        data: null
+      });
+    }
+
+    // 3. Verificar contraseña con bcrypt.compare
+    const isPasswordValid = await userService.verifyPassword(password, user.password);
+    
+    if (!isPasswordValid) {
+      // Log de auditoría: Contraseña incorrecta
+      console.warn(`[AUTH-AUDIT] Login fallido - Contraseña incorrecta - Email: ${email} - UserID: ${user.id}`);
+      return res.status(401).json({
+        success: false,
+        message: 'Credenciales inválidas',
+        taskId: 'AS-TASK-05',
+        data: null
+      });
+    }
+
+    // 4. Generar token JWT con payload (id, email, rol)
+    const JWT_SECRET = process.env.JWT_SECRET || 'secret_key_default_CHANGE_THIS';
+    const JWT_EXPIRES_IN = process.env.JWT_EXPIRES_IN || '24h';
+    
+    const payload = {
+      id: user.id,
+      email: user.email,
+      rol: user.rol
+    };
+
+    const token = jwt.sign(payload, JWT_SECRET, { 
+      expiresIn: JWT_EXPIRES_IN,
+      issuer: 'innovatech-auth'
+    });
+
+    // Calcular tiempo de respuesta
+    const responseTime = Date.now() - startTime;
+
+    // Log de auditoría: Login exitoso
+    console.log(`[AUTH-AUDIT] ✓ Login exitoso - UserID: ${user.id} - Email: ${user.email} - Rol: ${user.rol} - Tiempo: ${responseTime}ms - Timestamp: ${new Date().toISOString()}`);
+
+    // 5. Responder con token y datos del usuario (sin password)
     res.status(200).json({
       success: true,
-      message: 'Endpoint /login en desarrollo',
-      taskId: 'AS-TASK-02',
-      data: { email }
+      message: 'Login exitoso',
+      taskId: 'AS-TASK-05',
+      data: {
+        token,
+        usuario: {
+          id: user.id,
+          nombre: user.nombre,
+          email: user.email,
+          rol: user.rol
+        }
+      }
     });
+
   } catch (error) {
+    // Log de auditoría: Error del servidor
+    console.error(`[AUTH-AUDIT] ✗ Error en login - Email: ${req.body.email || 'N/A'} - Error: ${error.message} - Timestamp: ${new Date().toISOString()}`);
+    
+    // Error genérico del servidor
     res.status(500).json({
       success: false,
-      message: 'Error en el servidor',
-      error: error.message,
-      taskId: 'AS-TASK-02'
+      message: 'Error interno del servidor al iniciar sesión',
+      taskId: 'AS-TASK-05',
+      data: { error: error.message }
     });
   }
 };

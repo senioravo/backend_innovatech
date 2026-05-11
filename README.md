@@ -22,7 +22,7 @@ auth/
 
 **Endpoints disponibles:**
 - POST `/api/auth/register` - Registro de usuarios con PostgreSQL y bcrypt (AS-TASK-04)
-- POST `/api/auth/login` - Inicio de sesión (en desarrollo)
+- POST `/api/auth/login` - Inicio de sesión con JWT (AS-TASK-05)
 - POST `/api/auth/logout` - Cerrar sesión / Invalidar token JWT
 - GET `/api/auth/roles` - Listar roles disponibles del sistema
 - PUT `/api/auth/usuarios/:id/rol` - Asignar o cambiar rol de un usuario
@@ -81,6 +81,17 @@ npm run dev
   - Principios SOLID: Separación Controller/Service
   - Formato JSON estandarizado con taskId
   - Script SQL de migración incluido (auth/database/schema.sql)
+- ✅ AS-TASK-05: Endpoint POST /api/auth/login
+  - Validación de email y password
+  - Consulta a PostgreSQL para verificar usuario
+  - Verificación de contraseña con bcrypt.compare
+  - Generación de token JWT firmado (jsonwebtoken)
+  - Payload JWT: id, email, rol del usuario
+  - Expiración configurable (24h por defecto)
+  - Logs de auditoría para intentos exitosos y fallidos
+  - Manejo de errores HTTP (400, 401, 500)
+  - Principios SOLID implementados
+  - Formato JSON estandarizado con taskId
 
 ### AS-TASK-04: Detalles del endpoint /register
 
@@ -156,4 +167,106 @@ psql -U postgres -d innovatech_db -f auth/database/schema.sql
 [AUTH-AUDIT] Solicitud de registro recibida - Email: juan@innovatech.cl - IP: ::1 - Timestamp: 2026-05-11T10:30:00.000Z
 [UserService] Usuario creado exitosamente - ID: 1, Email: juan@innovatech.cl
 [AUTH-AUDIT] ✓ Usuario registrado exitosamente - ID: 1 - Email: juan@innovatech.cl - Rol: developer - Tiempo: 145ms
+```
+
+---
+
+### AS-TASK-05: Detalles del endpoint /login
+
+**Request:**
+```json
+POST /api/auth/login
+Content-Type: application/json
+
+{
+  "email": "juan@innovatech.cl",
+  "password": "securePass123"
+}
+```
+
+**Response exitosa (200):**
+```json
+{
+  "success": true,
+  "message": "Login exitoso",
+  "taskId": "AS-TASK-05",
+  "data": {
+    "token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...",
+    "usuario": {
+      "id": 1,
+      "nombre": "Juan Pérez",
+      "email": "juan@innovatech.cl",
+      "rol": "developer"
+    }
+  }
+}
+```
+
+**Response error - Campos faltantes (400):**
+```json
+{
+  "success": false,
+  "message": "Email y contraseña son requeridos",
+  "taskId": "AS-TASK-05",
+  "data": null
+}
+```
+
+**Response error - Credenciales inválidas (401):**
+```json
+{
+  "success": false,
+  "message": "Credenciales inválidas",
+  "taskId": "AS-TASK-05",
+  "data": null
+}
+```
+
+**JWT Payload:**
+```json
+{
+  "id": 1,
+  "email": "juan@innovatech.cl",
+  "rol": "developer",
+  "iat": 1715425800,
+  "exp": 1715512200,
+  "iss": "innovatech-auth"
+}
+```
+
+**Configuración JWT (.env):**
+```env
+JWT_SECRET=your_secret_key_here_change_in_production
+JWT_EXPIRES_IN=24h
+```
+
+**Logs de auditoría:**
+```
+[AUTH-AUDIT] Intento de login - Email: juan@innovatech.cl - IP: ::1 - Timestamp: 2026-05-11T14:30:00.000Z
+[AUTH-AUDIT] ✓ Login exitoso - UserID: 1 - Email: juan@innovatech.cl - Rol: developer - Tiempo: 87ms - Timestamp: 2026-05-11T14:30:00.087Z
+```
+
+**Logs de auditoría - Intentos fallidos:**
+```
+[AUTH-AUDIT] Intento de login - Email: noexiste@innovatech.cl - IP: ::1
+[AUTH-AUDIT] Login fallido - Usuario no encontrado - Email: noexiste@innovatech.cl
+
+[AUTH-AUDIT] Intento de login - Email: juan@innovatech.cl - IP: ::1
+[AUTH-AUDIT] Login fallido - Contraseña incorrecta - Email: juan@innovatech.cl - UserID: 1
+```
+
+**Testing con curl:**
+```bash
+# 1. Registrar un usuario
+curl -X POST http://localhost:3000/api/auth/register \
+  -H "Content-Type: application/json" \
+  -d '{"nombre":"Juan Pérez","email":"juan@innovatech.cl","password":"securePass123","rol":"developer"}'
+
+# 2. Login
+curl -X POST http://localhost:3000/api/auth/login \
+  -H "Content-Type: application/json" \
+  -d '{"email":"juan@innovatech.cl","password":"securePass123"}'
+
+# 3. Guardar el token para usar en otros endpoints
+TOKEN="eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."
 ```
