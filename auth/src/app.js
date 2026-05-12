@@ -8,6 +8,9 @@ const authRoutes = require('./routes/auth.routes');
 // AS-TASK-03: Importar rutas de Circuit Breaker
 const circuitBreakerRoutes = require('./routes/circuitBreaker.routes');
 
+// AS-TASK-09: Importar rutas de ejemplo para demostrar middleware de autorización
+const exampleRoutes = require('./routes/example.routes');
+
 const app = express();
 
 // Middlewares básicos
@@ -19,6 +22,9 @@ app.use('/api/auth', authRoutes);
 
 // AS-TASK-03: Configurar rutas de Circuit Breaker para pruebas
 app.use('/api/circuit-breaker', circuitBreakerRoutes);
+
+// AS-TASK-09: Configurar rutas de ejemplo para demostrar middleware de autorización por rol
+app.use('/api/example', exampleRoutes);
 
 // Iniciar servidor
 const PORT = process.env.PORT || 3001;
