@@ -325,6 +325,48 @@ const getRoles = async (req, res) => {
 };
 
 /**
+ * GET /roles/simple - Listar solo nombres de roles (formato simplificado)
+ * AS-TASK-10: Endpoint simplificado que retorna solo array de nombres
+ */
+const getRolesSimple = async (req, res) => {
+  const startTime = Date.now();
+  
+  try {
+    // Log de auditoría: Inicio de consulta
+    console.log(`[AUTH-AUDIT] Consulta de roles simplificados - IP: ${req.ip} - Timestamp: ${new Date().toISOString()}`);
+    
+    // Obtener roles desde configuración
+    const rolesArray = getAllRoles();
+    
+    const responseTime = Date.now() - startTime;
+    
+    // Log de auditoría: Consulta exitosa
+    console.log(`[AUTH-AUDIT] ✓ Roles simplificados obtenidos exitosamente - Total: ${rolesArray.length} roles - Tiempo: ${responseTime}ms - IP: ${req.ip} - Timestamp: ${new Date().toISOString()}`);
+
+    res.status(200).json({
+      success: true,
+      message: 'Roles disponibles',
+      taskId: 'AS-TASK-10',
+      data: {
+        roles: rolesArray
+      }
+    });
+  } catch (error) {
+    const responseTime = Date.now() - startTime;
+    
+    // Log de auditoría: Error
+    console.error(`[AUTH-AUDIT] ✗ Error al obtener roles simplificados - Error: ${error.message} - Tiempo: ${responseTime}ms - IP: ${req.ip} - Timestamp: ${new Date().toISOString()}`);
+    
+    res.status(500).json({
+      success: false,
+      message: 'Error al obtener roles',
+      error: error.message,
+      taskId: 'AS-TASK-10'
+    });
+  }
+};
+
+/**
  * PUT /usuarios/:id/rol - Asignar o cambiar rol a un usuario
  */
 /**
@@ -433,6 +475,7 @@ module.exports = {
   login,
   logout,
   getRoles,
+  getRolesSimple,
   updateUserRole,
   health
 };
