@@ -5,6 +5,9 @@
 const jwtHelper = require('../utils/jwt.helper');
 const tokenBlacklistService = require('../services/token.blacklist.service');
 
+// AS-TASK-08: Importar configuración de roles y permisos
+const { ROLES, hasPermission } = require('../config/roles');
+
 /**
  * Extraer token del header Authorization
  * Formato esperado: "Bearer <token>"
@@ -114,7 +117,7 @@ const verifyRole = (allowedRoles) => {
         return res.status(403).json({
           success: false,
           message: 'Rol de usuario no encontrado',
-          taskId: 'AS-TASK-07'
+          taskId: 'AS-TASK-08'
         });
       }
 
@@ -124,7 +127,7 @@ const verifyRole = (allowedRoles) => {
         return res.status(403).json({
           success: false,
           message: `Acceso denegado. Roles permitidos: ${allowedRoles.join(', ')}`,
-          taskId: 'AS-TASK-07'
+          taskId: 'AS-TASK-08'
         });
       }
 
@@ -136,14 +139,97 @@ const verifyRole = (allowedRoles) => {
         success: false,
         message: 'Error al verificar permisos',
         error: error.message,
-        taskId: 'AS-TASK-07'
+        taskId: 'AS-TASK-08'
       });
     }
   };
 };
 
+/**
+ * AS-TASK-08: Middleware de permisos específicos
+ * Verifica si el usuario tiene un permiso específico para un módulo y acción
+ * @param {string} modulo - Módulo (proyectos, tareas, reportes, usuarios)
+ * @param {string} accion - Acción (crear, editar, ver, etc.)
+ * @returns {Function} - Middleware function
+ */
+const requirePermission = (modulo, accion) => {
+  return (req, res, next) => {
+    try {
+      const userRole = req.user?.rol;
+
+      if (!userRole) {
+        return res.status(403).json({
+          success: false,
+          message: 'Rol de usuario no encontrado',
+          taskId: 'AS-TASK-08'
+        });
+      }
+
+      // Verificar permiso usando la configuración de roles
+      if (!hasPermission(userRole, modulo, accion)) {
+        console.log(`[AUTH-MIDDLEWARE] Permiso denegado - UserID: ${req.user.id} - Rol: ${userRole} - Módulo: ${modulo} - Acción: ${accion}`);
+        
+        return res.status(403).json({
+          success: false,
+          message: `Acceso denegado. Su rol "${userRole}" no tiene permiso para "${accion}" en módulo "${modulo}"`,
+          taskId: 'AS-TASK-08'
+        });
+      }
+
+      console.log(`[AUTH-MIDDLEWARE] Permiso concedido - UserID: ${req.user.id} - Rol: ${userRole} - Módulo: ${modulo} - Acción: ${accion}`);
+      next();
+    } catch (error) {
+      console.error('[AUTH-MIDDLEWARE] Error al verificar permisos:', error.message);
+      
+      return res.status(500).json({
+        success: false,
+        message: 'Error al verificar permisos',
+        error: error.message,
+        taskId: 'AS-TASK-08'
+      });
+    }
+  };
+};
+
+/**
+ * AS-TASK-08: Middleware - Solo GESTOR puede crear/editar proyectos
+ * Uso: router.post('/proyectos', verifyToken, requireGestor, createProject)
+ */
+const requireGestor = (req, res, next) => {
+  return verifyRole([ROLES.GESTOR])(req, res, next);
+};
+
+/**
+ * AS-TASK-08: Middleware - Solo PROFESIONAL puede ver y actualizar tareas asignadas
+ * Uso: router.put('/tareas/:id', verifyToken, requireProfesional, updateTask)
+ */
+const requireProfesional = (req, res, next) => {
+  return verifyRole([ROLES.PROFESIONAL])(req, res, next);
+};
+
+/**
+ * AS-TASK-08: Middleware - Solo DIRECTIVO puede consultar KPIs y reportes
+ * Uso: router.get('/reportes', verifyToken, requireDirectivo, getReports)
+ */
+const requireDirectivo = (req, res, next) => {
+  return verifyRole([ROLES.DIRECTIVO])(req, res, next);
+};
+
+/**
+ * AS-TASK-08: Middleware - Permitir múltiples roles
+ * Uso: router.get('/proyectos', verifyToken, allowRoles([ROLES.GESTOR, ROLES.DIRECTIVO]), getProjects)
+ */
+const allowRoles = (roles) => {
+  return verifyRole(roles);
+};
+
 module.exports = {
   extractToken,
   verifyToken,
-  verifyRole
+  verifyRole,
+  requirePermission,
+  requireGestor,
+  requireProfesional,
+  requireDirectivo,
+  allowRoles
 };

@@ -4,9 +4,12 @@
 const bcrypt = require('bcrypt');
 const { query } = require('../config/database');
 
+// AS-TASK-08: Importar configuración de roles
+const { ROLES, DEFAULT_ROLE, getAllRoles, isValidRole } = require('../config/roles');
+
 // Constantes
 const SALT_ROUNDS = 10;
-const VALID_ROLES = ['admin', 'user', 'developer', 'manager'];
+const VALID_ROLES = getAllRoles(); // AS-TASK-08: Usar roles definidos en config
 
 /**
  * Servicio de Usuario - Principios SOLID
@@ -136,6 +139,80 @@ class UserService {
       valid: errors.length === 0,
       errors
     };
+  }
+
+  /**
+   * AS-TASK-08: Buscar usuario por ID
+   * @param {number} userId - ID del usuario
+   * @returns {Promise<Object|null>} - Usuario encontrado o null
+   */
+  async findById(userId) {
+    try {
+      const result = await query(
+        'SELECT id, nombre, email, rol, created_at, updated_at FROM usuarios WHERE id = $1',
+        [userId]
+      );
+      
+      return result.rows.length > 0 ? result.rows[0] : null;
+    } catch (error) {
+      console.error('[UserService] Error al buscar usuario por ID:', error);
+      throw new Error('Error al buscar usuario en base de datos');
+    }
+  }
+
+  /**
+   * AS-TASK-08: Actualizar rol de usuario
+   * @param {number} userId - ID del usuario
+   * @param {string} newRole - Nuevo rol a asignar
+   * @returns {Promise<Object>} - Usuario actualizado
+   */
+  async updateUserRole(userId, newRole) {
+    try {
+      // 1. Validar que el rol sea válido
+      if (!isValidRole(newRole)) {
+        throw new Error(`Rol inválido. Valores permitidos: ${VALID_ROLES.join(', ')}`);
+      }
+
+      // 2. Verificar que el usuario existe
+      const userExists = await this.findById(userId);
+      if (!userExists) {
+        throw new Error('Usuario no encontrado');
+      }
+
+      // 3. Actualizar rol en BD
+      const result = await query(
+        `UPDATE usuarios 
+         SET rol = $1, updated_at = NOW()
+         WHERE id = $2
+         RETURNING id, nombre, email, rol, updated_at`,
+        [newRole, userId]
+      );
+
+      const updatedUser = result.rows[0];
+      
+      console.log(`[UserService] Rol actualizado - UserID: ${updatedUser.id} - Nuevo rol: ${updatedUser.rol}`);
+      
+      return updatedUser;
+    } catch (error) {
+      console.error('[UserService] Error al actualizar rol:', error);
+      throw error;
+    }
+  }
+
+  /**
+   * AS-TASK-08: Obtener rol por defecto
+   * @returns {string} - Rol por defecto
+   */
+  getDefaultRole() {
+    return DEFAULT_ROLE;
+  }
+
+  /**
+   * AS-TASK-08: Obtener todos los roles válidos
+   * @returns {Array<string>} - Array de roles válidos
+   */
+  getValidRoles() {
+    return VALID_ROLES;
   }
 }
 

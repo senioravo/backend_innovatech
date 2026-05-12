@@ -10,6 +10,9 @@ const jwtHelper = require('../utils/jwt.helper');
 // AS-TASK-07: Importar servicio de blacklist de tokens
 const tokenBlacklistService = require('../services/token.blacklist.service');
 
+// AS-TASK-08: Importar configuración de roles
+const { getAllRolesInfo, getRoleDescription } = require('../config/roles');
+
 /**
  * POST /register - Registro de usuarios
  * AS-TASK-04: Implementación completa con PostgreSQL y bcrypt
@@ -18,18 +21,24 @@ const register = async (req, res) => {
   const startTime = Date.now();
   
   try {
-    const { nombre, email, password, rol } = req.body;
+    let { nombre, email, password, rol } = req.body;
+    
+    // AS-TASK-08: Asignar rol por defecto si no se especifica
+    if (!rol) {
+      rol = userService.getDefaultRole();
+      console.log(`[AUTH-AUDIT] Rol no especificado, asignando rol por defecto: ${rol}`);
+    }
     
     // Log de auditoría: Inicio de solicitud
-    console.log(`[AUTH-AUDIT] Solicitud de registro recibida - Email: ${email || 'N/A'} - IP: ${req.ip} - Timestamp: ${new Date().toISOString()}`);
+    console.log(`[AUTH-AUDIT] Solicitud de registro recibida - Email: ${email || 'N/A'} - Rol: ${rol} - IP: ${req.ip} - Timestamp: ${new Date().toISOString()}`);
 
-    // 1. Validar campos obligatorios
-    if (!nombre || !email || !password || !rol) {
+    // 1. Validar campos obligatorios (rol ya no es obligatorio)
+    if (!nombre || !email || !password) {
       console.warn(`[AUTH-AUDIT] Registro fallido - Campos faltantes - Email: ${email || 'N/A'}`);
       return res.status(400).json({
         success: false,
-        message: 'Campos obligatorios faltantes: nombre, email, password, rol',
-        taskId: 'AS-TASK-04',
+        message: 'Campos obligatorios faltantes: nombre, email, password',
+        taskId: 'AS-TASK-08',
         data: null
       });
     }
@@ -282,20 +291,27 @@ const logout = async (req, res) => {
 /**
  * GET /roles - Listar roles disponibles
  */
+/**
+ * GET /roles - Listar roles disponibles
+ * AS-TASK-08: Usar roles definidos en config
+ */
 const getRoles = async (req, res) => {
   try {
-    // Roles disponibles en el sistema
-    const roles = [
-      { id: 1, name: 'admin', description: 'Administrador del sistema' },
-      { id: 2, name: 'project_manager', description: 'Gestor de proyectos' },
-      { id: 3, name: 'developer', description: 'Desarrollador' },
-      { id: 4, name: 'user', description: 'Usuario estándar' }
-    ];
+    // AS-TASK-08: Obtener roles desde configuración
+    const rolesInfo = getAllRolesInfo();
+    
+    // Formatear respuesta con índice
+    const roles = rolesInfo.map((role, index) => ({
+      id: index + 1,
+      nombre: role.nombre,
+      descripcion: role.descripcion,
+      permisos: role.permisos
+    }));
 
     res.status(200).json({
       success: true,
       message: 'Roles obtenidos exitosamente',
-      taskId: 'AS-TASK-02',
+      taskId: 'AS-TASK-08',
       data: roles
     });
   } catch (error) {
@@ -311,33 +327,90 @@ const getRoles = async (req, res) => {
 /**
  * PUT /usuarios/:id/rol - Asignar o cambiar rol a un usuario
  */
+/**
+ * PUT /usuarios/:id/rol - Actualizar rol de usuario
+ * AS-TASK-08: Implementación completa con validación y logs de auditoría
+ */
 const updateUserRole = async (req, res) => {
+  const startTime = Date.now();
+  
   try {
     const { id } = req.params;
     const { rol } = req.body;
 
-    // Validación
+    // Log de auditoría: Inicio de solicitud
+    console.log(`[AUTH-AUDIT] Solicitud de actualización de rol - UserID: ${id} - Nuevo rol: ${rol || 'N/A'} - IP: ${req.ip} - Timestamp: ${new Date().toISOString()}`);
+
+    // 1. Validar campo rol
     if (!rol) {
+      console.warn(`[AUTH-AUDIT] Actualización fallida - Campo rol faltante - UserID: ${id}`);
       return res.status(400).json({
         success: false,
         message: 'El campo rol es requerido',
-        taskId: 'AS-TASK-02'
+        taskId: 'AS-TASK-08',
+        data: null
       });
     }
 
-    // TODO: Implementar lógica de actualización en BD
+    // 2. Validar que el ID sea un número
+    const userId = parseInt(id);
+    if (isNaN(userId)) {
+      console.warn(`[AUTH-AUDIT] Actualización fallida - ID inválido - ID: ${id}`);
+      return res.status(400).json({
+        success: false,
+        message: 'ID de usuario inválido',
+        taskId: 'AS-TASK-08',
+        data: null
+      });
+    }
+
+    // 3. Obtener usuario actual para logs
+    const currentUser = await userService.findById(userId);
+    if (!currentUser) {
+      console.warn(`[AUTH-AUDIT] Actualización fallida - Usuario no encontrado - UserID: ${userId}`);
+      return res.status(404).json({
+        success: false,
+        message: 'Usuario no encontrado',
+        taskId: 'AS-TASK-08',
+        data: null
+      });
+    }
+
+    const oldRole = currentUser.rol;
+
+    // 4. Actualizar rol usando UserService
+    const updatedUser = await userService.updateUserRole(userId, rol);
+    
+    // Calcular tiempo de respuesta
+    const responseTime = Date.now() - startTime;
+
+    // Log de auditoría: Actualización exitosa
+    console.log(`[AUTH-AUDIT] ✓ Rol actualizado exitosamente - UserID: ${userId} - Email: ${updatedUser.email} - Rol anterior: ${oldRole} - Rol nuevo: ${updatedUser.rol} - Tiempo: ${responseTime}ms - Timestamp: ${new Date().toISOString()}`);
+
+    // 5. Responder con éxito
     res.status(200).json({
       success: true,
-      message: `Rol actualizado para usuario ${id}`,
-      taskId: 'AS-TASK-02',
-      data: { userId: id, newRole: rol }
+      message: `Rol actualizado exitosamente de "${oldRole}" a "${rol}"`,
+      taskId: 'AS-TASK-08',
+      data: {
+        id: updatedUser.id,
+        nombre: updatedUser.nombre,
+        email: updatedUser.email,
+        rolAnterior: oldRole,
+        rolNuevo: updatedUser.rol,
+        descripcion: getRoleDescription(updatedUser.rol),
+        updatedAt: updatedUser.updated_at
+      }
     });
   } catch (error) {
+    // Log de auditoría: Error del servidor
+    console.error(`[AUTH-AUDIT] ✗ Error al actualizar rol - UserID: ${req.params.id} - Error: ${error.message} - Timestamp: ${new Date().toISOString()}`);
+    
     res.status(500).json({
       success: false,
-      message: 'Error al actualizar rol',
+      message: 'Error interno del servidor al actualizar rol',
       error: error.message,
-      taskId: 'AS-TASK-02'
+      taskId: 'AS-TASK-08'
     });
   }
 };
