@@ -4,8 +4,8 @@
 // AS-TASK-04: Importar servicio de usuario
 const userService = require('../services/user.service');
 
-// AS-TASK-05: Importar jsonwebtoken para generación de JWT
-const jwt = require('jsonwebtoken');
+// AS-TASK-06: Importar JWT Helper para validación y generación de tokens
+const jwtHelper = require('../utils/jwt.helper');
 
 /**
  * POST /register - Registro de usuarios
@@ -104,7 +104,7 @@ const register = async (req, res) => {
 
 /**
  * POST /login - Inicio de sesión
- * AS-TASK-05: Implementación completa con JWT
+ * AS-TASK-06: Validación de credenciales y generación de JWT con helper
  */
 const login = async (req, res) => {
   const startTime = Date.now();
@@ -121,12 +121,23 @@ const login = async (req, res) => {
       return res.status(400).json({
         success: false,
         message: 'Email y contraseña son requeridos',
-        taskId: 'AS-TASK-05',
+        taskId: 'AS-TASK-06',
         data: null
       });
     }
 
-    // 2. Buscar usuario por email en la BD
+    // 2. Validar formato de email (AS-TASK-06: Mejora de validación)
+    if (!jwtHelper.validateEmail(email)) {
+      console.warn(`[AUTH-AUDIT] Login fallido - Email inválido - Email: ${email}`);
+      return res.status(400).json({
+        success: false,
+        message: 'Formato de email inválido',
+        taskId: 'AS-TASK-06',
+        data: null
+      });
+    }
+
+    // 3. Buscar usuario por email en la BD
     const user = await userService.findByEmail(email);
     
     if (!user) {
@@ -135,12 +146,12 @@ const login = async (req, res) => {
       return res.status(401).json({
         success: false,
         message: 'Credenciales inválidas',
-        taskId: 'AS-TASK-05',
+        taskId: 'AS-TASK-06',
         data: null
       });
     }
 
-    // 3. Verificar contraseña con bcrypt.compare
+    // 4. Verificar contraseña con bcrypt.compare
     const isPasswordValid = await userService.verifyPassword(password, user.password);
     
     if (!isPasswordValid) {
@@ -149,37 +160,32 @@ const login = async (req, res) => {
       return res.status(401).json({
         success: false,
         message: 'Credenciales inválidas',
-        taskId: 'AS-TASK-05',
+        taskId: 'AS-TASK-06',
         data: null
       });
     }
 
-    // 4. Generar token JWT con payload (id, email, rol)
-    const JWT_SECRET = process.env.JWT_SECRET || 'secret_key_default_CHANGE_THIS';
-    const JWT_EXPIRES_IN = process.env.JWT_EXPIRES_IN || '24h';
-    
-    const payload = {
+    // 5. Generar token JWT usando helper (AS-TASK-06: SOLID - Separación de responsabilidades)
+    const token = jwtHelper.generateToken({
       id: user.id,
       email: user.email,
       rol: user.rol
-    };
-
-    const token = jwt.sign(payload, JWT_SECRET, { 
-      expiresIn: JWT_EXPIRES_IN,
-      issuer: 'innovatech-auth'
     });
 
     // Calcular tiempo de respuesta
     const responseTime = Date.now() - startTime;
 
-    // Log de auditoría: Login exitoso
-    console.log(`[AUTH-AUDIT] ✓ Login exitoso - UserID: ${user.id} - Email: ${user.email} - Rol: ${user.rol} - Tiempo: ${responseTime}ms - Timestamp: ${new Date().toISOString()}`);
+    // Obtener configuración JWT para logs
+    const jwtConfig = jwtHelper.getConfig();
 
-    // 5. Responder con token y datos del usuario (sin password)
+    // Log de auditoría: Login exitoso
+    console.log(`[AUTH-AUDIT] ✓ Login exitoso - UserID: ${user.id} - Email: ${user.email} - Rol: ${user.rol} - Expira: ${jwtConfig.expiresIn} - Tiempo: ${responseTime}ms - Timestamp: ${new Date().toISOString()}`);
+
+    // 6. Responder con token y datos del usuario (sin password)
     res.status(200).json({
       success: true,
       message: 'Login exitoso',
-      taskId: 'AS-TASK-05',
+      taskId: 'AS-TASK-06',
       data: {
         token,
         usuario: {
@@ -187,7 +193,8 @@ const login = async (req, res) => {
           nombre: user.nombre,
           email: user.email,
           rol: user.rol
-        }
+        },
+        expiresIn: jwtConfig.expiresIn
       }
     });
 
@@ -199,7 +206,7 @@ const login = async (req, res) => {
     res.status(500).json({
       success: false,
       message: 'Error interno del servidor al iniciar sesión',
-      taskId: 'AS-TASK-05',
+      taskId: 'AS-TASK-06',
       data: { error: error.message }
     });
   }
