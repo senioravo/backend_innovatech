@@ -7,6 +7,9 @@ const userService = require('../services/user.service');
 // AS-TASK-06: Importar JWT Helper para validación y generación de tokens
 const jwtHelper = require('../utils/jwt.helper');
 
+// AS-TASK-07: Importar servicio de blacklist de tokens
+const tokenBlacklistService = require('../services/token.blacklist.service');
+
 /**
  * POST /register - Registro de usuarios
  * AS-TASK-04: Implementación completa con PostgreSQL y bcrypt
@@ -214,23 +217,64 @@ const login = async (req, res) => {
 
 /**
  * POST /logout - Invalidar sesión (revocar token JWT)
+ * AS-TASK-07: Implementación completa con blacklist de tokens
  */
 const logout = async (req, res) => {
+  const startTime = Date.now();
+  
   try {
-    // TODO: Implementar lógica de invalidación de token
-    const { token } = req.body;
+    // El token ya viene extraído y validado por el middleware verifyToken
+    const token = req.token;
+    const user = req.user; // { id, email, rol }
 
+    // Log de auditoría: Inicio de logout
+    console.log(`[AUTH-AUDIT] Solicitud de logout - UserID: ${user.id} - Email: ${user.email} - IP: ${req.ip} - Timestamp: ${new Date().toISOString()}`);
+
+    // Agregar token a blacklist
+    const blacklisted = tokenBlacklistService.addToBlacklist(token, {
+      id: user.id,
+      email: user.email,
+      rol: user.rol
+    });
+
+    if (!blacklisted) {
+      console.error(`[AUTH-AUDIT] ✗ Error al invalidar token - UserID: ${user.id} - Email: ${user.email}`);
+      return res.status(500).json({
+        success: false,
+        message: 'Error al cerrar sesión',
+        taskId: 'AS-TASK-07',
+        data: null
+      });
+    }
+
+    // Calcular tiempo de respuesta
+    const responseTime = Date.now() - startTime;
+
+    // Log de auditoría: Logout exitoso
+    console.log(`[AUTH-AUDIT] ✓ Logout exitoso - UserID: ${user.id} - Email: ${user.email} - Token invalidado - Tiempo: ${responseTime}ms - Timestamp: ${new Date().toISOString()}`);
+
+    // Responder con éxito
     res.status(200).json({
       success: true,
-      message: 'Sesión cerrada exitosamente',
-      taskId: 'AS-TASK-02'
+      message: 'Sesión cerrada exitosamente. Token invalidado.',
+      taskId: 'AS-TASK-07',
+      data: {
+        userId: user.id,
+        email: user.email,
+        logoutAt: new Date().toISOString()
+      }
     });
+
   } catch (error) {
+    // Log de auditoría: Error del servidor
+    console.error(`[AUTH-AUDIT] ✗ Error en logout - UserID: ${req.user?.id || 'N/A'} - Email: ${req.user?.email || 'N/A'} - Error: ${error.message} - Timestamp: ${new Date().toISOString()}`);
+    
+    // Error genérico del servidor
     res.status(500).json({
       success: false,
-      message: 'Error al cerrar sesión',
-      error: error.message,
-      taskId: 'AS-TASK-02'
+      message: 'Error interno del servidor al cerrar sesión',
+      taskId: 'AS-TASK-07',
+      data: { error: error.message }
     });
   }
 };

@@ -5,10 +5,15 @@ const express = require('express');
 const router = express.Router();
 const authController = require('../controllers/auth.controller');
 
+// AS-TASK-07: Importar middleware de autenticación
+const { verifyToken } = require('../middleware/auth.middleware');
+
 // Endpoints de autenticación
 router.post('/register', authController.register);
 router.post('/login', authController.login);
-router.post('/logout', authController.logout);
+
+// AS-TASK-07: Logout requiere token válido
+router.post('/logout', verifyToken, authController.logout);
 
 // Endpoints de roles
 router.get('/roles', authController.getRoles);
