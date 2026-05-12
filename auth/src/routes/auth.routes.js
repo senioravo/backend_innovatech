@@ -17,6 +17,8 @@ router.post('/logout', verifyToken, authController.logout);
 
 // Endpoints de roles
 router.get('/roles', authController.getRoles);
+// AS-TASK-10: Endpoint simplificado que retorna solo nombres de roles
+router.get('/roles/simple', authController.getRolesSimple);
 router.put('/usuarios/:id/rol', authController.updateUserRole);
 
 // Health check
