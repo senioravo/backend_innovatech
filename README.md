@@ -146,6 +146,17 @@ npm run dev
   - Logs de auditoría completos: usuario, rol anterior, rol nuevo, timestamp
   - Manejo de errores con status HTTP 400 (validación), 404 (no encontrado), 500 (servidor)
   - Principios SOLID: controller → service → config
+- [COMPLETADO] AS-TASK-12: Configurar auditoría de accesos y operaciones críticas
+  - Logger centralizado (logger.js) con escritura en archivos logs/audit.log y logs/error.log
+  - Middleware de auditoría (auditMiddleware.js) para registrar accesos automáticamente
+  - Formato estandarizado: [OK]/[ERROR] - Timestamp - UserID - Operación - Email - IP - Detalle - taskId
+  - Auditoría de operaciones críticas: REGISTER, LOGIN, LOGOUT, ROLE_CHANGE
+  - Rotación automática de archivos cuando superan 10MB
+  - No registra contraseñas ni tokens completos (solo metadatos seguros)
+  - Logs en consola y archivo simultáneamente para trazabilidad
+  - Principios SOLID: logger.js (helper) + auditMiddleware.js (middleware) separados
+  - Integrado en todas las rutas protegidas mediante router.use()
+  - .gitignore configurado para excluir logs/*.log pero mantener estructura
 
 ### AS-TASK-04: Detalles del endpoint /register
 
@@ -2549,4 +2560,305 @@ auth/
 ```
 
 ---
+
+### AS-TASK-12: Configurar auditoría de accesos y operaciones críticas
+
+**Objetivo:** Implementar sistema completo de auditoría para registrar automáticamente todos los accesos a endpoints protegidos y operaciones críticas (registro, login, logout, cambio de rol) en archivos de log locales con formato estandarizado.
+
+#### 1. Componentes implementados:
+
+**Logger centralizado (`logger.js`):**
+- Formato estandarizado: `[OK]/[ERROR] - Timestamp - UserID - Operación - Email - IP - Detalle - taskId`
+- Escritura en archivos: `logs/audit.log` (auditoría general) y `logs/error.log` (solo errores)
+- Rotación automática de archivos cuando superan 10MB
+- No registra contraseñas ni tokens completos (solo primeros y últimos 8 caracteres)
+- Métodos: `auditSuccess()`, `auditError()`, `auditWarning()`, `logCriticalOperation()`, `logEndpointAccess()`
+- Singleton pattern para instancia única
+
+**Middleware de auditoría (`auditMiddleware.js`):**
+- `auditMiddleware`: Intercepta todas las requests y registra accesos automáticamente
+- `auditCriticalOperation`: Middleware específico para operaciones críticas (REGISTER, LOGIN, LOGOUT, ROLE_CHANGE)
+- `auditUnauthorizedAccess`: Registra intentos de acceso no autorizados (401/403)
+- Mide tiempo de respuesta en milisegundos
+- No bloquea flujo de la aplicación
+
+#### 2. Formato de logs:
+
+**Log exitoso:**
+```
+[OK] - 2024-01-15T10:30:45.123Z - UserID:5 - Operación:LOGIN - Email:juan@innovatech.cl - IP:192.168.1.1 - Login exitoso - Rol: gestor - Expira: 1h - Tiempo:45ms - taskId:AS-TASK-12
+```
+
+**Log de error:**
+```
+[ERROR] - 2024-01-15T10:31:10.456Z - UserID:N/A - Operación:LOGIN - Email:maria@innovatech.cl - IP:192.168.1.2 - Error en login - Error: Credenciales inválidas - Tiempo:23ms - taskId:AS-TASK-12
+```
+
+**Log de advertencia (acceso denegado):**
+```
+[WARNING] - 2024-01-15T10:32:00.789Z - UserID:3 - Operación:PUT /usuarios/5/rol - Email:pedro@innovatech.cl - IP:192.168.1.3 - Acceso denegado - Status:403 - Tiempo:12ms - taskId:AS-TASK-12
+```
+
+#### 3. Operaciones críticas auditadas:
+
+| Operación | Middleware | Archivo Controller | Detalles Registrados |
+|-----------|------------|-------------------|----------------------|
+| REGISTER | auditCriticalOperation('REGISTER') | auth.controller.js | UserID, Email, Rol, IP, responseTime |
+| LOGIN | auditCriticalOperation('LOGIN') | auth.controller.js | UserID, Email, Rol, IP, Expira, responseTime |
+| LOGOUT | auditCriticalOperation('LOGOUT') | auth.controller.js | UserID, Email, IP, Token invalidado, responseTime |
+| ROLE_CHANGE | auditCriticalOperation('ROLE_CHANGE') | auth.controller.js | UserID, Email, Rol anterior, Rol nuevo, IP, responseTime |
+
+#### 4. Archivos de log:
+
+**Ubicación:** `auth/logs/`
+
+**Archivos generados:**
+- `audit.log` - Todos los accesos y operaciones (exitosas y fallidas)
+- `error.log` - Solo operaciones fallidas y errores del servidor
+
+**Rotación automática:**
+- Se activa cuando un archivo supera 10MB
+- Archivo rotado se renombra a: `audit-2024-01-15T10-30-45.log`
+- Nuevo archivo vacío se crea automáticamente
+
+**Configuración en .gitignore:**
+```gitignore
+# Logs
+*.log
+npm-debug.log*
+logs/*.log
+logs/*.log.*
+!logs/.gitkeep
+```
+
+#### 5. Implementación en routes:
+
+**Archivo:** `auth/src/routes/auth.routes.js`
+
+```javascript
+// AS-TASK-12: Importar middleware de auditoría
+const { auditMiddleware, auditCriticalOperation } = require('../middleware/auditMiddleware');
+
+// AS-TASK-12: Aplicar auditoría a todas las rutas (excepto health check)
+router.use((req, res, next) => {
+  if (req.path !== '/health') {
+    return auditMiddleware(req, res, next);
+  }
+  next();
+});
+
+// Endpoints de autenticación con auditoría de operaciones críticas
+router.post('/register', auditCriticalOperation('REGISTER'), authController.register);
+router.post('/login', auditCriticalOperation('LOGIN'), authController.login);
+router.post('/logout', verifyToken, auditCriticalOperation('LOGOUT'), authController.logout);
+router.put('/usuarios/:id/rol', auditCriticalOperation('ROLE_CHANGE'), authController.updateUserRole);
+```
+
+#### 6. Implementación en controller:
+
+**Migración de logs a logger centralizado:**
+
+**Antes (console.log):**
+```javascript
+console.log(`[AUTH-AUDIT] [OK] Login exitoso - UserID: ${user.id} - Email: ${user.email} - Rol: ${user.rol} - Tiempo: ${responseTime}ms - Timestamp: ${new Date().toISOString()}`);
+```
+
+**Después (logger centralizado):**
+```javascript
+// AS-TASK-12: Importar logger
+const logger = require('../utils/logger');
+
+// AS-TASK-12: Log de auditoría con logger
+logger.logCriticalOperation('LOGIN', {
+  success: true,
+  userId: user.id,
+  email: user.email,
+  ip: req.ip,
+  detail: `Login exitoso - Rol: ${user.rol} - Expira: ${jwtConfig.expiresIn}`,
+  responseTime,
+  taskId: 'AS-TASK-12'
+});
+```
+
+#### 7. Ejemplo de salida en archivo audit.log:
+
+```
+[OK] - 2024-01-15T10:00:00.123Z - UserID:1 - Operación:REGISTER - Email:juan@innovatech.cl - IP:192.168.1.10 - Usuario registrado - Rol: gestor - Tiempo:156ms - taskId:AS-TASK-12
+[OK] - 2024-01-15T10:05:30.456Z - UserID:1 - Operación:LOGIN - Email:juan@innovatech.cl - IP:192.168.1.10 - Login exitoso - Rol: gestor - Expira: 1h - Tiempo:45ms - taskId:AS-TASK-12
+[OK] - 2024-01-15T10:10:15.789Z - UserID:1 - Operación:GET /roles - Email:juan@innovatech.cl - IP:192.168.1.10 - Status:200 - Tiempo:12ms - taskId:AS-TASK-12
+[OK] - 2024-01-15T10:15:45.012Z - UserID:1 - Operación:ROLE_CHANGE - Email:juan@innovatech.cl - IP:192.168.1.10 - Rol actualizado - Anterior: gestor - Nuevo: directivo - Tiempo:78ms - taskId:AS-TASK-12
+[ERROR] - 2024-01-15T10:20:00.345Z - UserID:N/A - Operación:LOGIN - Email:hacker@evil.com - IP:192.168.1.99 - Error en login - Error: Credenciales inválidas - Tiempo:23ms - taskId:AS-TASK-12
+[WARNING] - 2024-01-15T10:25:30.678Z - UserID:2 - Operación:PUT /usuarios/1/rol - Email:pedro@innovatech.cl - IP:192.168.1.11 - Acceso denegado - Status:403 - Tiempo:8ms - taskId:AS-TASK-12
+[OK] - 2024-01-15T10:30:00.901Z - UserID:1 - Operación:LOGOUT - Email:juan@innovatech.cl - IP:192.168.1.10 - Logout exitoso - Token invalidado - Tiempo:34ms - taskId:AS-TASK-12
+```
+
+#### 8. Seguridad y privacidad:
+
+**Datos que NO se registran:**
+- Contraseñas (ni plain text ni hash completo)
+- Tokens JWT completos (solo primeros y últimos 8 caracteres)
+- Información sensible de payloads (números de tarjeta, datos personales)
+
+**Ejemplo de sanitización de token:**
+```javascript
+// Token original: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6MSwiZW1haWwiOiJqdWFuQGlubm...
+// Token sanitizado: eyJhbGci...ubm92YXRlY2g=
+```
+
+#### 9. Principios SOLID aplicados:
+
+**Single Responsibility:**
+- `logger.js`: Solo maneja logging y persistencia en archivos
+- `auditMiddleware.js`: Solo intercepta requests y registra accesos
+- `auth.controller.js`: Solo maneja lógica de negocio (delega logging a logger)
+
+**Open/Closed:**
+- Sistema extensible: agregar nuevo tipo de log solo requiere nuevo método en logger
+- No modificar código existente para agregar nueva funcionalidad
+
+**Dependency Inversion:**
+- Controllers dependen de abstracción (logger) no de implementación concreta (fs)
+- Fácil cambiar backend de logs (archivo → BD → servicio externo) sin tocar controllers
+
+#### 10. Comandos útiles:
+
+**Ver logs en tiempo real:**
+```bash
+# Linux/Mac
+tail -f auth/logs/audit.log
+
+# Windows PowerShell
+Get-Content auth/logs/audit.log -Wait -Tail 50
+```
+
+**Buscar logs de un usuario específico:**
+```bash
+# Linux/Mac
+grep "UserID:5" auth/logs/audit.log
+
+# Windows PowerShell
+Select-String -Path auth/logs/audit.log -Pattern "UserID:5"
+```
+
+**Contar operaciones por tipo:**
+```bash
+# Linux/Mac
+grep -c "Operación:LOGIN" auth/logs/audit.log
+
+# Windows PowerShell
+(Select-String -Path auth/logs/audit.log -Pattern "Operación:LOGIN").Count
+```
+
+**Ver solo errores:**
+```bash
+cat auth/logs/error.log
+```
+
+#### 11. Estructura de archivos final:
+
+```
+auth/
+├── src/
+│   ├── controllers/
+│   │   └── auth.controller.js      (usa logger para operaciones críticas)
+│   ├── middleware/
+│   │   └── auditMiddleware.js      (AS-TASK-12: auditoría automática)
+│   ├── utils/
+│   │   ├── jwt.helper.js
+│   │   └── logger.js               (AS-TASK-12: logger centralizado)
+│   └── routes/
+│       └── auth.routes.js          (aplica auditMiddleware a rutas)
+├── logs/
+│   ├── .gitkeep                    (mantiene directorio en Git)
+│   ├── audit.log                   (excluido de Git)
+│   └── error.log                   (excluido de Git)
+└── .gitignore                       (actualizado para logs)
+```
+
+#### 12. Mejoras futuras sugeridas:
+
+1. **Persistencia en base de datos:**
+```sql
+CREATE TABLE audit_logs (
+  id SERIAL PRIMARY KEY,
+  timestamp TIMESTAMP DEFAULT NOW(),
+  user_id INTEGER REFERENCES usuarios(id),
+  operation VARCHAR(50),
+  email VARCHAR(255),
+  ip VARCHAR(45),
+  status VARCHAR(20),
+  detail TEXT,
+  response_time INTEGER,
+  task_id VARCHAR(20)
+);
+```
+
+2. **Integración con servicios externos:**
+- Envío a Elasticsearch/Logstash/Kibana (ELK Stack)
+- Integración con Datadog, New Relic, o Splunk
+- Alertas automáticas en Slack/Discord para errores críticos
+
+3. **Dashboard de auditoría:**
+- Panel web para visualizar logs en tiempo real
+- Gráficos de operaciones por hora/día/mes
+- Alertas ante patrones sospechosos (muchos fallos de login)
+
+4. **Análisis de seguridad:**
+- Detección de IPs sospechosas (muchos intentos fallidos)
+- Alertas ante escalación de privilegios no autorizada
+- Reportes de auditoría periódicos (diarios/semanales)
+
+5. **Compresión de logs antiguos:**
+```bash
+# Comprimir logs de hace más de 30 días
+find logs/ -name "*.log" -mtime +30 -exec gzip {} \;
+```
+
+6. **Retención de logs:**
+- Mantener logs de últimos 90 días en archivo
+- Archivar logs antiguos en S3/Azure Blob Storage
+- Política de eliminación después de 1 año
+
+#### 13. Testing:
+
+**Test 1: Verificar que se crea el archivo de log**
+```bash
+# Hacer una operación (ej: login)
+curl -X POST http://localhost:3000/api/auth/login \
+  -H "Content-Type: application/json" \
+  -d '{"email": "juan@innovatech.cl", "password": "password123"}'
+
+# Verificar que existe el archivo
+ls -la auth/logs/audit.log
+
+# Leer contenido
+cat auth/logs/audit.log | grep "LOGIN"
+```
+
+**Test 2: Verificar rotación de archivos**
+```bash
+# Simular archivo grande (solo para pruebas)
+dd if=/dev/zero of=auth/logs/audit.log bs=1M count=11
+
+# Hacer una operación
+curl -X GET http://localhost:3000/api/auth/roles
+
+# Verificar que se creó archivo rotado
+ls -la auth/logs/audit-*.log
+```
+
+**Test 3: Verificar que no se registran contraseñas**
+```bash
+# Hacer registro con contraseña
+curl -X POST http://localhost:3000/api/auth/register \
+  -H "Content-Type: application/json" \
+  -d '{"nombre": "Test", "email": "test@test.cl", "password": "SuperSecretPassword123"}'
+
+# Verificar que NO aparece la contraseña en logs
+grep -i "SuperSecretPassword123" auth/logs/audit.log
+# Debe retornar: (no matches)
+```
+
+---
+
 
