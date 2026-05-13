@@ -168,6 +168,19 @@ npm run dev
   - API pública mantenida: auditSuccess(), auditError(), logCriticalOperation(), logEndpointAccess()
   - Preparado para integración con ELK Stack, CloudWatch, Datadog
   - taskId actualizado de AS-TASK-12 a AS-TASK-13 en todos los controladores
+- [COMPLETADO] AS-TASK-14: Integrar métricas con Prometheus
+  - Instalación de prom-client para Node.js
+  - Endpoint GET /api/metrics en formato Prometheus exposition
+  - metricsMiddleware.js para capturar métricas automáticamente
+  - Métricas básicas: auth_http_requests_total, auth_http_request_duration_seconds
+  - Métricas de autenticación: auth_errors_total, auth_critical_operations_total, auth_active_users
+  - Métricas por defecto de Node.js: CPU, memoria, event loop, GC
+  - Labels para diferenciación: method, route, status_code, error_type, operation, success, taskId
+  - Histograma de latencia con buckets: 0.1s, 0.5s, 1s, 2s, 5s, 10s
+  - Normalización de rutas dinámicas (/usuarios/123 → /usuarios/:id)
+  - Integración con operaciones críticas: REGISTER, LOGIN, LOGOUT, ROLE_CHANGE
+  - Principios SOLID: metricsMiddleware (middleware) + metrics.routes (endpoints) separados
+  - Documentación de configuración de Prometheus para scraping
 
 ### AS-TASK-04: Detalles del endpoint /register
 
@@ -3357,3 +3370,655 @@ logger.logMetrics({
 
 ---
 
+### AS-TASK-14: Integrar métricas con Prometheus
+
+**Objetivo:** Implementar sistema de métricas profesional con Prometheus usando prom-client para Node.js, exponiendo métricas de performance, operaciones críticas y errores de autenticación/autorización en formato estándar de Prometheus.
+
+#### 1. ¿Por qué Prometheus?
+
+**Prometheus** es el estándar de facto para monitoreo y observabilidad en sistemas distribuidos:
+- Sistema de métricas de series temporales
+- Lenguaje de consulta potente (PromQL)
+- Alertas configurables (Alertmanager)
+- Visualización con Grafana
+- Service discovery automático
+- Adopción masiva (CNCF graduated project)
+
+**Caso de uso:** Detectar degradación de performance, picos de errores, patrones de uso anómalos, y generar alertas automáticas antes de que afecten a usuarios.
+
+#### 2. Paquete instalado:
+
+```bash
+npm install prom-client
+```
+
+**Dependencia agregada a package.json:**
+```json
+{
+  "dependencies": {
+    "prom-client": "^15.1.0"
+  }
+}
+```
+
+#### 3. Métricas implementadas:
+
+| Métrica | Tipo | Descripción | Labels |
+|---------|------|-------------|--------|
+| `auth_http_requests_total` | Counter | Total de peticiones HTTP recibidas | method, route, status_code, taskId |
+| `auth_http_request_duration_seconds` | Histogram | Duración de peticiones HTTP (latencia) | method, route, status_code, taskId |
+| `auth_errors_total` | Counter | Errores de autenticación/autorización | error_type, route, taskId |
+| `auth_critical_operations_total` | Counter | Operaciones críticas realizadas | operation, success, taskId |
+| `auth_active_users` | Gauge | Usuarios con sesión activa | taskId |
+| `auth_service_*` | Default | Métricas de Node.js (CPU, memoria, GC, event loop) | taskId |
+
+#### 4. Tipos de métricas de Prometheus:
+
+**Counter (Contador):**
+- Solo incrementa, nunca decrementa
+- Uso: contar eventos (requests, errores, operaciones)
+- Ejemplo: `auth_http_requests_total{method="POST",route="/login"} 1523`
+
+**Histogram (Histograma):**
+- Mide distribución de valores en buckets
+- Uso: latencia, tamaños de respuesta
+- Ejemplo: `auth_http_request_duration_seconds_bucket{le="0.5"} 1200`
+- Genera automáticamente: `_sum`, `_count`, `_bucket`
+
+**Gauge (Medidor):**
+- Puede incrementar y decrementar
+- Uso: valores actuales (usuarios activos, memoria usada)
+- Ejemplo: `auth_active_users{taskId="AS-TASK-14"} 47`
+
+**Summary (Resumen):**
+- Similar a Histogram pero calcula cuantiles en el cliente
+- No usado en esta implementación (preferimos Histogram)
+
+#### 5. Arquitectura del sistema de métricas:
+
+```
+┌─────────────────────────────────────────────────────────┐
+│             Express App (Auth Service)                  │
+│                                                         │
+│  ┌──────────────────────────────────────────────────┐  │
+│  │         metricsMiddleware                        │  │
+│  │  - Intercepta todas las requests                 │  │
+│  │  - Registra latencia y status code               │  │
+│  │  - Normaliza rutas dinámicas                     │  │
+│  └──────────────────────────────────────────────────┘  │
+│                          │                              │
+│                          ▼                              │
+│  ┌──────────────────────────────────────────────────┐  │
+│  │         prom-client Registry                     │  │
+│  │  - Counter: requests, errors, operations         │  │
+│  │  - Histogram: latency con buckets               │  │
+│  │  - Gauge: active users                           │  │
+│  │  - Default: CPU, memoria, GC, event loop         │  │
+│  └──────────────────────────────────────────────────┘  │
+│                          │                              │
+│                          ▼                              │
+│  ┌──────────────────────────────────────────────────┐  │
+│  │         GET /api/metrics                         │  │
+│  │  - Expone métricas en formato Prometheus         │  │
+│  │  - Content-Type: text/plain; version=0.0.4       │  │
+│  └──────────────────────────────────────────────────┘  │
+└─────────────────────────────────────────────────────────┘
+                          │
+                          │ Scrape cada 15s
+                          ▼
+┌─────────────────────────────────────────────────────────┐
+│                  Prometheus Server                      │
+│  - Almacena series temporales                           │
+│  - Evalúa reglas de alertas                             │
+│  - Expone API para PromQL                               │
+└─────────────────────────────────────────────────────────┘
+                          │
+                          │ Query
+                          ▼
+┌─────────────────────────────────────────────────────────┐
+│                     Grafana                             │
+│  - Dashboards visuales                                  │
+│  - Paneles con gráficos de métricas                     │
+│  - Alertas visuales                                     │
+└─────────────────────────────────────────────────────────┘
+```
+
+#### 6. Formato de métricas expuestas:
+
+**Endpoint:** `GET /api/metrics`
+
+**Content-Type:** `text/plain; version=0.0.4`
+
+**Ejemplo de salida:**
+```prometheus
+# HELP auth_http_requests_total Total de peticiones HTTP recibidas
+# TYPE auth_http_requests_total counter
+auth_http_requests_total{method="POST",route="/login",status_code="200",taskId="AS-TASK-14"} 1523
+auth_http_requests_total{method="POST",route="/login",status_code="401",taskId="AS-TASK-14"} 45
+auth_http_requests_total{method="POST",route="/register",status_code="201",taskId="AS-TASK-14"} 387
+auth_http_requests_total{method="GET",route="/roles",status_code="200",taskId="AS-TASK-14"} 892
+
+# HELP auth_http_request_duration_seconds Duración de peticiones HTTP en segundos
+# TYPE auth_http_request_duration_seconds histogram
+auth_http_request_duration_seconds_bucket{method="POST",route="/login",status_code="200",taskId="AS-TASK-14",le="0.1"} 1200
+auth_http_request_duration_seconds_bucket{method="POST",route="/login",status_code="200",taskId="AS-TASK-14",le="0.5"} 1500
+auth_http_request_duration_seconds_bucket{method="POST",route="/login",status_code="200",taskId="AS-TASK-14",le="1"} 1520
+auth_http_request_duration_seconds_bucket{method="POST",route="/login",status_code="200",taskId="AS-TASK-14",le="+Inf"} 1523
+auth_http_request_duration_seconds_sum{method="POST",route="/login",status_code="200",taskId="AS-TASK-14"} 68.234
+auth_http_request_duration_seconds_count{method="POST",route="/login",status_code="200",taskId="AS-TASK-14"} 1523
+
+# HELP auth_errors_total Total de errores de autenticación y autorización
+# TYPE auth_errors_total counter
+auth_errors_total{error_type="auth_failed",route="/login",taskId="AS-TASK-14"} 45
+auth_errors_total{error_type="token_invalid_or_missing",route="/roles",taskId="AS-TASK-14"} 12
+auth_errors_total{error_type="insufficient_permissions",route="/usuarios/:id/rol",taskId="AS-TASK-14"} 8
+
+# HELP auth_critical_operations_total Total de operaciones críticas realizadas
+# TYPE auth_critical_operations_total counter
+auth_critical_operations_total{operation="REGISTER",success="true",taskId="AS-TASK-14"} 387
+auth_critical_operations_total{operation="LOGIN",success="true",taskId="AS-TASK-14"} 1523
+auth_critical_operations_total{operation="LOGIN",success="false",taskId="AS-TASK-14"} 45
+auth_critical_operations_total{operation="LOGOUT",success="true",taskId="AS-TASK-14"} 1401
+auth_critical_operations_total{operation="ROLE_CHANGE",success="true",taskId="AS-TASK-14"} 23
+
+# HELP auth_active_users Número de usuarios con sesión activa
+# TYPE auth_active_users gauge
+auth_active_users{taskId="AS-TASK-14"} 122
+
+# HELP auth_service_nodejs_version_info Node.js version info
+# TYPE auth_service_nodejs_version_info gauge
+auth_service_nodejs_version_info{version="v18.19.0",major="18",minor="19",patch="0",taskId="AS-TASK-14"} 1
+
+# HELP auth_service_process_cpu_user_seconds_total Total user CPU time
+# TYPE auth_service_process_cpu_user_seconds_total counter
+auth_service_process_cpu_user_seconds_total{taskId="AS-TASK-14"} 45.234
+
+# HELP auth_service_nodejs_heap_size_total_bytes Process heap size
+# TYPE auth_service_nodejs_heap_size_total_bytes gauge
+auth_service_nodejs_heap_size_total_bytes{taskId="AS-TASK-14"} 52428800
+```
+
+#### 7. Normalización de rutas dinámicas:
+
+**Problema:** Cardinalidad alta en métricas
+```
+/usuarios/1/rol
+/usuarios/2/rol
+/usuarios/123/rol
+/usuarios/456/rol
+→ 456 series de métricas diferentes (mal)
+```
+
+**Solución:** Normalizar rutas dinámicas
+```javascript
+function normalizePath(path) {
+  // /usuarios/123/rol → /usuarios/:id/rol
+  return path.replace(/\/\d+/g, '/:id');
+}
+```
+
+**Resultado:**
+```
+/usuarios/1/rol   → /usuarios/:id/rol
+/usuarios/2/rol   → /usuarios/:id/rol
+/usuarios/123/rol → /usuarios/:id/rol
+→ 1 serie de métricas (bien)
+```
+
+#### 8. Tipos de errores registrados:
+
+| error_type | Código HTTP | Descripción | Ejemplo |
+|-----------|-------------|-------------|---------|
+| `auth_failed` | 401 | Credenciales inválidas en /login | Email o contraseña incorrecta |
+| `token_invalid_or_missing` | 401 | Token JWT inválido o no proporcionado | Token expirado, malformado o ausente |
+| `insufficient_permissions` | 403 | Rol insuficiente para la operación | Usuario con rol "profesional" intenta cambiar rol |
+
+#### 9. Configurar Prometheus para scraping:
+
+**Archivo:** `prometheus.yml`
+
+```yaml
+# Configuración global
+global:
+  scrape_interval: 15s      # Scrapear cada 15 segundos
+  evaluation_interval: 15s  # Evaluar reglas cada 15 segundos
+
+# Configuración de scraping
+scrape_configs:
+  # Job para Auth Microservice
+  - job_name: 'auth-service'
+    
+    # Endpoint de métricas
+    metrics_path: '/api/metrics'
+    
+    # Targets estáticos (en producción usar service discovery)
+    static_configs:
+      - targets: ['localhost:3001']
+        labels:
+          service: 'auth'
+          environment: 'production'
+          region: 'us-east-1'
+          taskId: 'AS-TASK-14'
+```
+
+**Iniciar Prometheus:**
+```bash
+# Descargar Prometheus
+wget https://github.com/prometheus/prometheus/releases/download/v2.45.0/prometheus-2.45.0.linux-amd64.tar.gz
+tar xvfz prometheus-2.45.0.linux-amd64.tar.gz
+cd prometheus-2.45.0.linux-amd64
+
+# Copiar configuración
+cp prometheus.yml prometheus.yml.backup
+nano prometheus.yml  # Agregar configuración de arriba
+
+# Iniciar Prometheus
+./prometheus --config.file=prometheus.yml
+
+# Acceder a Prometheus UI
+# http://localhost:9090
+```
+
+#### 10. Consultas PromQL útiles:
+
+**Tasa de requests por segundo:**
+```promql
+rate(auth_http_requests_total[5m])
+```
+
+**Latencia P95 (percentil 95):**
+```promql
+histogram_quantile(0.95, 
+  rate(auth_http_request_duration_seconds_bucket[5m])
+)
+```
+
+**Tasa de errores:**
+```promql
+rate(auth_errors_total[5m])
+```
+
+**Porcentaje de errores:**
+```promql
+sum(rate(auth_http_requests_total{status_code=~"4..|5.."}[5m])) /
+sum(rate(auth_http_requests_total[5m])) * 100
+```
+
+**Top 5 endpoints más lentos:**
+```promql
+topk(5, 
+  rate(auth_http_request_duration_seconds_sum[5m]) /
+  rate(auth_http_request_duration_seconds_count[5m])
+)
+```
+
+**Operaciones críticas exitosas vs fallidas:**
+```promql
+sum by (operation, success) (
+  rate(auth_critical_operations_total[5m])
+)
+```
+
+**Usuarios activos en tiempo real:**
+```promql
+auth_active_users
+```
+
+#### 11. Dashboard de Grafana:
+
+**Importar dashboard:**
+1. Instalar Grafana: https://grafana.com/docs/grafana/latest/setup-grafana/installation/
+2. Agregar Prometheus como Data Source
+3. Crear dashboard con paneles:
+
+**Panel 1: Requests por segundo**
+```json
+{
+  "title": "Requests/sec por endpoint",
+  "targets": [{
+    "expr": "rate(auth_http_requests_total[5m])",
+    "legendFormat": "{{method}} {{route}}"
+  }],
+  "type": "graph"
+}
+```
+
+**Panel 2: Latencia P50, P95, P99**
+```json
+{
+  "title": "Latencia de respuesta",
+  "targets": [
+    {
+      "expr": "histogram_quantile(0.50, rate(auth_http_request_duration_seconds_bucket[5m]))",
+      "legendFormat": "P50"
+    },
+    {
+      "expr": "histogram_quantile(0.95, rate(auth_http_request_duration_seconds_bucket[5m]))",
+      "legendFormat": "P95"
+    },
+    {
+      "expr": "histogram_quantile(0.99, rate(auth_http_request_duration_seconds_bucket[5m]))",
+      "legendFormat": "P99"
+    }
+  ],
+  "type": "graph"
+}
+```
+
+**Panel 3: Errores por tipo**
+```json
+{
+  "title": "Errores de autenticación",
+  "targets": [{
+    "expr": "rate(auth_errors_total[5m])",
+    "legendFormat": "{{error_type}} - {{route}}"
+  }],
+  "type": "graph"
+}
+```
+
+**Panel 4: Operaciones críticas**
+```json
+{
+  "title": "Operaciones críticas (REGISTER, LOGIN, LOGOUT, ROLE_CHANGE)",
+  "targets": [{
+    "expr": "rate(auth_critical_operations_total[5m])",
+    "legendFormat": "{{operation}} (success={{success}})"
+  }],
+  "type": "graph"
+}
+```
+
+**Panel 5: Usuarios activos**
+```json
+{
+  "title": "Usuarios activos",
+  "targets": [{
+    "expr": "auth_active_users",
+    "legendFormat": "Usuarios con sesión activa"
+  }],
+  "type": "stat"
+}
+```
+
+#### 12. Reglas de alertas (Alertmanager):
+
+**Archivo:** `alert.rules.yml`
+
+```yaml
+groups:
+  - name: auth_service_alerts
+    interval: 30s
+    rules:
+      # Alerta: Tasa de errores alta
+      - alert: HighErrorRate
+        expr: |
+          sum(rate(auth_http_requests_total{status_code=~"5.."}[5m])) /
+          sum(rate(auth_http_requests_total[5m])) > 0.05
+        for: 5m
+        labels:
+          severity: critical
+          service: auth
+          taskId: AS-TASK-14
+        annotations:
+          summary: "Tasa de errores alta en Auth Service"
+          description: "{{ $value | humanizePercentage }} de requests están fallando"
+
+      # Alerta: Latencia P95 alta
+      - alert: HighLatencyP95
+        expr: |
+          histogram_quantile(0.95,
+            rate(auth_http_request_duration_seconds_bucket[5m])
+          ) > 1
+        for: 10m
+        labels:
+          severity: warning
+          service: auth
+          taskId: AS-TASK-14
+        annotations:
+          summary: "Latencia P95 alta en Auth Service"
+          description: "Latencia P95: {{ $value }}s (threshold: 1s)"
+
+      # Alerta: Muchos intentos fallidos de login
+      - alert: HighLoginFailureRate
+        expr: |
+          rate(auth_errors_total{error_type="auth_failed"}[5m]) > 10
+        for: 5m
+        labels:
+          severity: warning
+          service: auth
+          taskId: AS-TASK-14
+        annotations:
+          summary: "Muchos intentos fallidos de login"
+          description: "{{ $value }} intentos fallidos/seg (posible ataque de fuerza bruta)"
+
+      # Alerta: Service down
+      - alert: AuthServiceDown
+        expr: up{job="auth-service"} == 0
+        for: 1m
+        labels:
+          severity: critical
+          service: auth
+          taskId: AS-TASK-14
+        annotations:
+          summary: "Auth Service no responde"
+          description: "El servicio Auth no ha respondido en el último minuto"
+
+      # Alerta: Memoria alta
+      - alert: HighMemoryUsage
+        expr: |
+          auth_service_nodejs_heap_size_used_bytes /
+          auth_service_nodejs_heap_size_total_bytes > 0.9
+        for: 5m
+        labels:
+          severity: warning
+          service: auth
+          taskId: AS-TASK-14
+        annotations:
+          summary: "Uso de memoria alto en Auth Service"
+          description: "{{ $value | humanizePercentage }} de heap usado"
+```
+
+#### 13. Estructura de archivos final:
+
+```
+auth/
+├── src/
+│   ├── controllers/
+│   │   └── auth.controller.js      (integrado con recordCriticalOperation)
+│   ├── middleware/
+│   │   ├── auditMiddleware.js
+│   │   └── metricsMiddleware.js    (AS-TASK-14: captura métricas)
+│   ├── routes/
+│   │   ├── auth.routes.js
+│   │   └── metrics.routes.js       (AS-TASK-14: expone /api/metrics)
+│   ├── utils/
+│   │   └── logger.js
+│   └── app.js                       (integra metricsMiddleware)
+├── package.json                     (prom-client agregado)
+└── prometheus.yml                   (configuración de Prometheus - opcional)
+```
+
+#### 14. Testing manual:
+
+**Test 1: Verificar endpoint /api/metrics**
+```bash
+curl http://localhost:3001/api/metrics
+
+# Debe retornar métricas en formato Prometheus
+# Content-Type: text/plain; version=0.0.4
+```
+
+**Test 2: Generar tráfico y verificar métricas**
+```bash
+# Hacer 100 requests de login
+for i in {1..100}; do
+  curl -X POST http://localhost:3001/api/auth/login \
+    -H "Content-Type: application/json" \
+    -d '{"email": "test@test.cl", "password": "test123"}'
+done
+
+# Verificar que el contador incrementó
+curl http://localhost:3001/api/metrics | grep auth_http_requests_total
+```
+
+**Test 3: Verificar histograma de latencia**
+```bash
+curl http://localhost:3001/api/metrics | grep auth_http_request_duration_seconds
+# Debe mostrar buckets: le="0.1", le="0.5", le="1", etc.
+```
+
+**Test 4: Verificar métricas de errores**
+```bash
+# Hacer login fallido
+curl -X POST http://localhost:3001/api/auth/login \
+  -H "Content-Type: application/json" \
+  -d '{"email": "invalid@test.cl", "password": "wrong"}'
+
+# Verificar que el contador de errores incrementó
+curl http://localhost:3001/api/metrics | grep auth_errors_total
+```
+
+**Test 5: Verificar métricas de operaciones críticas**
+```bash
+curl http://localhost:3001/api/metrics | grep auth_critical_operations_total
+# Debe mostrar: REGISTER, LOGIN, LOGOUT, ROLE_CHANGE con success="true"/"false"
+```
+
+#### 15. Integración con Prometheus (Docker):
+
+**Archivo:** `docker-compose.yml`
+
+```yaml
+version: '3.8'
+
+services:
+  # Auth Microservice
+  auth:
+    build: ./auth
+    ports:
+      - "3001:3001"
+    environment:
+      - NODE_ENV=production
+      - PORT=3001
+    networks:
+      - monitoring
+
+  # Prometheus
+  prometheus:
+    image: prom/prometheus:v2.45.0
+    ports:
+      - "9090:9090"
+    volumes:
+      - ./prometheus.yml:/etc/prometheus/prometheus.yml
+      - ./alert.rules.yml:/etc/prometheus/alert.rules.yml
+      - prometheus_data:/prometheus
+    command:
+      - '--config.file=/etc/prometheus/prometheus.yml'
+      - '--storage.tsdb.path=/prometheus'
+    networks:
+      - monitoring
+
+  # Grafana
+  grafana:
+    image: grafana/grafana:10.0.0
+    ports:
+      - "3000:3000"
+    environment:
+      - GF_SECURITY_ADMIN_PASSWORD=admin
+    volumes:
+      - grafana_data:/var/lib/grafana
+    networks:
+      - monitoring
+
+  # Alertmanager (opcional)
+  alertmanager:
+    image: prom/alertmanager:v0.26.0
+    ports:
+      - "9093:9093"
+    volumes:
+      - ./alertmanager.yml:/etc/alertmanager/alertmanager.yml
+    networks:
+      - monitoring
+
+volumes:
+  prometheus_data:
+  grafana_data:
+
+networks:
+  monitoring:
+    driver: bridge
+```
+
+**Iniciar stack completo:**
+```bash
+docker-compose up -d
+
+# Acceder a servicios:
+# Auth Service: http://localhost:3001/api/metrics
+# Prometheus: http://localhost:9090
+# Grafana: http://localhost:3000 (admin/admin)
+```
+
+#### 16. Mejores prácticas:
+
+1. **Cardinalidad baja en labels:**
+   - Usar: `route="/usuarios/:id"` (normalizado)
+   - Evitar: `route="/usuarios/123"` (dinámico)
+
+2. **Nombres descriptivos:**
+   - Usar prefijo del servicio: `auth_http_requests_total`
+   - Seguir convención de Prometheus: `<namespace>_<name>_<unit>`
+
+3. **Buckets adecuados en histogramas:**
+   - Alineados con SLOs (Service Level Objectives)
+   - Ejemplo: P95 < 500ms → buckets [0.1, 0.5, 1, 2, 5]
+
+4. **No exponer datos sensibles:**
+   - No incluir: emails, passwords, tokens en labels
+   - Solo incluir: IDs, rutas, códigos de estado
+
+5. **Métricas por defecto:**
+   - Habilitar métricas de Node.js (CPU, memoria, GC)
+   - Ayuda a diagnosticar problemas de performance
+
+#### 17. Comparación con otras soluciones:
+
+| Aspecto | Prometheus | Datadog | New Relic | AWS CloudWatch |
+|---------|-----------|---------|-----------|----------------|
+| Costo | Gratis (self-hosted) | $$$ (SaaS) | $$$ (SaaS) | $$ (managed) |
+| PromQL | Sí | No | No | No |
+| Grafana | Integración nativa | Posible | Posible | Posible |
+| Alertas | Alertmanager | Built-in | Built-in | CloudWatch Alarms |
+| Service Discovery | Kubernetes, Consul, etc. | Auto | Auto | Auto |
+| Open Source | Sí | No | No | No |
+| Curva de aprendizaje | Media | Baja | Baja | Media |
+
+#### 18. Métricas futuras sugeridas:
+
+1. **Métricas de negocio:**
+```javascript
+const newUsersToday = new promClient.Gauge({
+  name: 'auth_new_users_today',
+  help: 'Usuarios registrados hoy'
+});
+```
+
+2. **Métricas de base de datos:**
+```javascript
+const dbQueryDuration = new promClient.Histogram({
+  name: 'auth_db_query_duration_seconds',
+  help: 'Duración de queries a PostgreSQL',
+  labelNames: ['query_type']
+});
+```
+
+3. **Métricas de cache:**
+```javascript
+const cacheHitRate = new promClient.Gauge({
+  name: 'auth_cache_hit_rate',
+  help: 'Tasa de acierto del cache'
+});
+```
+
+---
