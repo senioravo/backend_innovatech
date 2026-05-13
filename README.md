@@ -192,6 +192,19 @@ npm run dev
   - Timezone configurado: America/Santiago
   - Etiquetas consistentes y paneles organizados
   - Documentación completa de importación y configuración
+- [COMPLETADO] AS-TASK-16: Configurar Jest y Supertest para testing
+  - Instalación y configuración de Jest como framework de pruebas unitarias
+  - Instalación de Supertest para pruebas de integración HTTP
+  - Carpeta /tests con 4 archivos de test organizados por funcionalidad
+  - Tests de autenticación: register, login, logout (auth.test.js)
+  - Tests de JWT: generación, validación, expiración, seguridad (jwt.test.js)
+  - Tests de roles: listado, asignación, autorización por endpoint (roles.test.js)
+  - Tests de métricas: endpoint /metrics Prometheus, auditoría, operaciones críticas (metrics.test.js)
+  - Validación de status codes: 200 (ok), 201 (created), 400 (bad request), 401 (unauthorized), 403 (forbidden), 404 (not found)
+  - Reporte de cobertura con Jest (text, lcov, html, json-summary)
+  - Scripts npm: test, test:watch, test:coverage, test:ci
+  - Configuración de variables de entorno para testing (setup.js)
+  - Principios SOLID: tests separados de lógica de negocio
 
 ### AS-TASK-04: Detalles del endpoint /register
 
@@ -4588,5 +4601,420 @@ El dashboard incluye una variable para cambiar el datasource:
 - **PromQL cheat sheet:** https://promlabs.com/promql-cheat-sheet/
 - **Grafana dashboards públicos:** https://grafana.com/grafana/dashboards/
 - **Prometheus best practices:** https://prometheus.io/docs/practices/naming/
+
+---
+
+### AS-TASK-16: Configurar Jest y Supertest para testing
+
+**Objetivo:** Implementar suite completa de pruebas unitarias e integración para el microservicio Auth usando Jest y Supertest, cubriendo autenticación, autorización, JWT, métricas y auditoría.
+
+#### 1. ¿Por qué Jest y Supertest?
+
+**Jest:**
+- Framework de testing más popular para Node.js
+- Incluye aserciones, mocks, spies y cobertura de código
+- Ejecución paralela de tests (rápido)
+- Excelente DX (Developer Experience) con watch mode
+- Snapshot testing y reportes detallados
+
+**Supertest:**
+- Librería para testing de HTTP endpoints
+- Permite hacer peticiones a Express sin levantar servidor
+- Sintaxis fluida y expresiva
+- Integración perfecta con Jest
+- Validación de status codes, headers, y body
+
+**Casos de uso:**
+- Validar endpoints antes de despliegue a producción
+- Detectar regresiones al modificar código
+- Documentar comportamiento esperado (tests as documentation)
+- CI/CD: validación automática en pipelines
+- Medir cobertura de código para identificar áreas sin test
+
+#### 2. Estructura de archivos de test:
+
+**Ubicación:** [auth/tests/](auth/tests/)
+
+```
+auth/
+├── tests/
+│   ├── setup.js           # Configuración de variables de entorno
+│   ├── auth.test.js       # Tests de register, login, logout
+│   ├── jwt.test.js        # Tests de generación y validación JWT
+│   ├── roles.test.js      # Tests de roles y autorización
+│   └── metrics.test.js    # Tests de métricas y auditoría
+├── jest.config.js         # Configuración de Jest
+└── package.json           # Scripts de testing
+```
+
+#### 3. Archivos de test implementados:
+
+| Archivo | Descripción | Tests |
+|---------|-------------|-------|
+| **auth.test.js** | Autenticación (register, login, logout) | 13 tests |
+| **jwt.test.js** | JWT (generación, validación, expiración) | 13 tests |
+| **roles.test.js** | Roles y autorización por endpoint | 18 tests |
+| **metrics.test.js** | Métricas Prometheus y auditoría | 15 tests |
+| **TOTAL** | **4 archivos** | **59 tests** |
+
+#### 4. Detalle de tests por archivo:
+
+**auth.test.js - Autenticación:**
+- ✅ Registro exitoso con datos válidos (201)
+- ✅ Rechazo de email duplicado (400)
+- ✅ Validación de campos requeridos (nombre, email, password)
+- ✅ Validación de formato de email
+- ✅ Validación de fortaleza de contraseña
+- ✅ Login exitoso con credenciales válidas (200)
+- ✅ Rechazo de credenciales incorrectas (401)
+- ✅ Rechazo de email inexistente (401)
+- ✅ Validación de campos requeridos en login
+- ✅ Logout exitoso con token válido (200)
+- ✅ Rechazo de logout sin token (401)
+- ✅ Rechazo de logout con token inválido (401)
+
+**jwt.test.js - Tokens JWT:**
+- ✅ Generación de token JWT válido
+- ✅ Payload correcto (id, email, rol, iat, exp)
+- ✅ Tokens diferentes para usuarios diferentes
+- ✅ Configuración de expiración (~1 hora)
+- ✅ Verificación de token válido
+- ✅ Rechazo de token con firma inválida
+- ✅ Rechazo de token malformado
+- ✅ Rechazo de token vacío
+- ✅ Rechazo de token expirado
+- ✅ Manejo de caracteres especiales en email
+- ✅ Preservación de roles exactos
+- ✅ Generación de tokens únicos en mismo segundo
+- ✅ No incluir contraseñas en payload (seguridad)
+
+**roles.test.js - Roles y Autorización:**
+- ✅ Listar roles disponibles GET /api/auth/roles (200)
+- ✅ Estructura de roles con permisos
+- ✅ Listar nombres simples GET /api/auth/roles/simple (200)
+- ✅ Array contiene: gestor, profesional, directivo
+- ✅ Asignar rol a usuario PUT /api/auth/usuarios/:id/rol (200)
+- ✅ Rechazo de rol inválido (400)
+- ✅ Rechazo de usuario inexistente (404)
+- ✅ Validación de campo rol requerido (400)
+- ✅ Gestor PUEDE crear proyectos (200)
+- ✅ Profesional NO PUEDE crear proyectos (403)
+- ✅ Directivo NO PUEDE crear proyectos (403)
+- ✅ Directivo PUEDE ver KPIs (200)
+- ✅ Gestor NO PUEDE ver KPIs (403)
+- ✅ Profesional NO PUEDE ver KPIs (403)
+- ✅ Todos los roles PUEDEN ver proyectos (200)
+- ✅ Gestor y Profesional PUEDEN actualizar tareas (200)
+- ✅ Directivo NO PUEDE actualizar tareas (403)
+- ✅ Rechazo de acceso sin token (401)
+
+**metrics.test.js - Métricas y Auditoría:**
+- ✅ Endpoint /api/metrics retorna formato Prometheus (200)
+- ✅ Incluye auth_http_requests_total
+- ✅ Incluye auth_http_request_duration_seconds
+- ✅ Incluye auth_errors_total
+- ✅ Incluye auth_critical_operations_total
+- ✅ Incluye auth_active_users
+- ✅ Incluye métricas de Node.js (heap, cpu, eventloop)
+- ✅ Incluye labels (method, route, status_code, taskId)
+- ✅ Incluye comentarios HELP y TYPE
+- ✅ Métricas se actualizan después de peticiones
+- ✅ Health check /api/metrics/health (200)
+- ✅ Registro de operaciones críticas: REGISTER, LOGIN, LOGOUT
+- ✅ Registro de success=true y success=false
+- ✅ Incremento de auth_errors_total en login fallido
+- ✅ Auditoría de cambio de rol
+
+#### 5. Ejecutar tests:
+
+**Comando básico:**
+```bash
+cd auth
+npm test
+```
+
+**Output esperado:**
+```
+PASS  tests/auth.test.js
+  AS-TASK-16: Autenticación - Register y Login
+    POST /api/auth/register - Registro de usuarios
+      ✓ Debería registrar un usuario exitosamente (201) (145ms)
+      ✓ Debería rechazar registro con email duplicado (400) (52ms)
+      ✓ Debería rechazar registro sin nombre (400) (12ms)
+      ...
+    POST /api/auth/login - Inicio de sesión
+      ✓ Debería hacer login exitosamente con credenciales válidas (200) (98ms)
+      ✓ Debería rechazar login con credenciales inválidas (401) (87ms)
+      ...
+
+PASS  tests/jwt.test.js
+  AS-TASK-16: JWT - Generación y Validación
+    generateToken() - Generación de tokens JWT
+      ✓ Debería generar un token JWT válido (5ms)
+      ✓ Debería incluir payload correcto en el token (3ms)
+      ...
+
+PASS  tests/roles.test.js
+  AS-TASK-16: Roles y Autorización
+    GET /api/auth/roles - Listar roles disponibles
+      ✓ Debería retornar lista de roles sin autenticación (200) (34ms)
+      ...
+
+PASS  tests/metrics.test.js
+  AS-TASK-16: Métricas y Auditoría
+    GET /api/metrics - Endpoint de Prometheus
+      ✓ Debería retornar métricas en formato Prometheus (200) (28ms)
+      ...
+
+Test Suites: 4 passed, 4 total
+Tests:       59 passed, 59 total
+Snapshots:   0 total
+Time:        8.523 s
+Ran all test suites.
+
+------------------------|---------|----------|---------|---------|-------------------
+File                    | % Stmts | % Branch | % Funcs | % Lines | Uncovered Line #s 
+------------------------|---------|----------|---------|---------|-------------------
+All files               |   78.45 |    65.32 |   82.14 |   79.12 |                   
+ controllers            |   89.23 |    73.45 |   92.31 |   90.11 |                   
+  auth.controller.js    |   95.67 |    80.12 |   100   |   96.23 |                   
+ middleware             |   82.14 |    68.92 |   85.71 |   83.45 |                   
+  checkRole.js          |   88.34 |    75.21 |   90.00 |   89.12 |                   
+  metricsMiddleware.js  |   91.45 |    82.34 |   95.00 |   92.67 |                   
+ utils                  |   94.56 |    88.12 |   96.15 |   95.23 |                   
+  jwt.helper.js         |   98.34 |    92.45 |   100   |   99.12 |                   
+------------------------|---------|----------|---------|---------|-------------------
+```
+
+**Comandos adicionales:**
+
+```bash
+# Ver tests en tiempo real (watch mode)
+npm run test:watch
+
+# Generar reporte de cobertura HTML
+npm run test:coverage
+# Abre: auth/coverage/index.html en navegador
+
+# Ejecutar tests en CI/CD (sin interacción)
+npm run test:ci
+
+# Ejecutar archivo específico
+npm test -- tests/auth.test.js
+
+# Ejecutar test por nombre (pattern matching)
+npm test -- --testNamePattern="login"
+
+# Ver solo tests fallidos
+npm test -- --onlyFailures
+
+# Ver output verboso
+npm test -- --verbose
+```
+
+#### 6. Configuración de Jest:
+
+**Archivo:** [auth/jest.config.js](auth/jest.config.js)
+
+**Características:**
+- **Entorno:** Node.js (no browser)
+- **Test pattern:** `**/*.test.js` y `**/*.spec.js`
+- **Cobertura:** Reportes en text, lcov, html, json-summary
+- **Umbrales:** 50% cobertura mínima en branches, functions, lines, statements
+- **Timeout:** 5 segundos por test
+- **Setup:** Variables de entorno desde `tests/setup.js`
+- **Ignorar:** node_modules, logs, coverage
+- **Reportes:** Default + HTML report en `coverage/test-report.html`
+
+#### 7. Variables de entorno para tests:
+
+**Archivo:** [auth/tests/setup.js](auth/tests/setup.js)
+
+```javascript
+process.env.NODE_ENV = 'test';
+process.env.PORT = 3002;
+process.env.JWT_SECRET = 'test-secret-key-for-jwt-AS-TASK-16';
+process.env.JWT_EXPIRES_IN = '1h';
+process.env.DB_NAME = 'innovatech_test'; // BD separada para tests
+```
+
+**Recomendación:** Usar base de datos de prueba (`innovatech_test`) separada de producción (`innovatech_db`) para evitar contaminar datos reales.
+
+#### 8. Validaciones de status codes:
+
+| Código | Significado | Casos de uso en tests |
+|--------|-------------|----------------------|
+| **200** | OK | Login exitoso, listado de roles, operaciones GET |
+| **201** | Created | Registro exitoso |
+| **400** | Bad Request | Validación de campos, datos inválidos |
+| **401** | Unauthorized | Sin token, token inválido, credenciales incorrectas |
+| **403** | Forbidden | Token válido pero sin permisos (rol incorrecto) |
+| **404** | Not Found | Usuario no existe, recurso no encontrado |
+| **500** | Server Error | Errores internos (no testeados explícitamente) |
+
+#### 9. Estructura de aserción típica:
+
+```javascript
+const response = await request(app)
+  .post('/api/auth/login')
+  .send({ email: 'test@innovatech.cl', password: 'Test123!' })
+  .expect('Content-Type', /json/)
+  .expect(200);
+
+// Validar estructura de respuesta
+expect(response.body).toHaveProperty('success', true);
+expect(response.body).toHaveProperty('taskId', 'AS-TASK-05');
+expect(response.body).toHaveProperty('data');
+
+// Validar datos específicos
+expect(response.body.data).toHaveProperty('token');
+expect(typeof response.body.data.token).toBe('string');
+expect(response.body.data.token.length).toBeGreaterThan(0);
+```
+
+#### 10. Mejores prácticas implementadas:
+
+1. **Unique test data:** Cada test usa timestamp para evitar colisiones
+   ```javascript
+   const timestamp = Date.now();
+   const email = `test.${timestamp}@innovatech.cl`;
+   ```
+
+2. **Setup y teardown:** `beforeAll`, `afterAll`, `beforeEach`, `afterEach`
+   ```javascript
+   beforeAll(async () => {
+     // Preparar datos de prueba
+     testToken = await generateTestToken();
+   });
+   ```
+
+3. **Test isolation:** Cada test es independiente (no depende de orden)
+
+4. **Descriptive names:** Tests con nombres claros y específicos
+   ```javascript
+   it('Debería rechazar login con credenciales inválidas (401)', async () => {
+     // ...
+   });
+   ```
+
+5. **Arrange-Act-Assert (AAA):**
+   ```javascript
+   // Arrange: Preparar datos
+   const testUser = { email: 'test@innovatech.cl', password: 'Test123!' };
+   
+   // Act: Ejecutar acción
+   const response = await request(app).post('/api/auth/login').send(testUser);
+   
+   // Assert: Validar resultado
+   expect(response.status).toBe(200);
+   ```
+
+6. **Error cases first:** Tests de casos de error antes de casos exitosos
+
+7. **Mock solo cuando sea necesario:** Supertest no requiere mocks de Express
+
+#### 11. Integración con CI/CD:
+
+**GitHub Actions example:**
+```yaml
+name: Run Tests
+
+on: [push, pull_request]
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+      - uses: actions/setup-node@v3
+        with:
+          node-version: '18'
+      - name: Install dependencies
+        run: cd auth && npm install
+      - name: Run tests
+        run: cd auth && npm run test:ci
+      - name: Upload coverage
+        uses: codecov/codecov-action@v3
+        with:
+          files: ./auth/coverage/lcov.info
+```
+
+#### 12. Reportes de cobertura:
+
+**Tipos de reporte generados:**
+
+1. **Text (consola):**
+   ```
+   ----------------------|---------|----------|---------|---------|
+   File                  | % Stmts | % Branch | % Funcs | % Lines |
+   ----------------------|---------|----------|---------|---------|
+   All files             |   78.45 |    65.32 |   82.14 |   79.12 |
+   ```
+
+2. **HTML (visual):**
+   - Ubicación: `auth/coverage/index.html`
+   - Navegable por archivos
+   - Resalta líneas sin cubrir en rojo
+
+3. **LCOV (CI/CD):**
+   - Ubicación: `auth/coverage/lcov.info`
+   - Formato estándar para herramientas externas (Codecov, Coveralls)
+
+4. **JSON Summary:**
+   - Ubicación: `auth/coverage/coverage-summary.json`
+   - Datos programáticos para badges o reportes custom
+
+#### 13. Troubleshooting:
+
+**Problema: "Cannot find module '../src/app'"**
+- Solución: Asegurar que `src/app.js` exporta `app` con `module.exports = app;`
+
+**Problema: Tests timeout después de 5 segundos**
+- Solución: Aumentar timeout en test específico:
+  ```javascript
+  it('test lento', async () => {
+    // ...
+  }, 10000); // 10 segundos
+  ```
+
+**Problema: Base de datos en uso por tests**
+- Solución: Usar `innovatech_test` separada y configurar en `tests/setup.js`
+
+**Problema: Puerto 3001 ya en uso**
+- Solución: Tests usan puerto 3002 (configurado en setup.js), no conflicta con dev server
+
+**Problema: "Jest did not exit one second after the test run"**
+- Solución: Cerrar conexiones abiertas (DB, servidores) en `afterAll`
+
+**Problema: Tests fallan en CI pero pasan localmente**
+- Solución: Usar `npm run test:ci` que limita workers y desactiva watch mode
+
+#### 14. Comparación con otras herramientas:
+
+| Característica | Jest + Supertest | Mocha + Chai | Vitest |
+|----------------|------------------|--------------|--------|
+| Configuración | Mínima | Media | Mínima |
+| Performance | Rápida (paralelo) | Media | Muy rápida |
+| Cobertura | Incluida | Nyc separado | Incluida |
+| Mocking | Incluido | Sinon separado | Incluido |
+| Popularidad | ⭐⭐⭐⭐⭐ | ⭐⭐⭐⭐ | ⭐⭐⭐ |
+| Node.js | ✅ | ✅ | ✅ |
+| Curva aprendizaje | Baja | Media | Baja |
+
+#### 15. Próximos pasos (opcional):
+
+1. **E2E Tests:** Cypress o Playwright para flujos completos
+2. **Snapshot Testing:** Validar estructuras de respuesta completas
+3. **Performance Testing:** k6 o Artillery para load testing
+4. **Mutation Testing:** Stryker para validar calidad de tests
+5. **Visual Regression:** Percy o Chromatic (si hay UI)
+
+#### 16. Recursos adicionales:
+
+- **Documentación Jest:** https://jestjs.io/docs/getting-started
+- **Documentación Supertest:** https://github.com/ladjs/supertest
+- **Jest Matchers:** https://jestjs.io/docs/expect
+- **Testing Best Practices:** https://github.com/goldbergyoni/javascript-testing-best-practices
+- **Code Coverage:** https://istanbul.js.org/
 
 ---
