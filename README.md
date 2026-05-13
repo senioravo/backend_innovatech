@@ -157,6 +157,17 @@ npm run dev
   - Principios SOLID: logger.js (helper) + auditMiddleware.js (middleware) separados
   - Integrado en todas las rutas protegidas mediante router.use()
   - .gitignore configurado para excluir logs/*.log pero mantener estructura
+- [COMPLETADO] AS-TASK-13: Configurar sistema de logs centralizados con Winston
+  - Migración de logger custom (AS-TASK-12) a Winston (librería profesional)
+  - winston + winston-daily-rotate-file para rotación automática por fecha
+  - Rotación diaria de logs: audit-%DATE%.log y error-%DATE%.log
+  - Múltiples transportes: consola (desarrollo) + archivos rotativos (producción)
+  - Niveles de log: error, warn, info, http, debug
+  - Formato personalizado mantiene compatibilidad con AS-TASK-12
+  - Rotación avanzada: maxSize 20MB, maxFiles 14 días (audit) / 30 días (error)
+  - API pública mantenida: auditSuccess(), auditError(), logCriticalOperation(), logEndpointAccess()
+  - Preparado para integración con ELK Stack, CloudWatch, Datadog
+  - taskId actualizado de AS-TASK-12 a AS-TASK-13 en todos los controladores
 
 ### AS-TASK-04: Detalles del endpoint /register
 
@@ -2861,4 +2872,488 @@ grep -i "SuperSecretPassword123" auth/logs/audit.log
 
 ---
 
+### AS-TASK-13: Configurar sistema de logs centralizados con Winston
+
+**Objetivo:** Migrar sistema de logs de implementación custom (AS-TASK-12) a Winston, una librería profesional de logging para Node.js, mejorando escalabilidad, mantenibilidad y preparación para integración con servicios externos (ELK Stack, CloudWatch, Datadog).
+
+#### 1. Motivación de la migración:
+
+**AS-TASK-12 (Sistema custom con fs):**
+- ✅ Funcional y cumple requisitos básicos
+- ❌ Rotación manual por tamaño (10MB)
+- ❌ Solo 2 niveles: [OK] y [ERROR]
+- ❌ Difícil integración con servicios externos
+- ❌ Sin soporte para múltiples formatos
+- ❌ Requiere mantenimiento custom
+
+**AS-TASK-13 (Winston profesional):**
+- ✅ Librería probada en producción (4M descargas/semana)
+- ✅ Rotación automática por fecha + tamaño
+- ✅ 5 niveles: error, warn, info, http, debug
+- ✅ Integración nativa con ELK, CloudWatch, Datadog
+- ✅ Múltiples formatos: JSON, colorized, custom
+- ✅ Mantenimiento delegado a comunidad Open Source
+
+#### 2. Paquetes instalados:
+
+```bash
+npm install winston winston-daily-rotate-file
+```
+
+**Dependencias agregadas a package.json:**
+```json
+{
+  "dependencies": {
+    "winston": "^3.11.0",
+    "winston-daily-rotate-file": "^4.7.1"
+  }
+}
+```
+
+#### 3. Configuración de Winston:
+
+**Archivo:** `auth/src/utils/logger.js`
+
+**Transportes configurados:**
+
+| Transporte | Tipo | Nivel | Archivo | Rotación | Retención |
+|-----------|------|-------|---------|----------|-----------|
+| Console | winston.transports.Console | info (dev) / error (prod) | N/A | N/A | N/A |
+| Audit | DailyRotateFile | info | audit-%DATE%.log | Diaria + 20MB | 14 días |
+| Error | DailyRotateFile | error | error-%DATE%.log | Diaria + 20MB | 30 días |
+
+**Variables de entorno:**
+```bash
+LOG_LEVEL=info        # Nivel mínimo de log (debug, info, warn, error)
+NODE_ENV=production   # Producción: solo errors en consola
+```
+
+#### 4. Formato de logs (mantiene compatibilidad con AS-TASK-12):
+
+**Log exitoso (nivel info):**
+```
+[OK] - 2024-01-15T10:30:45.123Z - UserID:5 - Operación:LOGIN - Email:juan@innovatech.cl - IP:192.168.1.1 - Login exitoso - Rol: gestor - Expira: 1h - Tiempo:45ms - taskId:AS-TASK-13
+```
+
+**Log de error (nivel error):**
+```
+[ERROR] - 2024-01-15T10:31:10.456Z - UserID:N/A - Operación:LOGIN - Email:maria@innovatech.cl - IP:192.168.1.2 - Error en login - Error: Credenciales inválidas - Tiempo:23ms - taskId:AS-TASK-13
+```
+
+**Log de advertencia (nivel warn):**
+```
+[WARNING] - 2024-01-15T10:32:00.789Z - UserID:3 - Operación:PUT /usuarios/5/rol - Email:pedro@innovatech.cl - IP:192.168.1.3 - Acceso denegado - Status:403 - Tiempo:12ms - taskId:AS-TASK-13
+```
+
+#### 5. API pública (sin cambios para compatibilidad):
+
+**Métodos principales (idénticos a AS-TASK-12):**
+```javascript
+const logger = require('./utils/logger');
+
+// Log de éxito
+logger.auditSuccess({
+  userId: 5,
+  email: 'juan@innovatech.cl',
+  operation: 'LOGIN',
+  detail: 'Login exitoso',
+  ip: '192.168.1.1',
+  responseTime: 45,
+  taskId: 'AS-TASK-13'
+});
+
+// Log de error
+logger.auditError({
+  userId: null,
+  email: 'maria@innovatech.cl',
+  operation: 'LOGIN',
+  detail: 'Error en login',
+  ip: '192.168.1.2',
+  responseTime: 23,
+  taskId: 'AS-TASK-13'
+});
+
+// Log de advertencia
+logger.auditWarning({
+  userId: 3,
+  email: 'pedro@innovatech.cl',
+  operation: 'PUT /usuarios/5/rol',
+  detail: 'Acceso denegado - Status:403',
+  ip: '192.168.1.3',
+  responseTime: 12,
+  taskId: 'AS-TASK-13'
+});
+
+// Log de operación crítica (REGISTER, LOGIN, LOGOUT, ROLE_CHANGE)
+logger.logCriticalOperation('LOGIN', {
+  success: true,
+  userId: 5,
+  email: 'juan@innovatech.cl',
+  ip: '192.168.1.1',
+  detail: 'Login exitoso - Rol: gestor',
+  responseTime: 45,
+  taskId: 'AS-TASK-13'
+});
+
+// Log de acceso a endpoint
+logger.logEndpointAccess(req, 45, 200);
+```
+
+**Métodos adicionales de Winston:**
+```javascript
+// Log de debug (desarrollo)
+logger.debug('Variable x tiene valor 123');
+
+// Log HTTP (requests)
+logger.http('GET /api/auth/roles - 200 OK - 12ms');
+```
+
+#### 6. Arquitectura de Winston Logger:
+
+```
+┌─────────────────────────────────────────────────────────┐
+│                    Winston Logger                       │
+│                                                         │
+│  ┌──────────────────────────────────────────────────┐  │
+│  │          Formato Personalizado                   │  │
+│  │  [OK]/[ERROR] - Timestamp - UserID - Operación  │  │
+│  └──────────────────────────────────────────────────┘  │
+│                          │                              │
+│         ┌────────────────┼────────────────┐            │
+│         │                │                │            │
+│         ▼                ▼                ▼            │
+│  ┌──────────┐    ┌──────────┐    ┌──────────┐        │
+│  │ Console  │    │  Audit   │    │  Error   │        │
+│  │Transport │    │RotateFile│    │RotateFile│        │
+│  │          │    │          │    │          │        │
+│  │ Colorized│    │ audit-   │    │ error-   │        │
+│  │ Dev Mode │    │ %DATE%   │    │ %DATE%   │        │
+│  └──────────┘    │.log      │    │.log      │        │
+│                  │          │    │          │        │
+│                  │ 14 días  │    │ 30 días  │        │
+│                  │ 20MB max │    │ 20MB max │        │
+│                  └──────────┘    └──────────┘        │
+└─────────────────────────────────────────────────────────┘
+```
+
+#### 7. Rotación automática de archivos:
+
+**Patrón de nombres:**
+```
+logs/
+├── audit-2024-01-15.log    ← Hoy
+├── audit-2024-01-14.log    ← Ayer
+├── audit-2024-01-13.log
+├── ...
+├── audit-2024-01-01.log    ← Se elimina automáticamente después de 14 días
+├── error-2024-01-15.log
+├── error-2024-01-14.log
+└── ...
+```
+
+**Configuración de rotación:**
+```javascript
+new DailyRotateFile({
+  filename: 'logs/audit-%DATE%.log',
+  datePattern: 'YYYY-MM-DD',
+  maxSize: '20m',      // Rota cuando alcanza 20MB
+  maxFiles: '14d',     // Mantiene solo últimos 14 días
+  level: 'info'
+})
+```
+
+**Ventajas:**
+- No requiere scripts externos de rotación
+- Limpieza automática de logs antiguos
+- Nombres predecibles para búsqueda
+- Un archivo por día (fácil auditoría)
+
+#### 8. Niveles de log de Winston:
+
+| Nivel | Valor | Uso | Ejemplo |
+|-------|-------|-----|---------|
+| error | 0 | Errores críticos del servidor | Error de conexión a BD |
+| warn | 1 | Advertencias, accesos denegados | 403 Forbidden |
+| info | 2 | Operaciones normales exitosas | Login exitoso |
+| http | 3 | Requests HTTP | GET /api/auth/roles |
+| debug | 4 | Debugging en desarrollo | Variable x = 123 |
+
+**Ejemplo de uso por nivel:**
+```javascript
+logger.winstonLogger.error('Error crítico: BD desconectada');
+logger.winstonLogger.warn('Acceso denegado: rol insuficiente');
+logger.winstonLogger.info('Usuario 5 creó proyecto 123');
+logger.winstonLogger.http('GET /api/auth/roles - 200 OK - 12ms');
+logger.winstonLogger.debug('Token JWT generado: eyJhbGci...');
+```
+
+#### 9. Integración con servicios externos:
+
+**ELK Stack (Elasticsearch + Logstash + Kibana):**
+```bash
+npm install winston-elasticsearch
+```
+
+```javascript
+const { ElasticsearchTransport } = require('winston-elasticsearch');
+
+this.winstonLogger.add(new ElasticsearchTransport({
+  level: 'info',
+  clientOpts: {
+    node: 'http://localhost:9200'
+  },
+  index: 'innovatech-auth-logs'
+}));
+```
+
+**AWS CloudWatch:**
+```bash
+npm install winston-cloudwatch
+```
+
+```javascript
+const WinstonCloudWatch = require('winston-cloudwatch');
+
+this.winstonLogger.add(new WinstonCloudWatch({
+  logGroupName: 'innovatech-auth',
+  logStreamName: 'production',
+  awsRegion: 'us-east-1'
+}));
+```
+
+**Datadog:**
+```bash
+npm install @datadog/winston-datadog
+```
+
+```javascript
+const DatadogWinston = require('@datadog/winston-datadog');
+
+this.winstonLogger.add(new DatadogWinston({
+  apiKey: process.env.DATADOG_API_KEY,
+  hostname: 'auth-service',
+  service: 'innovatech-auth'
+}));
+```
+
+#### 10. Migración de AS-TASK-12 a AS-TASK-13:
+
+**Cambios en logger.js:**
+
+| Aspecto | AS-TASK-12 (custom) | AS-TASK-13 (Winston) |
+|---------|---------------------|----------------------|
+| Import | `const fs = require('fs')` | `const winston = require('winston')` |
+| Instancia | `new Logger()` | `winston.createLogger()` |
+| Escritura | `fs.appendFileSync()` | `this.winstonLogger.info()` |
+| Rotación | Manual (10MB) | Automática (diaria + 20MB) |
+| Formato | Custom string | winston.format.printf() |
+| Niveles | [OK]/[ERROR] | error/warn/info/http/debug |
+| Consola | `console.log()` | winston.transports.Console |
+| Métodos públicos | ✅ Mantenidos sin cambios | ✅ Mantenidos sin cambios |
+
+**Cambios en controllers:**
+- taskId: 'AS-TASK-12' → taskId: 'AS-TASK-13'
+- Comentarios: "AS-TASK-12: Log" → "AS-TASK-13: Log con Winston"
+
+**Sin cambios:**
+- auditMiddleware.js (usa abstracción de logger)
+- auth.routes.js (usa abstracción de logger)
+- Formato de logs (mantiene compatibilidad)
+- API pública de logger (mantiene compatibilidad)
+
+#### 11. Comandos útiles:
+
+**Ver logs de hoy:**
+```bash
+# Linux/Mac
+tail -f logs/audit-$(date +%Y-%m-%d).log
+
+# Windows PowerShell
+$today = Get-Date -Format "yyyy-MM-dd"
+Get-Content "logs\audit-$today.log" -Wait -Tail 50
+```
+
+**Ver logs de una fecha específica:**
+```bash
+cat logs/audit-2024-01-15.log
+```
+
+**Buscar logs de un usuario:**
+```bash
+# Buscar en todos los archivos de audit
+grep "UserID:5" logs/audit-*.log
+
+# Windows PowerShell
+Select-String -Path "logs\audit-*.log" -Pattern "UserID:5"
+```
+
+**Contar errores por día:**
+```bash
+# Linux/Mac
+for file in logs/error-*.log; do
+  echo "$file: $(wc -l < $file) errores"
+done
+
+# Windows PowerShell
+Get-ChildItem logs\error-*.log | ForEach-Object {
+  $lines = (Get-Content $_.FullName | Measure-Object -Line).Lines
+  Write-Host "$($_.Name): $lines errores"
+}
+```
+
+**Limpiar logs antiguos manualmente:**
+```bash
+# Eliminar logs de hace más de 30 días
+find logs/ -name "*.log" -mtime +30 -delete
+```
+
+#### 12. Ventajas de Winston sobre sistema custom:
+
+1. **Mantenibilidad:**
+   - Código reducido de ~286 líneas a ~150 líneas
+   - Sin código de rotación manual
+   - Sin manejo de fs errors
+
+2. **Escalabilidad:**
+   - Múltiples transportes en paralelo
+   - Fácil agregar nuevos destinos (BD, servicios externos)
+   - Sin límites de tamaño (delegado a Winston)
+
+3. **Observabilidad:**
+   - 5 niveles de log vs 2
+   - Formato colorizado en consola
+   - Integración con dashboards profesionales
+
+4. **Producción:**
+   - Librería probada en millones de aplicaciones
+   - Actualizaciones de seguridad automáticas (npm update)
+   - Documentación extensa y comunidad activa
+
+5. **DevOps:**
+   - Rotación automática por fecha (estándar industria)
+   - Nombres predecibles para scripts de backup
+   - Limpieza automática de logs antiguos
+
+#### 13. Estructura de archivos final:
+
+```
+auth/
+├── src/
+│   ├── controllers/
+│   │   └── auth.controller.js      (taskId: AS-TASK-13)
+│   ├── middleware/
+│   │   └── auditMiddleware.js      (sin cambios, usa abstracción)
+│   ├── utils/
+│   │   └── logger.js               (AS-TASK-13: Winston implementation)
+│   └── routes/
+│       └── auth.routes.js          (sin cambios, usa abstracción)
+├── logs/
+│   ├── .gitkeep
+│   ├── audit-2024-01-15.log        (Winston DailyRotateFile)
+│   ├── audit-2024-01-14.log
+│   ├── error-2024-01-15.log        (Winston DailyRotateFile)
+│   └── error-2024-01-14.log
+├── package.json                     (winston + winston-daily-rotate-file)
+└── .gitignore                       (sin cambios)
+```
+
+#### 14. Testing:
+
+**Test 1: Verificar que Winston crea logs con rotación diaria**
+```bash
+# Hacer una operación
+curl -X POST http://localhost:3000/api/auth/login \
+  -H "Content-Type: application/json" \
+  -d '{"email": "juan@innovatech.cl", "password": "password123"}'
+
+# Verificar archivo con fecha de hoy
+ls -la logs/audit-$(date +%Y-%m-%d).log
+
+# Leer contenido
+cat logs/audit-$(date +%Y-%m-%d).log | grep "LOGIN"
+```
+
+**Test 2: Verificar niveles de log**
+```bash
+# Buscar logs de nivel error
+grep "\[ERROR\]" logs/error-*.log
+
+# Buscar logs de nivel warning
+grep "\[WARNING\]" logs/audit-*.log
+```
+
+**Test 3: Verificar que formato mantiene compatibilidad con AS-TASK-12**
+```bash
+# El formato debe seguir siendo:
+# [OK] - Timestamp - UserID - Operación - Email - IP - Detalle - taskId
+
+# Verificar estructura
+cat logs/audit-$(date +%Y-%m-%d).log | head -1
+```
+
+**Test 4: Verificar rotación automática por tamaño**
+```bash
+# Simular muchos logs (script de carga)
+for i in {1..10000}; do
+  curl -X GET http://localhost:3000/api/auth/roles
+done
+
+# Verificar si se crearon múltiples archivos del mismo día
+ls -lh logs/audit-$(date +%Y-%m-%d)*.log
+# Ejemplo: audit-2024-01-15.log, audit-2024-01-15.1.log, audit-2024-01-15.2.log
+```
+
+#### 15. Variables de configuración:
+
+**Archivo .env (opcional):**
+```bash
+# Nivel mínimo de log
+LOG_LEVEL=info              # debug, info, warn, error
+
+# Entorno
+NODE_ENV=production         # production, development
+
+# Configuración de rotación (opcional, ya configurado en código)
+LOG_MAX_SIZE=20m            # Tamaño máximo antes de rotar
+LOG_MAX_FILES=14d           # Retención de logs audit
+LOG_ERROR_MAX_FILES=30d     # Retención de logs error
+```
+
+#### 16. Mejoras futuras:
+
+1. **Log de performance:**
+```javascript
+logger.logPerformance({
+  endpoint: '/api/auth/login',
+  method: 'POST',
+  responseTime: 145,
+  statusCode: 200,
+  userId: 5
+});
+```
+
+2. **Alertas automáticas:**
+```javascript
+// Enviar alerta a Slack si hay más de 10 errores por minuto
+if (errorCountLastMinute > 10) {
+  slackClient.send('🚨 Alerta: Muchos errores en Auth Service');
+}
+```
+
+3. **Dashboard en tiempo real:**
+- Gráficos de operaciones/minuto
+- Mapa de IPs de acceso
+- Top usuarios más activos
+
+4. **Métricas agregadas:**
+```javascript
+logger.logMetrics({
+  totalLogins: 1523,
+  failedLogins: 45,
+  avgResponseTime: 67,
+  period: 'last_hour'
+});
+```
+
+---
 

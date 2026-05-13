@@ -13,7 +13,7 @@ const tokenBlacklistService = require('../services/token.blacklist.service');
 // AS-TASK-08: Importar configuración de roles
 const { getAllRolesInfo, getRoleDescription } = require('../config/roles');
 
-// AS-TASK-12: Importar logger para auditoría
+// AS-TASK-13: Importar logger con Winston para auditoría
 const logger = require('../utils/logger');
 
 /**
@@ -76,7 +76,7 @@ const register = async (req, res) => {
     // Calcular tiempo de respuesta
     const responseTime = Date.now() - startTime;
 
-    // AS-TASK-12: Log de auditoría con logger
+    // AS-TASK-13: Log de auditoría con Winston
     logger.logCriticalOperation('REGISTER', {
       success: true,
       userId: newUser.id,
@@ -84,14 +84,14 @@ const register = async (req, res) => {
       ip: req.ip,
       detail: `Usuario registrado - Rol: ${newUser.rol}`,
       responseTime,
-      taskId: 'AS-TASK-12'
+      taskId: 'AS-TASK-13'
     });
 
     // 5. Responder con éxito (201 Created)
     res.status(201).json({
       success: true,
       message: 'Usuario registrado exitosamente',
-      taskId: 'AS-TASK-12',
+      taskId: 'AS-TASK-13',
       data: {
         id: newUser.id,
         nombre: newUser.nombre,
@@ -104,7 +104,7 @@ const register = async (req, res) => {
   } catch (error) {
     const responseTime = Date.now() - startTime;
     
-    // AS-TASK-12: Log de auditoría con logger
+    // AS-TASK-13: Log de auditoría con Winston
     logger.logCriticalOperation('REGISTER', {
       success: false,
       userId: null,
@@ -113,7 +113,7 @@ const register = async (req, res) => {
       detail: 'Error en registro',
       error: error.message,
       responseTime,
-      taskId: 'AS-TASK-12'
+      taskId: 'AS-TASK-13'
     });
     
     // Manejo de errores de BD específicos
@@ -121,7 +121,7 @@ const register = async (req, res) => {
       return res.status(400).json({
         success: false,
         message: 'El email ya está registrado',
-        taskId: 'AS-TASK-12',
+        taskId: 'AS-TASK-13',
         data: null
       });
     }
@@ -130,7 +130,7 @@ const register = async (req, res) => {
     res.status(500).json({
       success: false,
       message: 'Error interno del servidor al registrar usuario',
-      taskId: 'AS-TASK-12',
+      taskId: 'AS-TASK-13',
       data: { error: error.message }
     });
   }
@@ -212,7 +212,7 @@ const login = async (req, res) => {
     // Obtener configuración JWT para logs
     const jwtConfig = jwtHelper.getConfig();
 
-    // AS-TASK-12: Log de auditoría con logger
+    // AS-TASK-13: Log de auditoría con Winston
     logger.logCriticalOperation('LOGIN', {
       success: true,
       userId: user.id,
@@ -220,14 +220,14 @@ const login = async (req, res) => {
       ip: req.ip,
       detail: `Login exitoso - Rol: ${user.rol} - Expira: ${jwtConfig.expiresIn}`,
       responseTime,
-      taskId: 'AS-TASK-12'
+      taskId: 'AS-TASK-13'
     });
 
     // 6. Responder con token y datos del usuario (sin password)
     res.status(200).json({
       success: true,
       message: 'Login exitoso',
-      taskId: 'AS-TASK-12',
+      taskId: 'AS-TASK-13',
       data: {
         token,
         usuario: {
@@ -243,7 +243,7 @@ const login = async (req, res) => {
   } catch (error) {
     const responseTime = Date.now() - startTime;
     
-    // AS-TASK-12: Log de auditoría con logger
+    // AS-TASK-13: Log de auditoría con Winston
     logger.logCriticalOperation('LOGIN', {
       success: false,
       userId: null,
@@ -252,14 +252,14 @@ const login = async (req, res) => {
       detail: 'Error en login',
       error: error.message,
       responseTime,
-      taskId: 'AS-TASK-12'
+      taskId: 'AS-TASK-13'
     });
     
     // Error genérico del servidor
     res.status(500).json({
       success: false,
       message: 'Error interno del servidor al iniciar sesión',
-      taskId: 'AS-TASK-12',
+      taskId: 'AS-TASK-13',
       data: { error: error.message }
     });
   }
@@ -300,7 +300,7 @@ const logout = async (req, res) => {
     // Calcular tiempo de respuesta
     const responseTime = Date.now() - startTime;
 
-    // AS-TASK-12: Log de auditoría con logger
+    // AS-TASK-13: Log de auditoría con Winston
     logger.logCriticalOperation('LOGOUT', {
       success: true,
       userId: user.id,
@@ -308,14 +308,14 @@ const logout = async (req, res) => {
       ip: req.ip,
       detail: 'Logout exitoso - Token invalidado',
       responseTime,
-      taskId: 'AS-TASK-12'
+      taskId: 'AS-TASK-13'
     });
 
     // Responder con éxito
     res.status(200).json({
       success: true,
       message: 'Sesión cerrada exitosamente. Token invalidado.',
-      taskId: 'AS-TASK-12',
+      taskId: 'AS-TASK-13',
       data: {
         userId: user.id,
         email: user.email,
@@ -326,7 +326,7 @@ const logout = async (req, res) => {
   } catch (error) {
     const responseTime = Date.now() - startTime;
     
-    // AS-TASK-12: Log de auditoría con logger
+    // AS-TASK-13: Log de auditoría con Winston
     logger.logCriticalOperation('LOGOUT', {
       success: false,
       userId: req.user?.id || null,
@@ -335,7 +335,7 @@ const logout = async (req, res) => {
       detail: 'Error en logout',
       error: error.message,
       responseTime,
-      taskId: 'AS-TASK-12'
+      taskId: 'AS-TASK-13'
     });
     
     // Error genérico del servidor
@@ -497,7 +497,7 @@ const updateUserRole = async (req, res) => {
     // Calcular tiempo de respuesta
     const responseTime = Date.now() - startTime;
 
-    // AS-TASK-12: Log de auditoría con logger
+    // AS-TASK-13: Log de auditoría con Winston
     logger.logCriticalOperation('ROLE_CHANGE', {
       success: true,
       userId: userId,
@@ -505,14 +505,14 @@ const updateUserRole = async (req, res) => {
       ip: req.ip,
       detail: `Rol actualizado - Anterior: ${oldRole} - Nuevo: ${updatedUser.rol}`,
       responseTime,
-      taskId: 'AS-TASK-12'
+      taskId: 'AS-TASK-13'
     });
 
     // 5. Responder con éxito
     res.status(200).json({
       success: true,
       message: `Rol actualizado exitosamente de "${oldRole}" a "${rol}"`,
-      taskId: 'AS-TASK-12',
+      taskId: 'AS-TASK-13',
       data: {
         id: updatedUser.id,
         nombre: updatedUser.nombre,
@@ -526,7 +526,7 @@ const updateUserRole = async (req, res) => {
   } catch (error) {
     const responseTime = Date.now() - startTime;
     
-    // AS-TASK-12: Log de auditoría con logger
+    // AS-TASK-13: Log de auditoría con Winston
     logger.logCriticalOperation('ROLE_CHANGE', {
       success: false,
       userId: req.params.id || null,
@@ -535,14 +535,14 @@ const updateUserRole = async (req, res) => {
       detail: 'Error al actualizar rol',
       error: error.message,
       responseTime,
-      taskId: 'AS-TASK-12'
+      taskId: 'AS-TASK-13'
     });
     
     res.status(500).json({
       success: false,
       message: 'Error interno del servidor al actualizar rol',
       error: error.message,
-      taskId: 'AS-TASK-12'
+      taskId: 'AS-TASK-13'
     });
   }
 };

@@ -1,87 +1,90 @@
-// AS-TASK-12: Logger Helper para auditoría de accesos y operaciones críticas
-// Responsabilidad: Gestión centralizada de logs con escritura en archivos
+// AS-TASK-13: Logger Helper con Winston para logs centralizados
+// Responsabilidad: Gestión centralizada de logs con Winston
 // Principio SOLID: Single Responsibility - Solo maneja logging y persistencia
+// Migración de AS-TASK-12 (sistema custom) a Winston (librería profesional)
 
-const fs = require('fs');
+const winston = require('winston');
+const DailyRotateFile = require('winston-daily-rotate-file');
 const path = require('path');
 
 /**
- * Clase Logger - Sistema de logging centralizado
+ * Clase Logger - Sistema de logging centralizado con Winston
  * Características:
+ * - Librería Winston para logging profesional
  * - Formato estandarizado: [OK]/[ERROR] - Fecha - UsuarioId - Operación - Detalle
- * - Escritura en archivo local (logs/audit.log)
- * - Rotación automática de archivos (max 10MB)
+ * - Rotación automática por fecha (daily) y tamaño (20MB)
+ * - Múltiples transportes: consola (desarrollo) + archivos rotativos (producción)
+ * - Niveles de log: error, warn, info, http, debug
  * - No registra contraseñas ni tokens completos
  * - Incluye taskId en cada registro
+ * - Integración fácil con ELK Stack, CloudWatch, etc.
  */
 class Logger {
   constructor() {
     // Directorio de logs
     this.logsDir = path.join(__dirname, '../../logs');
-    this.auditLogFile = path.join(this.logsDir, 'audit.log');
-    this.errorLogFile = path.join(this.logsDir, 'error.log');
-    this.maxFileSize = 10 * 1024 * 1024; // 10MB
     
-    // Crear directorio de logs si no existe
-    this.ensureLogDirectory();
-  }
+    // Formato personalizado que coincida con formato de AS-TASK-12
+    const customFormat = winston.format.printf(({ level, message, timestamp, ...metadata }) => {
+      return message;
+    });
 
-  /**
-   * Crear directorio de logs si no existe
-   */
-  ensureLogDirectory() {
-    try {
-      if (!fs.existsSync(this.logsDir)) {
-        fs.mkdirSync(this.logsDir, { recursive: true });
-        console.log('[LOGGER] Directorio de logs creado:', this.logsDir);
-      }
-    } catch (error) {
-      console.error('[LOGGER] Error al crear directorio de logs:', error.message);
-    }
-  }
+    // Transporte: Archivo rotativo para auditoría general
+    const auditTransport = new DailyRotateFile({
+      filename: path.join(this.logsDir, 'audit-%DATE%.log'),
+      datePattern: 'YYYY-MM-DD',
+      maxSize: '20m',
+      maxFiles: '14d',
+      level: 'info',
+      format: winston.format.combine(
+        winston.format.timestamp(),
+        customFormat
+      )
+    });
 
-  /**
-   * Verificar tamaño de archivo y rotar si es necesario
-   * @param {string} filePath - Ruta del archivo a verificar
-   */
-  rotateLogFile(filePath) {
-    try {
-      if (fs.existsSync(filePath)) {
-        const stats = fs.statSync(filePath);
-        
-        if (stats.size > this.maxFileSize) {
-          const timestamp = new Date().toISOString().replace(/[:.]/g, '-');
-          const rotatedFile = filePath.replace('.log', `-${timestamp}.log`);
-          
-          fs.renameSync(filePath, rotatedFile);
-          console.log(`[LOGGER] Archivo rotado: ${rotatedFile}`);
-        }
-      }
-    } catch (error) {
-      console.error('[LOGGER] Error al rotar archivo:', error.message);
-    }
-  }
+    // Transporte: Archivo rotativo solo para errores
+    const errorTransport = new DailyRotateFile({
+      filename: path.join(this.logsDir, 'error-%DATE%.log'),
+      datePattern: 'YYYY-MM-DD',
+      maxSize: '20m',
+      maxFiles: '30d',
+      level: 'error',
+      format: winston.format.combine(
+        winston.format.timestamp(),
+        customFormat
+      )
+    });
 
-  /**
-   * Escribir log en archivo
-   * @param {string} filePath - Ruta del archivo
-   * @param {string} message - Mensaje a escribir
-   */
-  writeToFile(filePath, message) {
-    try {
-      // Rotar archivo si es necesario
-      this.rotateLogFile(filePath);
-      
-      // Agregar nueva línea al archivo
-      fs.appendFileSync(filePath, message + '\n', 'utf8');
-    } catch (error) {
-      console.error('[LOGGER] Error al escribir en archivo:', error.message);
-    }
+    // Transporte: Consola para desarrollo (con colores)
+    const consoleTransport = new winston.transports.Console({
+      level: process.env.NODE_ENV === 'production' ? 'error' : 'info',
+      format: winston.format.combine(
+        winston.format.colorize(),
+        winston.format.timestamp({ format: 'YYYY-MM-DD HH:mm:ss' }),
+        winston.format.printf(({ level, message, timestamp }) => {
+          return `[${timestamp}] ${level}: ${message}`;
+        })
+      )
+    });
+
+    // Crear instancia de Winston
+    this.winstonLogger = winston.createLogger({
+      level: process.env.LOG_LEVEL || 'info',
+      transports: [
+        auditTransport,
+        errorTransport,
+        consoleTransport
+      ],
+      exitOnError: false
+    });
+
+    // Log de inicialización
+    this.winstonLogger.info(`[LOGGER] Winston inicializado - Directorio: ${this.logsDir}`);
   }
 
   /**
    * Formatear mensaje de log estandarizado
-   * @param {string} status - [OK] o [ERROR]
+   * @param {string} status - [OK], [ERROR], [WARNING]
    * @param {Object} options - Opciones del log
    * @returns {string} - Mensaje formateado
    */
@@ -92,7 +95,7 @@ class Logger {
       detail = '',
       email = 'N/A',
       ip = 'N/A',
-      taskId = 'AS-TASK-12',
+      taskId = 'AS-TASK-13',
       responseTime = null
     } = options;
 
@@ -124,12 +127,7 @@ class Logger {
    */
   auditSuccess(options = {}) {
     const message = this.formatLogMessage('[OK]', options);
-    
-    // Escribir en archivo de auditoría
-    this.writeToFile(this.auditLogFile, message);
-    
-    // También mostrar en consola
-    console.log(`[AUDIT] ${message}`);
+    this.winstonLogger.info(message);
   }
 
   /**
@@ -138,13 +136,7 @@ class Logger {
    */
   auditError(options = {}) {
     const message = this.formatLogMessage('[ERROR]', options);
-    
-    // Escribir en archivo de auditoría y errores
-    this.writeToFile(this.auditLogFile, message);
-    this.writeToFile(this.errorLogFile, message);
-    
-    // También mostrar en consola
-    console.error(`[AUDIT] ${message}`);
+    this.winstonLogger.error(message);
   }
 
   /**
@@ -153,12 +145,7 @@ class Logger {
    */
   auditWarning(options = {}) {
     const message = this.formatLogMessage('[WARNING]', options);
-    
-    // Escribir en archivo de auditoría
-    this.writeToFile(this.auditLogFile, message);
-    
-    // También mostrar en consola
-    console.warn(`[AUDIT] ${message}`);
+    this.winstonLogger.warn(message);
   }
 
   /**
@@ -175,7 +162,7 @@ class Logger {
       detail = '',
       error = null,
       responseTime = null,
-      taskId = 'AS-TASK-12'
+      taskId = 'AS-TASK-13'
     } = data;
 
     const options = {
@@ -213,7 +200,7 @@ class Logger {
       detail: `Status:${statusCode}`,
       ip: req.ip || req.connection?.remoteAddress || 'N/A',
       responseTime,
-      taskId: 'AS-TASK-12'
+      taskId: 'AS-TASK-13'
     };
 
     if (statusCode < 400) {
@@ -224,31 +211,39 @@ class Logger {
   }
 
   /**
-   * Obtener estadísticas de logs
+   * Obtener estadísticas de logs (delegado a Winston)
    * @returns {Object} - Estadísticas
    */
   getStats() {
     try {
       const stats = {
-        auditLogSize: 0,
-        errorLogSize: 0,
-        auditLogExists: fs.existsSync(this.auditLogFile),
-        errorLogExists: fs.existsSync(this.errorLogFile)
+        transports: this.winstonLogger.transports.length,
+        level: this.winstonLogger.level,
+        logsDir: this.logsDir,
+        info: 'Logs manejados por Winston con rotación automática'
       };
-
-      if (stats.auditLogExists) {
-        stats.auditLogSize = fs.statSync(this.auditLogFile).size;
-      }
-
-      if (stats.errorLogExists) {
-        stats.errorLogSize = fs.statSync(this.errorLogFile).size;
-      }
 
       return stats;
     } catch (error) {
-      console.error('[LOGGER] Error al obtener estadísticas:', error.message);
+      this.winstonLogger.error(`[LOGGER] Error al obtener estadísticas: ${error.message}`);
       return null;
     }
+  }
+
+  /**
+   * Método adicional: Log de nivel debug para desarrollo
+   * @param {string} message - Mensaje de debug
+   */
+  debug(message) {
+    this.winstonLogger.debug(message);
+  }
+
+  /**
+   * Método adicional: Log de nivel http para requests
+   * @param {string} message - Mensaje HTTP
+   */
+  http(message) {
+    this.winstonLogger.http(message);
   }
 }
 
