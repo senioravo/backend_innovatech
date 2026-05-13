@@ -1,4 +1,4 @@
-// AS-TASK-09: Middleware de autorización por rol
+﻿// AS-TASK-09: Middleware de autorización por rol
 // Responsabilidad: Verificar que el usuario tenga el rol adecuado para acceder a un endpoint
 // Principio SOLID: Single Responsibility - Solo valida autorización por rol
 
@@ -97,7 +97,7 @@ const checkRole = (moduloRequerido, accionRequerida) => {
         const responseTime = Date.now() - startTime;
         
         // Log de auditoría: Acceso bloqueado por falta de permisos
-        console.warn(`[AUTHORIZATION-AUDIT] ✗ Acceso BLOQUEADO - UserID: ${userId} - Email: ${userEmail} - Rol: ${userRole} - Módulo: ${moduloRequerido} - Acción: ${accionRequerida} - Endpoint: ${req.method} ${req.path} - IP: ${req.ip} - Tiempo: ${responseTime}ms - Timestamp: ${new Date().toISOString()}`);
+        console.warn(`[AUTHORIZATION-AUDIT] [ERROR] Acceso BLOQUEADO - UserID: ${userId} - Email: ${userEmail} - Rol: ${userRole} - Módulo: ${moduloRequerido} - Acción: ${accionRequerida} - Endpoint: ${req.method} ${req.path} - IP: ${req.ip} - Tiempo: ${responseTime}ms - Timestamp: ${new Date().toISOString()}`);
         
         return res.status(403).json({
           success: false,
@@ -123,11 +123,11 @@ const checkRole = (moduloRequerido, accionRequerida) => {
       const responseTime = Date.now() - startTime;
       
       // Log de auditoría: Acceso autorizado
-      console.log(`[AUTHORIZATION-AUDIT] ✓ Acceso AUTORIZADO - UserID: ${userId} - Email: ${userEmail} - Rol: ${userRole} - Módulo: ${moduloRequerido} - Acción: ${accionRequerida} - Endpoint: ${req.method} ${req.path} - Tiempo: ${responseTime}ms - Timestamp: ${new Date().toISOString()}`);
+      console.log(`[AUTHORIZATION-AUDIT] [OK] Acceso AUTORIZADO - UserID: ${userId} - Email: ${userEmail} - Rol: ${userRole} - Módulo: ${moduloRequerido} - Acción: ${accionRequerida} - Endpoint: ${req.method} ${req.path} - Tiempo: ${responseTime}ms - Timestamp: ${new Date().toISOString()}`);
 
       next();
     } catch (error) {
-      console.error(`[AUTHORIZATION-AUDIT] ✗ Error en middleware de autorización - Error: ${error.message} - Endpoint: ${req.method} ${req.path} - IP: ${req.ip} - Timestamp: ${new Date().toISOString()}`);
+      console.error(`[AUTHORIZATION-AUDIT] [ERROR] Error en middleware de autorización - Error: ${error.message} - Endpoint: ${req.method} ${req.path} - IP: ${req.ip} - Timestamp: ${new Date().toISOString()}`);
       
       return res.status(500).json({
         success: false,
@@ -228,3 +228,5 @@ module.exports = {
   checkAuthentication,
   getRequiredRolesForAction
 };
+
+

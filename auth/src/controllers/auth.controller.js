@@ -1,4 +1,4 @@
-// AS-TASK-02: Controlador de autenticación y autorización
+﻿// AS-TASK-02: Controlador de autenticación y autorización
 // Endpoints para integración con API Gateway
 
 // AS-TASK-04: Importar servicio de usuario
@@ -74,7 +74,7 @@ const register = async (req, res) => {
     const responseTime = Date.now() - startTime;
 
     // Log de auditoría: Registro exitoso
-    console.log(`[AUTH-AUDIT] ✓ Usuario registrado exitosamente - ID: ${newUser.id} - Email: ${newUser.email} - Rol: ${newUser.rol} - Tiempo: ${responseTime}ms - Timestamp: ${new Date().toISOString()}`);
+    console.log(`[AUTH-AUDIT] [OK] Usuario registrado exitosamente - ID: ${newUser.id} - Email: ${newUser.email} - Rol: ${newUser.rol} - Tiempo: ${responseTime}ms - Timestamp: ${new Date().toISOString()}`);
 
     // 5. Responder con éxito (201 Created)
     res.status(201).json({
@@ -92,7 +92,7 @@ const register = async (req, res) => {
 
   } catch (error) {
     // Log de auditoría: Error del servidor
-    console.error(`[AUTH-AUDIT] ✗ Error en registro - Email: ${req.body.email || 'N/A'} - Error: ${error.message} - Timestamp: ${new Date().toISOString()}`);
+    console.error(`[AUTH-AUDIT] [ERROR] Error en registro - Email: ${req.body.email || 'N/A'} - Error: ${error.message} - Timestamp: ${new Date().toISOString()}`);
     
     // Manejo de errores de BD específicos
     if (error.code === '23505') { // PostgreSQL unique constraint violation
@@ -191,7 +191,7 @@ const login = async (req, res) => {
     const jwtConfig = jwtHelper.getConfig();
 
     // Log de auditoría: Login exitoso
-    console.log(`[AUTH-AUDIT] ✓ Login exitoso - UserID: ${user.id} - Email: ${user.email} - Rol: ${user.rol} - Expira: ${jwtConfig.expiresIn} - Tiempo: ${responseTime}ms - Timestamp: ${new Date().toISOString()}`);
+    console.log(`[AUTH-AUDIT] [OK] Login exitoso - UserID: ${user.id} - Email: ${user.email} - Rol: ${user.rol} - Expira: ${jwtConfig.expiresIn} - Tiempo: ${responseTime}ms - Timestamp: ${new Date().toISOString()}`);
 
     // 6. Responder con token y datos del usuario (sin password)
     res.status(200).json({
@@ -212,7 +212,7 @@ const login = async (req, res) => {
 
   } catch (error) {
     // Log de auditoría: Error del servidor
-    console.error(`[AUTH-AUDIT] ✗ Error en login - Email: ${req.body.email || 'N/A'} - Error: ${error.message} - Timestamp: ${new Date().toISOString()}`);
+    console.error(`[AUTH-AUDIT] [ERROR] Error en login - Email: ${req.body.email || 'N/A'} - Error: ${error.message} - Timestamp: ${new Date().toISOString()}`);
     
     // Error genérico del servidor
     res.status(500).json({
@@ -247,7 +247,7 @@ const logout = async (req, res) => {
     });
 
     if (!blacklisted) {
-      console.error(`[AUTH-AUDIT] ✗ Error al invalidar token - UserID: ${user.id} - Email: ${user.email}`);
+      console.error(`[AUTH-AUDIT] [ERROR] Error al invalidar token - UserID: ${user.id} - Email: ${user.email}`);
       return res.status(500).json({
         success: false,
         message: 'Error al cerrar sesión',
@@ -260,7 +260,7 @@ const logout = async (req, res) => {
     const responseTime = Date.now() - startTime;
 
     // Log de auditoría: Logout exitoso
-    console.log(`[AUTH-AUDIT] ✓ Logout exitoso - UserID: ${user.id} - Email: ${user.email} - Token invalidado - Tiempo: ${responseTime}ms - Timestamp: ${new Date().toISOString()}`);
+    console.log(`[AUTH-AUDIT] [OK] Logout exitoso - UserID: ${user.id} - Email: ${user.email} - Token invalidado - Tiempo: ${responseTime}ms - Timestamp: ${new Date().toISOString()}`);
 
     // Responder con éxito
     res.status(200).json({
@@ -276,7 +276,7 @@ const logout = async (req, res) => {
 
   } catch (error) {
     // Log de auditoría: Error del servidor
-    console.error(`[AUTH-AUDIT] ✗ Error en logout - UserID: ${req.user?.id || 'N/A'} - Email: ${req.user?.email || 'N/A'} - Error: ${error.message} - Timestamp: ${new Date().toISOString()}`);
+    console.error(`[AUTH-AUDIT] [ERROR] Error en logout - UserID: ${req.user?.id || 'N/A'} - Email: ${req.user?.email || 'N/A'} - Error: ${error.message} - Timestamp: ${new Date().toISOString()}`);
     
     // Error genérico del servidor
     res.status(500).json({
@@ -341,7 +341,7 @@ const getRolesSimple = async (req, res) => {
     const responseTime = Date.now() - startTime;
     
     // Log de auditoría: Consulta exitosa
-    console.log(`[AUTH-AUDIT] ✓ Roles simplificados obtenidos exitosamente - Total: ${rolesArray.length} roles - Tiempo: ${responseTime}ms - IP: ${req.ip} - Timestamp: ${new Date().toISOString()}`);
+    console.log(`[AUTH-AUDIT] [OK] Roles simplificados obtenidos exitosamente - Total: ${rolesArray.length} roles - Tiempo: ${responseTime}ms - IP: ${req.ip} - Timestamp: ${new Date().toISOString()}`);
 
     res.status(200).json({
       success: true,
@@ -355,7 +355,7 @@ const getRolesSimple = async (req, res) => {
     const responseTime = Date.now() - startTime;
     
     // Log de auditoría: Error
-    console.error(`[AUTH-AUDIT] ✗ Error al obtener roles simplificados - Error: ${error.message} - Tiempo: ${responseTime}ms - IP: ${req.ip} - Timestamp: ${new Date().toISOString()}`);
+    console.error(`[AUTH-AUDIT] [ERROR] Error al obtener roles simplificados - Error: ${error.message} - Tiempo: ${responseTime}ms - IP: ${req.ip} - Timestamp: ${new Date().toISOString()}`);
     
     res.status(500).json({
       success: false,
@@ -371,7 +371,18 @@ const getRolesSimple = async (req, res) => {
  */
 /**
  * PUT /usuarios/:id/rol - Actualizar rol de usuario
- * AS-TASK-08: Implementación completa con validación y logs de auditoría
+ * AS-TASK-11: Endpoint para cambiar rol de un usuario
+ * Nota: Implementación original creada en AS-TASK-08, reutilizada para AS-TASK-11
+ * 
+ * Requisitos cumplidos:
+ * - Recibe :id en la ruta y rol en el body
+ * - Valida que el rol sea uno de: gestor, profesional, directivo
+ * - Consulta PostgreSQL para verificar existencia del usuario
+ * - Actualiza el rol en la base de datos
+ * - Responde con formato JSON estandarizado
+ * - Maneja errores con status HTTP apropiados (400, 404, 500)
+ * - Registra logs de auditoría (id, rol anterior, rol nuevo, fecha)
+ * - Sigue principios SOLID (controller → service → config)
  */
 const updateUserRole = async (req, res) => {
   const startTime = Date.now();
@@ -389,7 +400,7 @@ const updateUserRole = async (req, res) => {
       return res.status(400).json({
         success: false,
         message: 'El campo rol es requerido',
-        taskId: 'AS-TASK-08',
+        taskId: 'AS-TASK-11',
         data: null
       });
     }
@@ -401,7 +412,7 @@ const updateUserRole = async (req, res) => {
       return res.status(400).json({
         success: false,
         message: 'ID de usuario inválido',
-        taskId: 'AS-TASK-08',
+        taskId: 'AS-TASK-11',
         data: null
       });
     }
@@ -413,7 +424,7 @@ const updateUserRole = async (req, res) => {
       return res.status(404).json({
         success: false,
         message: 'Usuario no encontrado',
-        taskId: 'AS-TASK-08',
+        taskId: 'AS-TASK-11',
         data: null
       });
     }
@@ -427,13 +438,13 @@ const updateUserRole = async (req, res) => {
     const responseTime = Date.now() - startTime;
 
     // Log de auditoría: Actualización exitosa
-    console.log(`[AUTH-AUDIT] ✓ Rol actualizado exitosamente - UserID: ${userId} - Email: ${updatedUser.email} - Rol anterior: ${oldRole} - Rol nuevo: ${updatedUser.rol} - Tiempo: ${responseTime}ms - Timestamp: ${new Date().toISOString()}`);
+    console.log(`[AUTH-AUDIT] [OK] Rol actualizado exitosamente - UserID: ${userId} - Email: ${updatedUser.email} - Rol anterior: ${oldRole} - Rol nuevo: ${updatedUser.rol} - Tiempo: ${responseTime}ms - Timestamp: ${new Date().toISOString()}`);
 
     // 5. Responder con éxito
     res.status(200).json({
       success: true,
       message: `Rol actualizado exitosamente de "${oldRole}" a "${rol}"`,
-      taskId: 'AS-TASK-08',
+      taskId: 'AS-TASK-11',
       data: {
         id: updatedUser.id,
         nombre: updatedUser.nombre,
@@ -446,13 +457,13 @@ const updateUserRole = async (req, res) => {
     });
   } catch (error) {
     // Log de auditoría: Error del servidor
-    console.error(`[AUTH-AUDIT] ✗ Error al actualizar rol - UserID: ${req.params.id} - Error: ${error.message} - Timestamp: ${new Date().toISOString()}`);
+    console.error(`[AUTH-AUDIT] [ERROR] Error al actualizar rol - UserID: ${req.params.id} - Error: ${error.message} - Timestamp: ${new Date().toISOString()}`);
     
     res.status(500).json({
       success: false,
       message: 'Error interno del servidor al actualizar rol',
       error: error.message,
-      taskId: 'AS-TASK-08'
+      taskId: 'AS-TASK-11'
     });
   }
 };
@@ -479,3 +490,5 @@ module.exports = {
   updateUserRole,
   health
 };
+
+

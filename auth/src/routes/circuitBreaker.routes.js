@@ -9,3 +9,4 @@ router.get('/test/project', circuitBreakerController.testProjectManagerBreaker);
 router.get('/stats', circuitBreakerController.getBreakerStatistics);
 
 module.exports = router;
+

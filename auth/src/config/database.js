@@ -1,4 +1,4 @@
-// AS-TASK-04: Configuración de conexión a PostgreSQL
+﻿// AS-TASK-04: Configuración de conexión a PostgreSQL
 const { Pool } = require('pg');
 require('dotenv').config();
 
@@ -29,11 +29,11 @@ pool.on('error', (err) => {
 const checkConnection = async () => {
   try {
     const client = await pool.connect();
-    console.log('[Database] ✓ PostgreSQL conectado exitosamente');
+    console.log('[Database] [OK] PostgreSQL conectado exitosamente');
     client.release();
     return true;
   } catch (error) {
-    console.error('[Database] ✗ Error al conectar con PostgreSQL:', error.message);
+    console.error('[Database] [ERROR] Error al conectar con PostgreSQL:', error.message);
     return false;
   }
 };
@@ -43,3 +43,5 @@ module.exports = {
   checkConnection,
   query: (text, params) => pool.query(text, params)
 };
+
+

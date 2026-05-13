@@ -174,3 +174,4 @@ class JWTHelper {
 
 // Exportar instancia única (Singleton pattern)
 module.exports = new JWTHelper();
+

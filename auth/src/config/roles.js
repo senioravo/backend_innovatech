@@ -139,3 +139,4 @@ module.exports = {
   hasPermission,
   getRoleDescription
 };
+
