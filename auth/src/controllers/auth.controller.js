@@ -16,6 +16,9 @@ const { getAllRolesInfo, getRoleDescription } = require('../config/roles');
 // AS-TASK-13: Importar logger con Winston para auditoría
 const logger = require('../utils/logger');
 
+// AS-TASK-14: Importar funciones de métricas de Prometheus
+const { recordCriticalOperation } = require('../middleware/metricsMiddleware');
+
 /**
  * POST /register - Registro de usuarios
  * AS-TASK-04: Implementación completa con PostgreSQL y bcrypt
@@ -87,6 +90,9 @@ const register = async (req, res) => {
       taskId: 'AS-TASK-13'
     });
 
+    // AS-TASK-14: Registrar operación en métricas de Prometheus
+    recordCriticalOperation('REGISTER', true);
+
     // 5. Responder con éxito (201 Created)
     res.status(201).json({
       success: true,
@@ -115,6 +121,9 @@ const register = async (req, res) => {
       responseTime,
       taskId: 'AS-TASK-13'
     });
+
+    // AS-TASK-14: Registrar operación fallida en métricas
+    recordCriticalOperation('REGISTER', false);
     
     // Manejo de errores de BD específicos
     if (error.code === '23505') { // PostgreSQL unique constraint violation
@@ -223,6 +232,9 @@ const login = async (req, res) => {
       taskId: 'AS-TASK-13'
     });
 
+    // AS-TASK-14: Registrar operación en métricas de Prometheus
+    recordCriticalOperation('LOGIN', true);
+
     // 6. Responder con token y datos del usuario (sin password)
     res.status(200).json({
       success: true,
@@ -254,6 +266,9 @@ const login = async (req, res) => {
       responseTime,
       taskId: 'AS-TASK-13'
     });
+
+    // AS-TASK-14: Registrar operación fallida en métricas
+    recordCriticalOperation('LOGIN', false);
     
     // Error genérico del servidor
     res.status(500).json({
@@ -311,6 +326,9 @@ const logout = async (req, res) => {
       taskId: 'AS-TASK-13'
     });
 
+    // AS-TASK-14: Registrar operación en métricas de Prometheus
+    recordCriticalOperation('LOGOUT', true);
+
     // Responder con éxito
     res.status(200).json({
       success: true,
@@ -337,6 +355,9 @@ const logout = async (req, res) => {
       responseTime,
       taskId: 'AS-TASK-13'
     });
+
+    // AS-TASK-14: Registrar operación fallida en métricas
+    recordCriticalOperation('LOGOUT', false);
     
     // Error genérico del servidor
     res.status(500).json({
@@ -508,6 +529,9 @@ const updateUserRole = async (req, res) => {
       taskId: 'AS-TASK-13'
     });
 
+    // AS-TASK-14: Registrar operación en métricas de Prometheus
+    recordCriticalOperation('ROLE_CHANGE', true);
+
     // 5. Responder con éxito
     res.status(200).json({
       success: true,
@@ -537,6 +561,9 @@ const updateUserRole = async (req, res) => {
       responseTime,
       taskId: 'AS-TASK-13'
     });
+
+    // AS-TASK-14: Registrar operación fallida en métricas
+    recordCriticalOperation('ROLE_CHANGE', false);
     
     res.status(500).json({
       success: false,
