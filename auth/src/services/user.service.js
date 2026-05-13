@@ -218,3 +218,4 @@ class UserService {
 
 // Exportar instancia única (Singleton pattern)
 module.exports = new UserService();
+

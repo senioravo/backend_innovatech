@@ -1,4 +1,4 @@
-// AS-TASK-03: Configurar Circuit Breaker para llamadas internas
+﻿// AS-TASK-03: Configurar Circuit Breaker para llamadas internas
 // Implementación del patrón Circuit Breaker usando Opossum
 
 const CircuitBreaker = require('opossum');
@@ -52,11 +52,11 @@ function createCircuitBreaker(asyncFunction, serviceName = 'Unknown Service') {
   });
 
   breaker.on('success', (result) => {
-    console.log(`[Circuit Breaker - ${serviceName}] ✅ Llamada exitosa`);
+    console.log(`[Circuit Breaker - ${serviceName}]  Llamada exitosa`);
   });
 
   breaker.on('failure', (error) => {
-    console.error(`[Circuit Breaker - ${serviceName}] ❌ Fallo detectado:`, error.message);
+    console.error(`[Circuit Breaker - ${serviceName}] NO Fallo detectado:`, error.message);
   });
 
   breaker.on('timeout', () => {
@@ -96,3 +96,5 @@ module.exports = {
   getBreakerStats,
   circuitBreakerOptions
 };
+
+

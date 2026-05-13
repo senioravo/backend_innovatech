@@ -181,3 +181,4 @@ class TokenBlacklistService {
 
 // Exportar instancia única (Singleton pattern)
 module.exports = new TokenBlacklistService();
+

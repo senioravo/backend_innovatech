@@ -25,3 +25,4 @@ router.put('/usuarios/:id/rol', authController.updateUserRole);
 router.get('/health', authController.health);
 
 module.exports = router;
+
