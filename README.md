@@ -181,6 +181,17 @@ npm run dev
   - Integración con operaciones críticas: REGISTER, LOGIN, LOGOUT, ROLE_CHANGE
   - Principios SOLID: metricsMiddleware (middleware) + metrics.routes (endpoints) separados
   - Documentación de configuración de Prometheus para scraping
+- [COMPLETADO] AS-TASK-15: Crear dashboard en Grafana
+  - Dashboard JSON pre-configurado para Auth Microservice
+  - Conexión a Prometheus como datasource
+  - 10 paneles organizados: peticiones HTTP, latencia, errores, operaciones críticas, usuarios activos
+  - Visualizaciones adecuadas: líneas (latencia), barras (errores), contadores (usuarios), gauge (tasa error)
+  - Queries PromQL optimizadas con taskId: AS-TASK-14
+  - Percentiles de latencia: P50, P95, P99
+  - Auto-refresh cada 5 segundos
+  - Timezone configurado: America/Santiago
+  - Etiquetas consistentes y paneles organizados
+  - Documentación completa de importación y configuración
 
 ### AS-TASK-04: Detalles del endpoint /register
 
@@ -4020,5 +4031,562 @@ const cacheHitRate = new promClient.Gauge({
   help: 'Tasa de acierto del cache'
 });
 ```
+
+---
+
+### AS-TASK-15: Crear dashboard en Grafana
+
+**Objetivo:** Implementar dashboard visual en Grafana para monitoreo en tiempo real del microservicio Auth, consumiendo métricas de Prometheus y proporcionando observabilidad completa del sistema.
+
+#### 1. ¿Por qué Grafana?
+
+**Grafana** es la plataforma líder para visualización de métricas y observabilidad:
+- Visualización interactiva de series temporales
+- Soporte nativo para Prometheus
+- Dashboards compartibles (JSON export/import)
+- Alertas visuales configurables
+- Múltiples tipos de paneles (gráficas, tablas, gauges, stats)
+- Comunidad masiva con dashboards pre-construidos
+
+**Caso de uso:** Monitoreo en tiempo real de performance, detección visual de anomalías, análisis de tendencias, y toma de decisiones basada en métricas.
+
+#### 2. Archivo del dashboard:
+
+**Ubicación:** [grafana/auth-service-dashboard.json](grafana/auth-service-dashboard.json)
+
+**Características:**
+- UID único: `auth-service-dashboard`
+- Título: "Auth Service - Innovatech Monitoring (AS-TASK-15)"
+- Descripción: "Dashboard de monitoreo para Auth Microservice de Innovatech Chile. taskId: AS-TASK-15"
+- Timezone: America/Santiago
+- Auto-refresh: 5 segundos
+- Rango temporal por defecto: Última 1 hora
+
+#### 3. Paneles implementados:
+
+| # | Panel | Tipo | Descripción | Query PromQL |
+|---|-------|------|-------------|--------------|
+| 1 | Peticiones HTTP por Endpoint | Time Series | Requests/sec agrupadas por método y ruta | `rate(auth_http_requests_total[5m])` |
+| 2 | Usuarios Activos | Stat | Usuarios con sesión activa en tiempo real | `auth_active_users` |
+| 3 | Tasa de Éxito | Stat | Porcentaje de peticiones exitosas (2xx) | `(sum(rate(...{status_code=~"2.."}[5m])) / sum(rate(...[5m]))) * 100` |
+| 4 | Latencia P50, P95, P99 | Time Series | Percentiles de latencia con thresholds | `histogram_quantile(0.95, rate(..._bucket[5m]))` |
+| 5 | Latencia Promedio por Endpoint | Time Series | Latencia promedio desglosada por endpoint | `rate(..._sum[5m]) / rate(..._count[5m])` |
+| 6 | Errores Auth/Authz por Tipo | Time Series (Bars) | Errores apilados por tipo y ruta | `rate(auth_errors_total[5m])` |
+| 7 | Operaciones Críticas | Time Series | REGISTER, LOGIN, LOGOUT, ROLE_CHANGE | `rate(auth_critical_operations_total[5m])` |
+| 8 | Tasa de Error HTTP | Gauge | Porcentaje de errores 4xx/5xx | `(sum(rate(...{status_code=~"4..\|5.."}[5m])) / sum(rate(...[5m]))) * 100` |
+| 9 | Total Peticiones (5min) | Stat | Contador de peticiones últimos 5 minutos | `sum(increase(auth_http_requests_total[5m]))` |
+| 10 | Uso de Memoria Node.js | Time Series | Heap used vs heap total | `auth_service_nodejs_heap_size_used_bytes` |
+
+#### 4. Arquitectura de monitoreo:
+
+```
+┌─────────────────────────────────────────────────────────┐
+│           Auth Service (Node.js + Express)              │
+│                                                         │
+│  - metricsMiddleware captura métricas                   │
+│  - Expone GET /api/metrics (Prometheus format)          │
+└─────────────────────────────────────────────────────────┘
+                          │
+                          │ HTTP Scrape cada 15s
+                          ▼
+┌─────────────────────────────────────────────────────────┐
+│                  Prometheus Server                      │
+│                                                         │
+│  - Almacena series temporales en TSDB                   │
+│  - Retiene datos según configuración (15 días default)  │
+│  - Ejecuta queries PromQL                               │
+│  - Evalúa reglas de alertas                             │
+└─────────────────────────────────────────────────────────┘
+                          │
+                          │ Query API (puerto 9090)
+                          ▼
+┌─────────────────────────────────────────────────────────┐
+│                      Grafana                            │
+│                                                         │
+│  ┌──────────────────────────────────────────────────┐  │
+│  │  Dashboard: Auth Service Monitoring              │  │
+│  │                                                  │  │
+│  │  Panel 1: Peticiones HTTP     Panel 2: Usuarios │  │
+│  │  Panel 3: Tasa Éxito          Panel 4: Latencia │  │
+│  │  Panel 5: Latencia Avg        Panel 6: Errores  │  │
+│  │  Panel 7: Operaciones         Panel 8: % Error  │  │
+│  │  Panel 9: Total Requests      Panel 10: Memoria │  │
+│  └──────────────────────────────────────────────────┘  │
+│                                                         │
+│  - Auto-refresh: 5s                                     │
+│  - Alertas visuales con thresholds                      │
+│  - Drill-down a métricas individuales                   │
+└─────────────────────────────────────────────────────────┘
+```
+
+#### 5. Instalación y configuración:
+
+**Paso 1: Instalar Grafana**
+
+**Linux (Ubuntu/Debian):**
+```bash
+# Agregar repositorio de Grafana
+sudo apt-get install -y software-properties-common
+sudo add-apt-repository "deb https://packages.grafana.com/oss/deb stable main"
+wget -q -O - https://packages.grafana.com/gpg.key | sudo apt-key add -
+
+# Instalar Grafana
+sudo apt-get update
+sudo apt-get install grafana
+
+# Iniciar servicio
+sudo systemctl start grafana-server
+sudo systemctl enable grafana-server
+
+# Acceder a: http://localhost:3000
+# Usuario por defecto: admin / admin
+```
+
+**macOS (Homebrew):**
+```bash
+brew install grafana
+brew services start grafana
+
+# Acceder a: http://localhost:3000
+```
+
+**Windows:**
+```bash
+# Descargar desde: https://grafana.com/grafana/download
+# Instalar ejecutable
+# Iniciar servicio desde Services panel o:
+net start grafana
+
+# Acceder a: http://localhost:3000
+```
+
+**Docker:**
+```bash
+docker run -d \
+  --name=grafana \
+  -p 3000:3000 \
+  -e "GF_SECURITY_ADMIN_PASSWORD=admin" \
+  grafana/grafana:10.0.0
+```
+
+**Paso 2: Configurar Prometheus como Data Source**
+
+1. Acceder a Grafana: http://localhost:3000
+2. Login con: `admin` / `admin` (cambiar password en primer login)
+3. Ir a: **Configuration** → **Data Sources** → **Add data source**
+4. Seleccionar: **Prometheus**
+5. Configurar:
+   ```
+   Name: Prometheus
+   URL: http://localhost:9090
+   Access: Server (default)
+   ```
+6. Hacer clic en: **Save & Test**
+7. Debe aparecer: "Data source is working"
+
+**Paso 3: Importar el dashboard**
+
+**Método 1: Importar desde archivo JSON**
+
+1. Ir a: **Dashboards** → **Import**
+2. Hacer clic en: **Upload JSON file**
+3. Seleccionar archivo: `grafana/auth-service-dashboard.json`
+4. Seleccionar Data Source: **Prometheus** (el configurado en paso 2)
+5. Hacer clic en: **Import**
+6. El dashboard se abre automáticamente
+
+**Método 2: Copiar/Pegar JSON**
+
+1. Ir a: **Dashboards** → **Import**
+2. Copiar contenido de: `grafana/auth-service-dashboard.json`
+3. Pegar en el textarea de Grafana
+4. Hacer clic en: **Load**
+5. Seleccionar Data Source: **Prometheus**
+6. Hacer clic en: **Import**
+
+**Método 3: Importar desde terminal (Grafana API)**
+
+```bash
+# Subir dashboard via API
+curl -X POST \
+  http://localhost:3000/api/dashboards/db \
+  -H "Content-Type: application/json" \
+  -H "Authorization: Bearer YOUR_API_KEY" \
+  -d @grafana/auth-service-dashboard.json
+```
+
+#### 6. Verificación del dashboard:
+
+**Checklist:**
+- [ ] Dashboard carga sin errores
+- [ ] Todos los paneles muestran datos (requiere tráfico en Auth Service)
+- [ ] Auto-refresh funciona (5 segundos)
+- [ ] Queries PromQL ejecutan correctamente
+- [ ] Thresholds se muestran correctamente (amarillo/rojo)
+- [ ] Leyendas muestran labels: method, route, status_code, operation, etc.
+
+**Generar tráfico de prueba:**
+```bash
+# Hacer peticiones al Auth Service para generar métricas
+for i in {1..100}; do
+  curl -X POST http://localhost:3001/api/auth/login \
+    -H "Content-Type: application/json" \
+    -d '{"email": "test@innovatech.cl", "password": "test123"}'
+  sleep 0.1
+done
+
+# Verificar métricas en Prometheus
+curl http://localhost:3001/api/metrics | grep auth_http_requests_total
+
+# Ver dashboard en Grafana
+# http://localhost:3000/d/auth-service-dashboard
+```
+
+#### 7. Personalización del dashboard:
+
+**Cambiar intervalo de refresh:**
+```json
+"refresh": "10s"  // Cambiar de 5s a 10s
+```
+
+**Cambiar rango temporal por defecto:**
+```json
+"time": {
+  "from": "now-6h",  // Cambiar de 1h a 6h
+  "to": "now"
+}
+```
+
+**Agregar nuevo panel:**
+1. Hacer clic en: **Add panel** (esquina superior derecha)
+2. Configurar query PromQL
+3. Seleccionar tipo de visualización
+4. Configurar opciones (legend, thresholds, etc.)
+5. Hacer clic en: **Apply**
+
+**Exportar dashboard modificado:**
+1. Ir a: **Dashboard settings** (ícono engranaje)
+2. Hacer clic en: **JSON Model**
+3. Copiar JSON completo
+4. Guardar en: `grafana/auth-service-dashboard.json`
+5. Commit y push
+
+#### 8. Ejemplos de queries PromQL avanzadas:
+
+**Top 5 endpoints más lentos:**
+```promql
+topk(5, 
+  rate(auth_http_request_duration_seconds_sum{taskId="AS-TASK-14"}[5m]) / 
+  rate(auth_http_request_duration_seconds_count{taskId="AS-TASK-14"}[5m])
+)
+```
+
+**Tasa de login exitosos vs fallidos:**
+```promql
+sum by (success) (
+  rate(auth_critical_operations_total{operation="LOGIN",taskId="AS-TASK-14"}[5m])
+)
+```
+
+**Predicción de tráfico (basado en tendencia):**
+```promql
+predict_linear(
+  auth_http_requests_total{taskId="AS-TASK-14"}[1h], 
+  3600
+)
+```
+
+**Latencia P99 por endpoint:**
+```promql
+histogram_quantile(0.99, 
+  sum by (route, le) (
+    rate(auth_http_request_duration_seconds_bucket{taskId="AS-TASK-14"}[5m])
+  )
+)
+```
+
+**Alertas basadas en SLOs (Service Level Objectives):**
+```promql
+# SLO: 99.9% de requests deben ser exitosas
+(
+  sum(rate(auth_http_requests_total{status_code=~"2..",taskId="AS-TASK-14"}[5m])) /
+  sum(rate(auth_http_requests_total{taskId="AS-TASK-14"}[5m]))
+) < 0.999
+```
+
+#### 9. Configuración de alertas en Grafana:
+
+**Crear alerta de latencia alta:**
+
+1. Ir al panel: "Latencia P95, P99"
+2. Hacer clic en: **Edit**
+3. Ir a la pestaña: **Alert**
+4. Configurar condición:
+   ```
+   WHEN avg() OF query(B, 5m, now) IS ABOVE 1
+   ```
+   (Alerta si P95 > 1 segundo)
+5. Configurar notificaciones:
+   - Email
+   - Slack
+   - PagerDuty
+   - Webhook
+6. Hacer clic en: **Save**
+
+**Crear alerta de tasa de error alta:**
+
+1. Ir al panel: "Tasa de Error HTTP (%)"
+2. Configurar condición:
+   ```
+   WHEN last() OF query(A) IS ABOVE 10
+   ```
+   (Alerta si tasa de error > 10%)
+3. Configurar severity: **Critical**
+4. Configurar notificación
+5. Guardar
+
+#### 10. Integración con notificaciones:
+
+**Configurar Slack:**
+
+1. Crear Incoming Webhook en Slack workspace
+2. Ir a Grafana: **Alerting** → **Contact points** → **New contact point**
+3. Seleccionar: **Slack**
+4. Configurar:
+   ```
+   Webhook URL: https://hooks.slack.com/services/YOUR/WEBHOOK/URL
+   Channel: #alertas-auth-service
+   Username: Grafana
+   ```
+5. Test y Save
+
+**Configurar Email:**
+
+1. Editar archivo de configuración de Grafana: `/etc/grafana/grafana.ini`
+   ```ini
+   [smtp]
+   enabled = true
+   host = smtp.gmail.com:587
+   user = alerts@innovatech.cl
+   password = YOUR_PASSWORD
+   from_address = alerts@innovatech.cl
+   from_name = Grafana Innovatech
+   ```
+2. Reiniciar Grafana: `sudo systemctl restart grafana-server`
+3. Crear contact point tipo Email
+
+#### 11. Dashboard con Docker Compose:
+
+**Archivo:** `docker-compose.yml` (actualizar AS-TASK-14)
+
+```yaml
+version: '3.8'
+
+services:
+  # Auth Microservice
+  auth:
+    build: ./auth
+    ports:
+      - "3001:3001"
+    environment:
+      - NODE_ENV=production
+      - PORT=3001
+    networks:
+      - monitoring
+
+  # Prometheus
+  prometheus:
+    image: prom/prometheus:v2.45.0
+    ports:
+      - "9090:9090"
+    volumes:
+      - ./prometheus.yml:/etc/prometheus/prometheus.yml
+      - prometheus_data:/prometheus
+    command:
+      - '--config.file=/etc/prometheus/prometheus.yml'
+      - '--storage.tsdb.path=/prometheus'
+    networks:
+      - monitoring
+
+  # Grafana
+  grafana:
+    image: grafana/grafana:10.0.0
+    ports:
+      - "3000:3000"
+    environment:
+      - GF_SECURITY_ADMIN_PASSWORD=admin
+      - GF_INSTALL_PLUGINS=grafana-clock-panel
+    volumes:
+      - grafana_data:/var/lib/grafana
+      - ./grafana/provisioning:/etc/grafana/provisioning
+      - ./grafana:/var/lib/grafana/dashboards
+    networks:
+      - monitoring
+    depends_on:
+      - prometheus
+
+volumes:
+  prometheus_data:
+  grafana_data:
+
+networks:
+  monitoring:
+    driver: bridge
+```
+
+**Provisioning automático del datasource:**
+
+Crear archivo: `grafana/provisioning/datasources/prometheus.yml`
+
+```yaml
+apiVersion: 1
+
+datasources:
+  - name: Prometheus
+    type: prometheus
+    access: proxy
+    url: http://prometheus:9090
+    isDefault: true
+    editable: true
+```
+
+**Provisioning automático del dashboard:**
+
+Crear archivo: `grafana/provisioning/dashboards/dashboard.yml`
+
+```yaml
+apiVersion: 1
+
+providers:
+  - name: 'Auth Service Dashboards'
+    orgId: 1
+    folder: 'Innovatech'
+    type: file
+    disableDeletion: false
+    updateIntervalSeconds: 10
+    allowUiUpdates: true
+    options:
+      path: /var/lib/grafana/dashboards
+```
+
+**Iniciar stack completo:**
+```bash
+docker-compose up -d
+
+# Servicios disponibles:
+# Auth Service: http://localhost:3001/api/metrics
+# Prometheus: http://localhost:9090
+# Grafana: http://localhost:3000 (admin/admin)
+# Dashboard: http://localhost:3000/d/auth-service-dashboard
+```
+
+#### 12. Estructura de archivos final:
+
+```
+backend_innovatech/
+├── auth/
+│   └── src/
+│       ├── middleware/
+│       │   └── metricsMiddleware.js    (AS-TASK-14)
+│       └── routes/
+│           └── metrics.routes.js       (AS-TASK-14)
+├── grafana/
+│   ├── auth-service-dashboard.json     (AS-TASK-15: Dashboard)
+│   └── provisioning/
+│       ├── datasources/
+│       │   └── prometheus.yml          (Auto-config datasource)
+│       └── dashboards/
+│           └── dashboard.yml           (Auto-import dashboard)
+├── prometheus.yml                      (AS-TASK-14: Config scraping)
+├── docker-compose.yml                  (Stack completo)
+└── README.md                           (Documentación)
+```
+
+#### 13. Variables del dashboard:
+
+El dashboard incluye una variable para cambiar el datasource:
+
+```json
+"templating": {
+  "list": [
+    {
+      "name": "DS_PROMETHEUS",
+      "type": "datasource",
+      "query": "prometheus",
+      "label": "Datasource"
+    }
+  ]
+}
+```
+
+**Agregar variable para filtrar por environment:**
+1. Dashboard settings → Variables → New variable
+2. Configurar:
+   ```
+   Name: environment
+   Type: Query
+   Query: label_values(auth_http_requests_total, environment)
+   ```
+3. Actualizar queries para usar: `{environment="$environment"}`
+
+#### 14. Mejores prácticas de observabilidad:
+
+1. **Dashboards organizados:**
+   - Agrupar paneles relacionados
+   - Usar colores consistentes (verde=ok, amarillo=warning, rojo=critical)
+   - Títulos descriptivos
+   - Descripciones claras en paneles
+
+2. **Queries eficientes:**
+   - Usar rate() para contadores
+   - Usar increase() para totales en ventanas de tiempo
+   - Agregar labels solo cuando sea necesario
+   - Evitar queries costosas (cardinalidad alta)
+
+3. **Thresholds apropiados:**
+   - Basados en SLOs del negocio
+   - P95 latencia < 500ms (warning), < 1s (critical)
+   - Tasa de error < 5% (warning), < 10% (critical)
+   - Ajustar según comportamiento real
+
+4. **Documentación:**
+   - Descripción clara en cada panel
+   - Links a runbooks de troubleshooting
+   - Notas sobre cómo interpretar métricas
+
+5. **Versionado:**
+   - Exportar JSON después de cambios
+   - Commit a Git
+   - Mantener historial de versiones
+
+#### 15. Troubleshooting:
+
+**Problema: Paneles muestran "No data"**
+- Verificar que Prometheus está scrapeando: http://localhost:9090/targets
+- Verificar que Auth Service expone métricas: http://localhost:3001/api/metrics
+- Verificar query PromQL en Prometheus UI
+- Verificar que el label `taskId="AS-TASK-14"` existe
+
+**Problema: Dashboard no se importa**
+- Verificar sintaxis JSON válida (usar jsonlint.com)
+- Verificar que datasource Prometheus está configurado
+- Revisar logs de Grafana: `sudo journalctl -u grafana-server -f`
+
+**Problema: Queries lentas**
+- Reducir ventana de tiempo: `[5m]` en lugar de `[1h]`
+- Agregar por menos labels: `sum by (route)` en lugar de `sum by (route, method, status_code)`
+- Usar recording rules en Prometheus
+
+**Problema: Datos no se actualizan**
+- Verificar auto-refresh está habilitado (5s)
+- Verificar que hay tráfico en Auth Service
+- Refrescar página manualmente (Ctrl+R)
+
+#### 16. Recursos adicionales:
+
+- **Documentación oficial Grafana:** https://grafana.com/docs/grafana/latest/
+- **PromQL cheat sheet:** https://promlabs.com/promql-cheat-sheet/
+- **Grafana dashboards públicos:** https://grafana.com/grafana/dashboards/
+- **Prometheus best practices:** https://prometheus.io/docs/practices/naming/
 
 ---
