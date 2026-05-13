@@ -1,0 +1,34 @@
+// AS-TASK-16: Setup para tests
+// Configuración de variables de entorno para ambiente de testing
+
+// Variables de entorno para testing
+process.env.NODE_ENV = 'test';
+process.env.PORT = 3002; // Puerto diferente para tests
+process.env.JWT_SECRET = 'test-secret-key-for-jwt-AS-TASK-16';
+process.env.JWT_EXPIRES_IN = '1h';
+process.env.BCRYPT_SALT_ROUNDS = '10';
+
+// Database (usar BD de test o mock)
+process.env.DB_HOST = 'localhost';
+process.env.DB_PORT = '5432';
+process.env.DB_NAME = 'innovatech_test';
+process.env.DB_USER = 'postgres';
+process.env.DB_PASSWORD = 'postgres';
+
+// Circuit Breaker
+process.env.CIRCUIT_BREAKER_TIMEOUT = '3000';
+process.env.CIRCUIT_BREAKER_ERROR_THRESHOLD = '50';
+process.env.CIRCUIT_BREAKER_RESET_TIMEOUT = '30000';
+
+// Desactivar logs durante tests (opcional)
+process.env.LOG_LEVEL = 'error';
+
+// Suprimir console.log durante tests (opcional)
+// global.console = {
+//   ...console,
+//   log: jest.fn(),
+//   info: jest.fn(),
+//   debug: jest.fn(),
+// };
+
+console.log('🧪 Test environment configured for AS-TASK-16');
