@@ -1,12 +1,11 @@
 const taskRepository = require('../repositories/taskRepository');
-const projectRepository = require('../repositories/projectRepository');
+const resourceAvailabilityService = require('./resourceAvailabilityService');
 const { NotFoundError } = require('../utils/errorHandler');
 
 class TaskService {
   createTask(projectId, userId, { title, description, completed }) {
     if (!projectId || !userId) throw new Error('projectId y userId son requeridos');
-    const project = projectRepository.findByIdAndUserId(projectId, userId);
-    if (!project) throw new NotFoundError('Proyecto no encontrado');
+    resourceAvailabilityService.assertProjectAvailable(projectId, userId);
 
     const now = new Date().toISOString();
     return taskRepository.create({
@@ -25,13 +24,12 @@ class TaskService {
     if (!projectId || !taskId || !userId) {
       throw new Error('projectId, taskId y userId son requeridos');
     }
-    const task = taskRepository.findByProjectIdAndTaskId(projectId, taskId, userId);
-    if (!task) throw new NotFoundError('Tarea no encontrada');
-    return task;
+    return resourceAvailabilityService.assertTaskInProject(projectId, taskId, userId);
   }
 
   updateTask(taskId, userId, updates) {
     if (!taskId || !userId) throw new Error('taskId y userId son requeridos');
+    resourceAvailabilityService.assertTaskAvailable(taskId, userId);
     const task = taskRepository.update(taskId, userId, updates);
     if (!task) throw new NotFoundError('Tarea no encontrada');
     return task;
@@ -41,6 +39,7 @@ class TaskService {
     if (!taskId || !userId || !responsableId) {
       throw new Error('taskId, userId y responsableId son requeridos');
     }
+    resourceAvailabilityService.assertTaskAvailable(taskId, userId);
     const task = taskRepository.update(taskId, userId, { responsableId });
     if (!task) throw new NotFoundError('Tarea no encontrada');
     return task;
@@ -48,6 +47,7 @@ class TaskService {
 
   deleteTask(taskId, userId) {
     if (!taskId || !userId) throw new Error('taskId y userId son requeridos');
+    resourceAvailabilityService.assertTaskAvailable(taskId, userId);
     const deleted = taskRepository.delete(taskId, userId);
     if (!deleted) throw new NotFoundError('Tarea no encontrada');
     return true;
