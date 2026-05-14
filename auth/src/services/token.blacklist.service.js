@@ -4,6 +4,9 @@
 
 const jwtHelper = require('../utils/jwt.helper');
 
+// AS-TASK-21: Importar Winston logger
+const logger = require('../utils/logger');
+
 /**
  * Servicio de Blacklist de Tokens
  * Almacena tokens JWT invalidados en memoria
@@ -43,11 +46,11 @@ class TokenBlacklistService {
         expiresAt: new Date(decoded.exp * 1000).toISOString()
       });
       
-      console.log(`[BLACKLIST] Token agregado - UserID: ${decoded.id} - Email: ${decoded.email} - Expira: ${new Date(decoded.exp * 1000).toISOString()}`);
+      logger.info(`[BLACKLIST] Token agregado`, { userId: decoded.id, email: decoded.email, expiresAt: new Date(decoded.exp * 1000).toISOString(), taskId: 'AS-TASK-21' });
       
       return true;
     } catch (error) {
-      console.error('[BLACKLIST] Error al agregar token:', error.message);
+      logger.error('[BLACKLIST] Error al agregar token', { error: error.message, taskId: 'AS-TASK-21' });
       
       // Si el token es inválido o expirado, aún lo agregamos
       // para evitar intentos de reutilización
@@ -119,7 +122,7 @@ class TokenBlacklistService {
     }
 
     if (cleaned > 0) {
-      console.log(`[BLACKLIST] Limpieza automática: ${cleaned} tokens expirados eliminados`);
+      logger.info(`[BLACKLIST] Limpieza automática: ${cleaned} tokens expirados eliminados`, { taskId: 'AS-TASK-21' });
     }
 
     return cleaned;
@@ -136,7 +139,7 @@ class TokenBlacklistService {
       this.cleanupExpiredTokens();
     }, intervalTime);
 
-    console.log('[BLACKLIST] Limpieza automática iniciada (cada 1 hora)');
+    logger.info('[BLACKLIST] Limpieza automática iniciada (cada 1 hora)', { taskId: 'AS-TASK-21' });
   }
 
   /**
@@ -145,7 +148,7 @@ class TokenBlacklistService {
   stopCleanupInterval() {
     if (this.cleanupInterval) {
       clearInterval(this.cleanupInterval);
-      console.log('[BLACKLIST] Limpieza automática detenida');
+      logger.info('[BLACKLIST] Limpieza automática detenida', { taskId: 'AS-TASK-21' });
     }
   }
 
