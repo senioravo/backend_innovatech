@@ -1,8 +1,10 @@
 const express = require('express');
+const authOrchestrationRoutes = require('../routes/authOrchestrationRoutes');
+const projectManagerOrchestrationRoutes = require('../routes/projectManagerOrchestrationRoutes');
 
-/**
- * Router raíz del BFF. Aquí se registrarán rutas que agreguen llamadas a microservicios.
- */
 const gatewayRouter = express.Router();
+
+gatewayRouter.use('/auth', authOrchestrationRoutes);
+gatewayRouter.use(projectManagerOrchestrationRoutes);
 
 module.exports = gatewayRouter;
