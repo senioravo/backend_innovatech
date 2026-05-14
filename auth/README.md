@@ -2,11 +2,11 @@
 
 **Task ID:** AS-TASK-20
 
-## 📋 Descripción
+## Descripción
 
 Microservicio de autenticación y autorización para la plataforma InnovaTech. Proporciona funcionalidades de registro, login, gestión de usuarios y control de acceso basado en roles (RBAC). Implementado siguiendo principios SOLID y mejores prácticas de desarrollo.
 
-## 🏗️ Arquitectura
+## Arquitectura
 
 - **Framework:** Express.js v4.18.2
 - **Base de datos:** PostgreSQL (Neon Cloud Database)
@@ -17,7 +17,7 @@ Microservicio de autenticación y autorización para la plataforma InnovaTech. P
 - **Monitoreo:** Prometheus (prom-client v15.1.3)
 - **Resiliencia:** Circuit Breaker (opossum v8.1.4)
 
-## 📦 Requisitos Previos
+## Requisitos Previos
 
 ### Software Requerido
 
@@ -41,7 +41,7 @@ El microservicio está configurado para usar **Neon PostgreSQL** (database-as-a-
 2. Crear base de datos: `createdb innovatech_auth`
 3. Configurar credenciales en `.env`
 
-## 🚀 Instalación
+## Instalación
 
 ### 1. Clonar el Repositorio
 
@@ -118,7 +118,7 @@ O ejecutar manualmente:
 psql $DATABASE_URL -f database/schema.sql
 ```
 
-## 🏃 Ejecución del Servicio
+## Ejecución del Servicio
 
 ### Modo Desarrollo (con hot-reload)
 
@@ -137,7 +137,7 @@ Salida esperada:
 ```
 [BLACKLIST] Limpieza automática iniciada (cada 1 hora)
 [2026-05-13 00:29:01] info: [LOGGER] Winston inicializado - Directorio: /path/to/logs
-🚀 Microservicio Auth ejecutándose en puerto 3001
+Microservicio Auth ejecutándose en puerto 3001
 ```
 
 El servicio estará disponible en `http://localhost:3001`
