@@ -16,4 +16,19 @@ function normalizeTaskStatus(value) {
   return String(value).trim().toUpperCase();
 }
 
-module.exports = { TASK_STATUSES, TASK_STATUS_SET, isValidTaskStatus, normalizeTaskStatus };
+/** Pipeline lineal: un solo paso hacia adelante (o mismo estado). */
+function isAllowedTaskStatusTransition(from, to) {
+  const i = TASK_STATUSES.indexOf(from);
+  const j = TASK_STATUSES.indexOf(to);
+  if (i === -1 || j === -1) return false;
+  if (from === to) return true;
+  return j === i + 1;
+}
+
+module.exports = {
+  TASK_STATUSES,
+  TASK_STATUS_SET,
+  isValidTaskStatus,
+  normalizeTaskStatus,
+  isAllowedTaskStatusTransition
+};
