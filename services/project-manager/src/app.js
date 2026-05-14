@@ -2,6 +2,7 @@ const express = require('express');
 const cors = require('cors');
 const config = require('./config');
 const apiGateway = require('./gateway/apiGateway');
+const { getAuthDependencyStatus } = require('./clients/authServiceClient');
 const { handleNotFound, handleError } = require('./utils/responseUtil');
 
 const app = express();
@@ -10,9 +11,13 @@ const app = express();
 app.use(express.json());
 app.use(cors());
 
-// Rutas de salud
-app.get('/health', (req, res) => {
-  res.json({ status: 'OK', service: 'Project Manager' });
+// Rutas de salud (incluye dependencias internas protegidas con circuit breaker)
+app.get('/health', async (req, res) => {
+  res.json({
+    status: 'OK',
+    service: 'Project Manager',
+    dependencies: { auth: await getAuthDependencyStatus() }
+  });
 });
 
 // API Gateway: enrutamiento centralizado (p. ej. /api/v1/projects)
