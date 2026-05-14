@@ -1,16 +1,18 @@
 class ValidationService {
   static validateProjectInput(data) {
     const errors = [];
+    const name = data.name ?? data.nombre;
+    const description = data.description ?? data.descripcion;
 
-    if (!data.name || typeof data.name !== 'string' || !data.name.trim()) {
+    if (!name || typeof name !== 'string' || !name.trim()) {
       errors.push('El nombre es requerido y debe ser texto');
-    } else if (data.name.trim().length < 3) {
+    } else if (name.trim().length < 3) {
       errors.push('El nombre debe tener al menos 3 caracteres');
     }
 
-    if (!data.description || typeof data.description !== 'string' || !data.description.trim()) {
+    if (!description || typeof description !== 'string' || !description.trim()) {
       errors.push('La descripción es requerida y debe ser texto');
-    } else if (data.description.trim().length < 10) {
+    } else if (description.trim().length < 10) {
       errors.push('La descripción debe tener al menos 10 caracteres');
     }
 

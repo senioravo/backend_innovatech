@@ -4,9 +4,11 @@
  */
 
 function createProjectDto(body) {
+  const name = body.name ?? body.nombre;
+  const description = body.description ?? body.descripcion;
   return {
-    name: body.name?.trim() || null,
-    description: body.description?.trim() || null
+    name: typeof name === 'string' ? name.trim() || null : null,
+    description: typeof description === 'string' ? description.trim() || null : null
   };
 }
 
