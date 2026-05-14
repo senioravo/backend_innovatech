@@ -1,14 +1,14 @@
 const resourceAvailabilityService = require('../services/resourceAvailabilityService');
 
 /**
- * Carga el proyecto si existe y pertenece al usuario; expone req.availableProject.
- * @param {string} paramName - nombre del parámetro en req.params (p. ej. 'id', 'projectId')
+ * Loads project if it exists and belongs to the user; sets req.availableProject.
+ * @param {string} paramName - req.params key (e.g. 'id', 'projectId')
  */
 function ensureProjectAvailable(paramName = 'id') {
-  return (req, res, next) => {
+  return async (req, res, next) => {
     try {
       const projectId = req.params[paramName];
-      req.availableProject = resourceAvailabilityService.assertProjectAvailable(
+      req.availableProject = await resourceAvailabilityService.assertProjectAvailable(
         projectId,
         req.user.id
       );
@@ -20,13 +20,13 @@ function ensureProjectAvailable(paramName = 'id') {
 }
 
 /**
- * Carga la tarea si existe y pertenece al usuario vía proyecto; expone req.availableTask.
+ * Loads task if it exists for the user via project ownership; sets req.availableTask.
  */
 function ensureTaskAvailable(paramName = 'id') {
-  return (req, res, next) => {
+  return async (req, res, next) => {
     try {
       const taskId = req.params[paramName];
-      req.availableTask = resourceAvailabilityService.assertTaskAvailable(taskId, req.user.id);
+      req.availableTask = await resourceAvailabilityService.assertTaskAvailable(taskId, req.user.id);
       next();
     } catch (err) {
       next(err);
@@ -35,14 +35,14 @@ function ensureTaskAvailable(paramName = 'id') {
 }
 
 /**
- * Valida tarea dentro del proyecto; expone req.availableTask.
+ * Validates task within project; sets req.availableTask.
  */
 function ensureTaskInProject(projectParam = 'projectId', taskParam = 'taskId') {
-  return (req, res, next) => {
+  return async (req, res, next) => {
     try {
       const projectId = req.params[projectParam];
       const taskId = req.params[taskParam];
-      req.availableTask = resourceAvailabilityService.assertTaskInProject(
+      req.availableTask = await resourceAvailabilityService.assertTaskInProject(
         projectId,
         taskId,
         req.user.id

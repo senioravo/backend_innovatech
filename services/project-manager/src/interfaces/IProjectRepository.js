@@ -1,6 +1,5 @@
 /**
- * Interfaz para ProjectRepository
- * Define el contrato que todo repositorio de proyectos debe cumplir
+ * Contract for project repository implementations.
  */
 class IProjectRepository {
   findByUserId(userId) {

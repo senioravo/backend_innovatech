@@ -8,19 +8,19 @@ class ApplicationError extends Error {
 
 class ValidationError extends ApplicationError {
   constructor(errors) {
-    super('Errores de validación', 400);
+    super('Validation failed', 400);
     this.errors = errors;
   }
 }
 
 class NotFoundError extends ApplicationError {
-  constructor(message = 'Recurso no encontrado') {
+  constructor(message = 'Resource not found') {
     super(message, 404);
   }
 }
 
 class UnauthorizedError extends ApplicationError {
-  constructor(message = 'No autorizado') {
+  constructor(message = 'Unauthorized') {
     super(message, 401);
   }
 }

@@ -1,8 +1,8 @@
 const { CircuitBreaker } = require('./circuitBreaker');
 
 /**
- * Cliente HTTP interno con circuit breaker por nombre de dependencia.
- * Usar para llamadas entre microservicios (mismo patrón para nuevos clients).
+ * Internal HTTP client with a per-dependency circuit breaker.
+ * Use for calls to other microservices (same pattern for new clients).
  */
 function createInternalHttpClient({
   serviceName,

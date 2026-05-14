@@ -1,18 +1,15 @@
 const resourceAvailabilityService = require('../services/resourceAvailabilityService');
 
-/**
- * Respuestas HTTP para comprobar disponibilidad sin mutar el recurso.
- */
 const resourceAvailabilityController = {
-  checkProject(req, res, next) {
+  async checkProject(req, res, next) {
     try {
-      const project = resourceAvailabilityService.assertProjectAvailable(
+      const project = await resourceAvailabilityService.assertProjectAvailable(
         req.params.id,
         req.user.id
       );
       res.json({
-        disponible: true,
-        recurso: 'proyecto',
+        available: true,
+        resource: 'project',
         id: project.id
       });
     } catch (error) {
@@ -20,12 +17,12 @@ const resourceAvailabilityController = {
     }
   },
 
-  checkTask(req, res, next) {
+  async checkTask(req, res, next) {
     try {
-      const task = resourceAvailabilityService.assertTaskAvailable(req.params.id, req.user.id);
+      const task = await resourceAvailabilityService.assertTaskAvailable(req.params.id, req.user.id);
       res.json({
-        disponible: true,
-        recurso: 'tarea',
+        available: true,
+        resource: 'task',
         id: task.id,
         projectId: task.projectId
       });
@@ -34,18 +31,18 @@ const resourceAvailabilityController = {
     }
   },
 
-  checkTaskInProject(req, res, next) {
+  async checkTaskInProject(req, res, next) {
     try {
-      const task = resourceAvailabilityService.assertTaskInProject(
+      const task = await resourceAvailabilityService.assertTaskInProject(
         req.params.projectId,
         req.params.taskId,
         req.user.id
       );
       res.json({
-        disponible: true,
-        recurso: 'tarea',
+        available: true,
+        resource: 'task',
         id: task.id,
-        proyectoId: task.projectId
+        projectId: task.projectId
       });
     } catch (error) {
       next(error);

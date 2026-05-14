@@ -3,71 +3,74 @@ const taskRepository = require('../repositories/taskRepository');
 const resourceAvailabilityService = require('./resourceAvailabilityService');
 const { NotFoundError } = require('../utils/errorHandler');
 
-/**
- * Servicio de lógica de negocio para proyectos
- * Responsabilidad única: orquestar operaciones de proyectos
- * Inyección de dependencia: recibe repositorio
- */
 class ProjectService {
   constructor(repository = projectRepository) {
     this.repository = repository;
   }
 
-  listProjects(userId) {
-    if (!userId) throw new Error('userId es requerido');
+  async listProjects(userId) {
+    if (!userId) throw new Error('userId is required');
     return this.repository.findByUserId(userId);
   }
 
-  getProject(projectId, userId) {
-    if (!projectId || !userId) throw new Error('projectId y userId son requeridos');
+  async getProject(projectId, userId) {
+    if (!projectId || !userId) throw new Error('projectId and userId are required');
     return resourceAvailabilityService.assertProjectAvailable(projectId, userId);
   }
 
-  createProject({ name, description, userId }) {
+  async createProject({ name, description, userId, startDate, endDate, assigneeId }) {
     if (!name || !description || !userId) {
-      throw new Error('name, description y userId son requeridos');
+      throw new Error('name, description and userId are required');
     }
 
     return this.repository.create({
-      id: `${Date.now()}`,
       userId,
       name: name.trim(),
       description: description.trim(),
-      createdAt: new Date().toISOString(),
-      responsableId: null
+      assigneeId: assigneeId ?? null,
+      startDate: startDate ?? null,
+      endDate: endDate ?? null
     });
   }
 
-  updateProject(projectId, userId, updates) {
-    if (!projectId || !userId) throw new Error('projectId y userId son requeridos');
+  async updateProject(projectId, userId, updates) {
+    if (!projectId || !userId) throw new Error('projectId and userId are required');
 
-    resourceAvailabilityService.assertProjectAvailable(projectId, userId);
+    await resourceAvailabilityService.assertProjectAvailable(projectId, userId);
 
-    const project = this.repository.update(projectId, userId, {
+    const patch = {
       name: updates.name?.trim(),
-      description: updates.description?.trim()
-    });
+      description: updates.description?.trim(),
+      startDate: updates.startDate,
+      endDate: updates.endDate
+    };
+    const defined = {};
+    if (patch.name !== undefined) defined.name = patch.name;
+    if (patch.description !== undefined) defined.description = patch.description;
+    if (patch.startDate !== undefined) defined.startDate = patch.startDate;
+    if (patch.endDate !== undefined) defined.endDate = patch.endDate;
 
-    if (!project) throw new NotFoundError('Proyecto no encontrado');
+    const project = await this.repository.update(projectId, userId, defined);
+
+    if (!project) throw new NotFoundError('Project not found');
     return project;
   }
 
-  assignResponsable(projectId, ownerUserId, responsableId) {
-    if (!projectId || !ownerUserId || !responsableId) {
-      throw new Error('projectId, ownerUserId y responsableId son requeridos');
+  async assignAssignee(projectId, ownerUserId, assigneeId) {
+    if (!projectId || !ownerUserId || !assigneeId) {
+      throw new Error('projectId, ownerUserId and assigneeId are required');
     }
-    resourceAvailabilityService.assertProjectAvailable(projectId, ownerUserId);
-    return this.repository.update(projectId, ownerUserId, { responsableId });
+    await resourceAvailabilityService.assertProjectAvailable(projectId, ownerUserId);
+    return this.repository.update(projectId, ownerUserId, { assigneeId });
   }
 
-  deleteProject(projectId, userId) {
-    if (!projectId || !userId) throw new Error('projectId y userId son requeridos');
-    resourceAvailabilityService.assertProjectAvailable(projectId, userId);
-    taskRepository.deleteByProjectId(projectId);
-    this.repository.delete(projectId, userId);
+  async deleteProject(projectId, userId) {
+    if (!projectId || !userId) throw new Error('projectId and userId are required');
+    await resourceAvailabilityService.assertProjectAvailable(projectId, userId);
+    await taskRepository.deleteByProjectId(projectId);
+    await this.repository.delete(projectId, userId);
     return true;
   }
 }
 
-// Exportar instancia singleton
 module.exports = new ProjectService();

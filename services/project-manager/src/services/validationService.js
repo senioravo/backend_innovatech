@@ -1,19 +1,40 @@
 class ValidationService {
+  static hasOwn(data, key) {
+    return Object.prototype.hasOwnProperty.call(data, key);
+  }
+
+  static optionalIsoDate(data, field, errors) {
+    if (!ValidationService.hasOwn(data, field)) return undefined;
+    const v = data[field];
+    if (v === null || v === '') return null;
+    if (typeof v !== 'string' || !/^\d{4}-\d{2}-\d{2}$/.test(v)) {
+      errors.push(`${field} must be a date in YYYY-MM-DD format`);
+      return undefined;
+    }
+    return v;
+  }
+
   static validateProjectInput(data) {
     const errors = [];
-    const name = data.name ?? data.nombre;
-    const description = data.description ?? data.descripcion;
+    const name = data.name;
+    const description = data.description;
 
     if (!name || typeof name !== 'string' || !name.trim()) {
-      errors.push('El nombre es requerido y debe ser texto');
+      errors.push('name is required and must be a string');
     } else if (name.trim().length < 3) {
-      errors.push('El nombre debe tener al menos 3 caracteres');
+      errors.push('name must be at least 3 characters');
     }
 
     if (!description || typeof description !== 'string' || !description.trim()) {
-      errors.push('La descripción es requerida y debe ser texto');
+      errors.push('description is required and must be a string');
     } else if (description.trim().length < 10) {
-      errors.push('La descripción debe tener al menos 10 caracteres');
+      errors.push('description must be at least 10 characters');
+    }
+
+    const start = ValidationService.optionalIsoDate(data, 'startDate', errors);
+    const end = ValidationService.optionalIsoDate(data, 'endDate', errors);
+    if (errors.length === 0 && start && end && end.localeCompare(start) < 0) {
+      errors.push('endDate cannot be before startDate');
     }
 
     return {
@@ -24,19 +45,35 @@ class ValidationService {
 
   static validateUpdateInput(data) {
     const errors = [];
-    const name = data.name ?? data.nombre;
-    const description = data.description ?? data.descripcion;
+    const name = data.name;
+    const description = data.description;
 
-    if (!name && !description) {
-      errors.push('Debe proporcionar nombre o descripción para actualizar');
+    const hasName = ValidationService.hasOwn(data, 'name');
+    const hasDescription = ValidationService.hasOwn(data, 'description');
+    const hasStart = ValidationService.hasOwn(data, 'startDate');
+    const hasEnd = ValidationService.hasOwn(data, 'endDate');
+
+    if (!hasName && !hasDescription && !hasStart && !hasEnd) {
+      errors.push('Provide at least one of: name, description, startDate, endDate');
     }
 
-    if (name && name.trim().length < 3) {
-      errors.push('El nombre debe tener al menos 3 caracteres');
+    if (hasName) {
+      if (!name || typeof name !== 'string' || !name.trim() || name.trim().length < 3) {
+        errors.push('name must be at least 3 characters');
+      }
     }
 
-    if (description && description.trim().length < 10) {
-      errors.push('La descripción debe tener al menos 10 caracteres');
+    if (hasDescription) {
+      if (typeof description !== 'string' || description.trim().length < 10) {
+        errors.push('description must be at least 10 characters');
+      }
+    }
+
+    const start = hasStart ? ValidationService.optionalIsoDate(data, 'startDate', errors) : undefined;
+    const end = hasEnd ? ValidationService.optionalIsoDate(data, 'endDate', errors) : undefined;
+
+    if (errors.length === 0 && start && end && end.localeCompare(start) < 0) {
+      errors.push('endDate cannot be before startDate');
     }
 
     return {
@@ -47,19 +84,25 @@ class ValidationService {
 
   static validateTaskInput(data) {
     const errors = [];
-    const title = data.title ?? data.titulo;
-    const description = data.description ?? data.descripcion;
+    const title = data.title;
+    const description = data.description;
 
     if (!title || typeof title !== 'string' || !title.trim()) {
-      errors.push('El título es requerido y debe ser texto');
+      errors.push('title is required and must be a string');
     } else if (title.trim().length < 3) {
-      errors.push('El título debe tener al menos 3 caracteres');
+      errors.push('title must be at least 3 characters');
     }
 
     if (description !== undefined && description !== null && String(description).trim() !== '') {
       if (typeof description !== 'string' || description.trim().length < 10) {
-        errors.push('La descripción, si se informa, debe tener al menos 10 caracteres');
+        errors.push('description, if provided, must be at least 10 characters');
       }
+    }
+
+    const start = ValidationService.optionalIsoDate(data, 'startDate', errors);
+    const end = ValidationService.optionalIsoDate(data, 'endDate', errors);
+    if (errors.length === 0 && start && end && end.localeCompare(start) < 0) {
+      errors.push('endDate cannot be before startDate');
     }
 
     return {
@@ -70,31 +113,42 @@ class ValidationService {
 
   static validateTaskUpdateInput(data) {
     const errors = [];
-    const title = data.title ?? data.titulo;
-    const description = data.description ?? data.descripcion;
+    const title = data.title;
+    const description = data.description;
 
-    const hasTitle = data.title !== undefined || data.titulo !== undefined;
-    const hasDescription = data.description !== undefined || data.descripcion !== undefined;
-    const hasCompleted = data.completed !== undefined || data.completado !== undefined;
+    const hasTitle = ValidationService.hasOwn(data, 'title');
+    const hasDescription = ValidationService.hasOwn(data, 'description');
+    const hasCompleted = ValidationService.hasOwn(data, 'completed');
+    const hasStart = ValidationService.hasOwn(data, 'startDate');
+    const hasEnd = ValidationService.hasOwn(data, 'endDate');
 
-    if (!hasTitle && !hasDescription && !hasCompleted) {
-      errors.push('Debe proporcionar título, descripción o completado para actualizar');
+    if (!hasTitle && !hasDescription && !hasCompleted && !hasStart && !hasEnd) {
+      errors.push(
+        'Provide at least one of: title, description, completed, startDate, endDate'
+      );
     }
 
     if (hasTitle) {
       if (!title || typeof title !== 'string' || !title.trim() || title.trim().length < 3) {
-        errors.push('El título debe tener al menos 3 caracteres');
+        errors.push('title must be at least 3 characters');
       }
     }
 
     if (hasDescription) {
       if (typeof description !== 'string' || description.trim().length < 10) {
-        errors.push('La descripción debe tener al menos 10 caracteres');
+        errors.push('description must be at least 10 characters');
       }
     }
 
-    if (hasCompleted && typeof (data.completed ?? data.completado) !== 'boolean') {
-      errors.push('completado debe ser booleano');
+    if (hasCompleted && typeof data.completed !== 'boolean') {
+      errors.push('completed must be a boolean');
+    }
+
+    const start = hasStart ? ValidationService.optionalIsoDate(data, 'startDate', errors) : undefined;
+    const end = hasEnd ? ValidationService.optionalIsoDate(data, 'endDate', errors) : undefined;
+
+    if (errors.length === 0 && start && end && end.localeCompare(start) < 0) {
+      errors.push('endDate cannot be before startDate');
     }
 
     return {
@@ -103,18 +157,15 @@ class ValidationService {
     };
   }
 
-  /**
-   * responsableId / userId: identificador acordado con el microservicio de usuarios (sin validación remota aquí).
-   */
-  static validateResponsableInput(data) {
+  static validateAssigneeInput(data) {
     const errors = [];
-    const rid = data.responsableId ?? data.userId;
-    if (rid === undefined || rid === null) {
-      errors.push('Debe enviar responsableId o userId');
-    } else if (typeof rid !== 'string' || !rid.trim()) {
-      errors.push('El identificador del responsable debe ser texto no vacío');
-    } else if (rid.trim().length > 120) {
-      errors.push('El identificador del responsable es demasiado largo');
+    const id = data.assigneeId;
+    if (id === undefined || id === null) {
+      errors.push('assigneeId is required');
+    } else if (typeof id !== 'string' || !id.trim()) {
+      errors.push('assigneeId must be a non-empty string');
+    } else if (id.trim().length > 120) {
+      errors.push('assigneeId is too long');
     }
     return {
       isValid: errors.length === 0,

@@ -12,6 +12,7 @@ module.exports = {
   JWT_SECRET: process.env.JWT_SECRET || 'cambiar_en_produccion',
   API_GATEWAY_PREFIX: process.env.API_GATEWAY_PREFIX || '/api/v1',
   AUTH_SERVICE_URL: (process.env.AUTH_SERVICE_URL || '').trim(),
+  databaseUrl: (process.env.DATABASE_URL || '').trim(),
   internalRequestTimeoutMs: int(process.env.INTERNAL_REQUEST_TIMEOUT_MS, 5000),
   circuitBreaker: {
     failureThreshold: int(process.env.CB_FAILURE_THRESHOLD, 5),
