@@ -27,5 +27,8 @@ module.exports = {
     username: (process.env.ELASTICSEARCH_USERNAME || '').trim(),
     password: process.env.ELASTICSEARCH_PASSWORD || '',
     tlsInsecure: process.env.ELASTICSEARCH_TLS_INSECURE === '1'
-  }
+  },
+  /** Prometheus: ENABLE_METRICS=0 desactiva /metrics y el middleware HTTP. */
+  enableMetrics: process.env.ENABLE_METRICS !== '0',
+  metricsPath: ((process.env.METRICS_PATH || '/metrics').trim() || '/metrics')
 };
