@@ -1,13 +1,18 @@
+const { sendAuditToElasticsearch } = require('../clients/elasticAuditClient');
+
 /**
- * Auditoría básica: una línea JSON por evento (fácil de grep / enviar a agregador).
+ * Auditoría básica: consola (JSON) + Elasticsearch opcional (ELASTICSEARCH_NODE).
  */
 function auditLog(entry) {
-  const line = JSON.stringify({
+  const doc = {
     ts: new Date().toISOString(),
     type: 'AUDIT',
     ...entry
+  };
+  console.info(JSON.stringify(doc));
+  sendAuditToElasticsearch(doc).catch((err) => {
+    console.error('[audit-es] index failed:', err.message);
   });
-  console.info(line);
 }
 
 function auditFromRequest(req, partial) {
