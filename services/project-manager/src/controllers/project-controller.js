@@ -6,6 +6,7 @@ const {
   pickProjectScheduleFields
 } = require('../dtos/projectDto');
 const { ValidationError } = require('../utils/errorHandler');
+const { auditFromRequest } = require('../utils/auditLog');
 
 const projectController = {
   async listProjects(req, res, next) {
@@ -42,6 +43,12 @@ const projectController = {
         userId: req.user.id
       });
 
+      auditFromRequest(req, {
+        action: 'PROJECT_CREATE',
+        resource: 'project',
+        resourceId: project.id
+      });
+
       res.status(201).json(projectToDto(project));
     } catch (error) {
       next(error);
@@ -66,6 +73,13 @@ const projectController = {
 
       const project = await projectService.updateProject(req.params.id, req.user.id, updates);
 
+      auditFromRequest(req, {
+        action: 'PROJECT_UPDATE',
+        resource: 'project',
+        resourceId: req.params.id,
+        meta: { fields: Object.keys(updates) }
+      });
+
       res.json(projectToDto(project));
     } catch (error) {
       next(error);
@@ -80,6 +94,14 @@ const projectController = {
       }
       const assigneeId = String(req.body.assigneeId).trim();
       const project = await projectService.assignAssignee(req.params.id, req.user.id, assigneeId);
+
+      auditFromRequest(req, {
+        action: 'PROJECT_ASSIGNEE',
+        resource: 'project',
+        resourceId: req.params.id,
+        meta: { assigneeId }
+      });
+
       res.json(projectToDto(project));
     } catch (error) {
       next(error);
@@ -89,6 +111,13 @@ const projectController = {
   async deleteProject(req, res, next) {
     try {
       await projectService.deleteProject(req.params.id, req.user.id);
+
+      auditFromRequest(req, {
+        action: 'PROJECT_DELETE',
+        resource: 'project',
+        resourceId: req.params.id
+      });
+
       res.status(204).send();
     } catch (error) {
       next(error);
