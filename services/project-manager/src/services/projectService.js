@@ -1,5 +1,6 @@
 const projectRepository = require('../repositories/projectRepository');
 const taskRepository = require('../repositories/taskRepository');
+const resourceAvailabilityService = require('./resourceAvailabilityService');
 const { NotFoundError } = require('../utils/errorHandler');
 
 /**
@@ -19,9 +20,7 @@ class ProjectService {
 
   getProject(projectId, userId) {
     if (!projectId || !userId) throw new Error('projectId y userId son requeridos');
-    const project = this.repository.findByIdAndUserId(projectId, userId);
-    if (!project) throw new NotFoundError('Proyecto no encontrado');
-    return project;
+    return resourceAvailabilityService.assertProjectAvailable(projectId, userId);
   }
 
   createProject({ name, description, userId }) {
@@ -41,7 +40,9 @@ class ProjectService {
 
   updateProject(projectId, userId, updates) {
     if (!projectId || !userId) throw new Error('projectId y userId son requeridos');
-    
+
+    resourceAvailabilityService.assertProjectAvailable(projectId, userId);
+
     const project = this.repository.update(projectId, userId, {
       name: updates.name?.trim(),
       description: updates.description?.trim()
@@ -55,15 +56,13 @@ class ProjectService {
     if (!projectId || !ownerUserId || !responsableId) {
       throw new Error('projectId, ownerUserId y responsableId son requeridos');
     }
-    const project = this.repository.findByIdAndUserId(projectId, ownerUserId);
-    if (!project) throw new NotFoundError('Proyecto no encontrado');
+    resourceAvailabilityService.assertProjectAvailable(projectId, ownerUserId);
     return this.repository.update(projectId, ownerUserId, { responsableId });
   }
 
   deleteProject(projectId, userId) {
     if (!projectId || !userId) throw new Error('projectId y userId son requeridos');
-    const project = this.repository.findByIdAndUserId(projectId, userId);
-    if (!project) throw new NotFoundError('Proyecto no encontrado');
+    resourceAvailabilityService.assertProjectAvailable(projectId, userId);
     taskRepository.deleteByProjectId(projectId);
     this.repository.delete(projectId, userId);
     return true;

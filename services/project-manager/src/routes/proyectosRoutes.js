@@ -2,6 +2,7 @@ const express = require('express');
 const authMiddleware = require('../middlewares/authMiddleware');
 const requireRole = require('../middlewares/roleMiddleware');
 const projectController = require('../controllers/project-controller');
+const resourceAvailabilityController = require('../controllers/resource-availability-controller');
 const taskController = require('../controllers/task-controller');
 
 const router = express.Router();
@@ -14,6 +15,17 @@ router.get(
 );
 router.post('/', requireRole('Gestor'), projectController.createProject);
 
+router.get(
+  '/:id/disponibilidad',
+  requireRole('Gestor', 'Profesional', 'Directivo'),
+  resourceAvailabilityController.checkProject
+);
+
+router.get(
+  '/:projectId/tasks/:taskId/disponibilidad',
+  requireRole('Gestor', 'Profesional', 'Directivo'),
+  resourceAvailabilityController.checkTaskInProject
+);
 router.get(
   '/:projectId/tasks/:taskId',
   requireRole('Gestor', 'Profesional', 'Directivo'),
