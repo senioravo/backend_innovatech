@@ -7,11 +7,15 @@ const apiGateway = require('./gateway/apiGateway');
 const { getAuthDependencyStatus } = require('./clients/authServiceClient');
 const { handleNotFound, handleError } = require('./utils/responseUtil');
 const { verifyDatabase } = require('./db/verify');
+const { metricsMiddleware, metricsHandler } = require('./metrics/prometheus');
 
 const app = express();
 
 app.use(express.json());
 app.use(cors());
+app.use(metricsMiddleware);
+
+app.get(config.metricsPath, metricsHandler);
 
 app.get('/health', async (req, res) => {
   res.json({
