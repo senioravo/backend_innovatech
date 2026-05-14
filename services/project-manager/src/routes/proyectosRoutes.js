@@ -7,5 +7,6 @@ const router = express.Router();
 
 router.use(authMiddleware);
 router.post('/', requireRole('Gestor'), projectController.createProject);
+router.delete('/:id', requireRole('Gestor'), projectController.deleteProject);
 
 module.exports = router;
