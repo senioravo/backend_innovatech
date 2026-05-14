@@ -56,6 +56,26 @@ class TaskRepository {
     return rows.map(mapTaskRow);
   }
 
+  /**
+   * Tareas donde el usuario es dueño del proyecto o responsable de la tarea.
+   */
+  async findForUserDashboard(userId) {
+    if (!userId) throw new Error('userId is required');
+    const pool = getPool();
+    const { rows } = await pool.query(
+      `SELECT t.*, p.name AS project_name
+       FROM "TASK" t
+       INNER JOIN "PROJECT" p ON t.project_id = p.id
+       WHERE p.owner_user_id = $1 OR t.responsable_id = $1
+       ORDER BY t.updated_at DESC NULLS LAST, t.created_at DESC`,
+      [userId]
+    );
+    return rows.map((row) => ({
+      task: mapTaskRow(row),
+      projectName: row.project_name
+    }));
+  }
+
   async create(data) {
     if (!data?.projectId || !data?.title) {
       throw new Error('projectId and title are required');
