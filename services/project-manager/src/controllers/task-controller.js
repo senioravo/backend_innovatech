@@ -3,6 +3,7 @@ const ValidationService = require('../services/validationService');
 const { createTaskDto, taskToDto, pickTaskScheduleFields } = require('../dtos/taskDto');
 const { normalizeTaskStatus } = require('../constants/taskStatuses');
 const { ValidationError } = require('../utils/errorHandler');
+const { auditFromRequest } = require('../utils/auditLog');
 
 const taskController = {
   async listTasksForProject(req, res, next) {
@@ -33,6 +34,13 @@ const taskController = {
         ...schedule
       });
 
+      auditFromRequest(req, {
+        action: 'TASK_CREATE',
+        resource: 'task',
+        resourceId: task.id,
+        projectId: req.params.projectId
+      });
+
       res.status(201).json(taskToDto(task));
     } catch (error) {
       next(error);
@@ -51,6 +59,15 @@ const taskController = {
         req.user.id,
         validation.normalized
       );
+
+      auditFromRequest(req, {
+        action: 'TASK_STATUS_UPDATE',
+        resource: 'task',
+        resourceId: req.params.taskId,
+        projectId: req.params.projectId,
+        meta: { status: validation.normalized }
+      });
+
       res.json(taskToDto(task));
     } catch (error) {
       next(error);
@@ -95,6 +112,14 @@ const taskController = {
       Object.assign(updates, pickTaskScheduleFields(req.body));
 
       const task = await taskService.updateTask(req.params.id, req.user.id, updates);
+
+      auditFromRequest(req, {
+        action: 'TASK_UPDATE',
+        resource: 'task',
+        resourceId: req.params.id,
+        meta: { fields: Object.keys(updates) }
+      });
+
       res.json(taskToDto(task));
     } catch (error) {
       next(error);
@@ -109,6 +134,14 @@ const taskController = {
       }
       const assigneeId = String(req.body.assigneeId).trim();
       const task = await taskService.assignAssignee(req.params.id, req.user.id, assigneeId);
+
+      auditFromRequest(req, {
+        action: 'TASK_ASSIGNEE',
+        resource: 'task',
+        resourceId: req.params.id,
+        meta: { assigneeId }
+      });
+
       res.json(taskToDto(task));
     } catch (error) {
       next(error);
@@ -118,6 +151,13 @@ const taskController = {
   async deleteTask(req, res, next) {
     try {
       await taskService.deleteTask(req.params.id, req.user.id);
+
+      auditFromRequest(req, {
+        action: 'TASK_DELETE',
+        resource: 'task',
+        resourceId: req.params.id
+      });
+
       res.status(204).send();
     } catch (error) {
       next(error);
