@@ -4,6 +4,7 @@ const requireRole = require('../middlewares/roleMiddleware');
 const projectController = require('../controllers/project-controller');
 const projectRoutes = require('../routes/projectRoutes');
 const proyectosRoutes = require('../routes/proyectosRoutes');
+const taskRoutes = require('../routes/taskRoutes');
 
 const gatewayRouter = express.Router();
 
@@ -15,6 +16,7 @@ gatewayRouter.put(
 );
 
 gatewayRouter.use('/proyectos', proyectosRoutes);
+gatewayRouter.use('/tasks', taskRoutes);
 gatewayRouter.use('/projects', projectRoutes);
 
 module.exports = gatewayRouter;

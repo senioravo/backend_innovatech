@@ -44,6 +44,64 @@ class ValidationService {
       errors
     };
   }
+
+  static validateTaskInput(data) {
+    const errors = [];
+    const title = data.title ?? data.titulo;
+    const description = data.description ?? data.descripcion;
+
+    if (!title || typeof title !== 'string' || !title.trim()) {
+      errors.push('El título es requerido y debe ser texto');
+    } else if (title.trim().length < 3) {
+      errors.push('El título debe tener al menos 3 caracteres');
+    }
+
+    if (description !== undefined && description !== null && String(description).trim() !== '') {
+      if (typeof description !== 'string' || description.trim().length < 10) {
+        errors.push('La descripción, si se informa, debe tener al menos 10 caracteres');
+      }
+    }
+
+    return {
+      isValid: errors.length === 0,
+      errors
+    };
+  }
+
+  static validateTaskUpdateInput(data) {
+    const errors = [];
+    const title = data.title ?? data.titulo;
+    const description = data.description ?? data.descripcion;
+
+    const hasTitle = data.title !== undefined || data.titulo !== undefined;
+    const hasDescription = data.description !== undefined || data.descripcion !== undefined;
+    const hasCompleted = data.completed !== undefined || data.completado !== undefined;
+
+    if (!hasTitle && !hasDescription && !hasCompleted) {
+      errors.push('Debe proporcionar título, descripción o completado para actualizar');
+    }
+
+    if (hasTitle) {
+      if (!title || typeof title !== 'string' || !title.trim() || title.trim().length < 3) {
+        errors.push('El título debe tener al menos 3 caracteres');
+      }
+    }
+
+    if (hasDescription) {
+      if (typeof description !== 'string' || description.trim().length < 10) {
+        errors.push('La descripción debe tener al menos 10 caracteres');
+      }
+    }
+
+    if (hasCompleted && typeof (data.completed ?? data.completado) !== 'boolean') {
+      errors.push('completado debe ser booleano');
+    }
+
+    return {
+      isValid: errors.length === 0,
+      errors
+    };
+  }
 }
 
 module.exports = ValidationService;
