@@ -102,6 +102,25 @@ class ValidationService {
       errors
     };
   }
+
+  /**
+   * responsableId / userId: identificador acordado con el microservicio de usuarios (sin validación remota aquí).
+   */
+  static validateResponsableInput(data) {
+    const errors = [];
+    const rid = data.responsableId ?? data.userId;
+    if (rid === undefined || rid === null) {
+      errors.push('Debe enviar responsableId o userId');
+    } else if (typeof rid !== 'string' || !rid.trim()) {
+      errors.push('El identificador del responsable debe ser texto no vacío');
+    } else if (rid.trim().length > 120) {
+      errors.push('El identificador del responsable es demasiado largo');
+    }
+    return {
+      isValid: errors.length === 0,
+      errors
+    };
+  }
 }
 
 module.exports = ValidationService;

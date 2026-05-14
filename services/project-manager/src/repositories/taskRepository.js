@@ -37,6 +37,7 @@ class TaskRepository {
     if (updates.title !== undefined) task.title = updates.title;
     if (updates.description !== undefined) task.description = updates.description;
     if (updates.completed !== undefined) task.completed = updates.completed;
+    if (updates.responsableId !== undefined) task.responsableId = updates.responsableId;
     task.updatedAt = new Date().toISOString();
     return task;
   }

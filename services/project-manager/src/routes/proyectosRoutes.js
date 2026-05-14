@@ -25,6 +25,12 @@ router.post(
   taskController.createTask
 );
 
+router.patch(
+  '/:id/responsable',
+  requireRole('Gestor', 'Profesional'),
+  projectController.assignResponsable
+);
+
 router.delete('/:id', requireRole('Gestor'), projectController.deleteProject);
 
 module.exports = router;

@@ -19,6 +19,7 @@ function projectToDto(project) {
     id: project.id,
     name: project.name,
     description: project.description,
+    responsableId: project.responsableId ?? null,
     createdAt: project.createdAt
   };
 }

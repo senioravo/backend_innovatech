@@ -31,6 +31,12 @@ router.put(
   projectController.updateProject
 );
 
+router.patch(
+  '/:id/responsable',
+  requireRole('Gestor', 'Profesional'),
+  projectController.assignResponsable
+);
+
 router.delete(
   '/:id',
   requireRole('Gestor'),

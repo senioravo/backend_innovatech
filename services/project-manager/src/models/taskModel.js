@@ -1,5 +1,5 @@
 class TaskModel {
-  constructor({ id, projectId, title, description, completed, createdAt, updatedAt }) {
+  constructor({ id, projectId, title, description, completed, createdAt, updatedAt, responsableId }) {
     this.id = id;
     this.projectId = projectId;
     this.title = title;
@@ -7,6 +7,7 @@ class TaskModel {
     this.completed = Boolean(completed);
     this.createdAt = createdAt;
     this.updatedAt = updatedAt;
+    this.responsableId = responsableId ?? null;
   }
 }
 

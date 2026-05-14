@@ -70,6 +70,20 @@ const projectController = {
     }
   },
 
+  assignResponsable(req, res, next) {
+    try {
+      const validation = ValidationService.validateResponsableInput(req.body);
+      if (!validation.isValid) {
+        throw new ValidationError(validation.errors);
+      }
+      const responsableId = String(req.body.responsableId ?? req.body.userId).trim();
+      const project = projectService.assignResponsable(req.params.id, req.user.id, responsableId);
+      res.json(projectToDto(project));
+    } catch (error) {
+      next(error);
+    }
+  },
+
   deleteProject(req, res, next) {
     try {
       projectService.deleteProject(req.params.id, req.user.id);
