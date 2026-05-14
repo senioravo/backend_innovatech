@@ -4,6 +4,9 @@
 const bcrypt = require('bcrypt');
 const { query } = require('../config/database');
 
+// AS-TASK-21: Importar Winston logger
+const logger = require('../utils/logger');
+
 // AS-TASK-08: Importar configuración de roles
 const { ROLES, DEFAULT_ROLE, getAllRoles, isValidRole } = require('../config/roles');
 
@@ -30,7 +33,7 @@ class UserService {
       );
       return result.rows.length > 0;
     } catch (error) {
-      console.error('[UserService] Error al verificar email:', error);
+      logger.error('[UserService] Error al verificar email', { error: error.message, taskId: 'AS-TASK-21' });
       throw new Error('Error al verificar email en base de datos');
     }
   }
@@ -62,11 +65,11 @@ class UserService {
 
       const newUser = result.rows[0];
       
-      console.log(`[UserService] Usuario creado exitosamente - ID: ${newUser.id}, Email: ${newUser.email}`);
+      logger.info(`[UserService] Usuario creado exitosamente`, { userId: newUser.id, email: newUser.email, taskId: 'AS-TASK-21' });
       
       return newUser;
     } catch (error) {
-      console.error('[UserService] Error al crear usuario:', error);
+      logger.error('[UserService] Error al crear usuario', { error: error.message, taskId: 'AS-TASK-21' });
       throw error;
     }
   }
@@ -81,7 +84,7 @@ class UserService {
     try {
       return await bcrypt.compare(plainPassword, hashedPassword);
     } catch (error) {
-      console.error('[UserService] Error al verificar contraseña:', error);
+      logger.error('[UserService] Error al verificar contraseña', { error: error.message, taskId: 'AS-TASK-21' });
       throw new Error('Error al verificar contraseña');
     }
   }
@@ -100,7 +103,7 @@ class UserService {
       
       return result.rows.length > 0 ? result.rows[0] : null;
     } catch (error) {
-      console.error('[UserService] Error al buscar usuario:', error);
+      logger.error('[UserService] Error al buscar usuario', { error: error.message, taskId: 'AS-TASK-21' });
       throw new Error('Error al buscar usuario en base de datos');
     }
   }
@@ -155,7 +158,7 @@ class UserService {
       
       return result.rows.length > 0 ? result.rows[0] : null;
     } catch (error) {
-      console.error('[UserService] Error al buscar usuario por ID:', error);
+      logger.error('[UserService] Error al buscar usuario por ID', { error: error.message, taskId: 'AS-TASK-21' });
       throw new Error('Error al buscar usuario en base de datos');
     }
   }
@@ -190,11 +193,11 @@ class UserService {
 
       const updatedUser = result.rows[0];
       
-      console.log(`[UserService] Rol actualizado - UserID: ${updatedUser.id} - Nuevo rol: ${updatedUser.rol}`);
+      logger.info(`[UserService] Rol actualizado`, { userId: updatedUser.id, newRole: updatedUser.rol, taskId: 'AS-TASK-21' });
       
       return updatedUser;
     } catch (error) {
-      console.error('[UserService] Error al actualizar rol:', error);
+      logger.error('[UserService] Error al actualizar rol', { error: error.message, taskId: 'AS-TASK-21' });
       throw error;
     }
   }
