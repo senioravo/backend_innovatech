@@ -1,8 +1,13 @@
 require('dotenv').config();
+/**
+ * Arquitectura en capas (dependencias hacia abajo):
+ * - presentation/http → application → infrastructure
+ * - config / utils: transversales
+ */
 const express = require('express');
 const cors = require('cors');
 const config = require('./config');
-const apiGateway = require('./gateway/apiGateway');
+const apiGateway = require('./presentation/http/gateway/apiGateway');
 const { handleNotFound, handleError } = require('./utils/responseUtil');
 
 const app = express();
