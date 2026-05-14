@@ -28,6 +28,7 @@ function taskToDto(task) {
     title: task.title,
     description: task.description,
     completed: task.completed,
+    status: task.status ?? 'PENDING',
     assigneeId: task.assigneeId ?? null,
     startDate: formatDate(task.startDate),
     endDate: formatDate(task.endDate),

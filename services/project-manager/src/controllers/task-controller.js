@@ -1,9 +1,19 @@
 const taskService = require('../services/taskService');
 const ValidationService = require('../services/validationService');
 const { createTaskDto, taskToDto, pickTaskScheduleFields } = require('../dtos/taskDto');
+const { normalizeTaskStatus } = require('../constants/taskStatuses');
 const { ValidationError } = require('../utils/errorHandler');
 
 const taskController = {
+  async listTasksForProject(req, res, next) {
+    try {
+      const tasks = await taskService.listTasksByProject(req.params.projectId, req.user.id);
+      res.json({ tasks: tasks.map(taskToDto) });
+    } catch (error) {
+      next(error);
+    }
+  },
+
   async createTask(req, res, next) {
     try {
       const validation = ValidationService.validateTaskInput(req.body);
@@ -24,6 +34,24 @@ const taskController = {
       });
 
       res.status(201).json(taskToDto(task));
+    } catch (error) {
+      next(error);
+    }
+  },
+
+  async patchTaskStatus(req, res, next) {
+    try {
+      const validation = ValidationService.validateTaskStatusInput(req.body);
+      if (!validation.isValid) {
+        throw new ValidationError(validation.errors);
+      }
+      const task = await taskService.updateTaskStatus(
+        req.params.projectId,
+        req.params.taskId,
+        req.user.id,
+        validation.normalized
+      );
+      res.json(taskToDto(task));
     } catch (error) {
       next(error);
     }
@@ -58,6 +86,11 @@ const taskController = {
       }
       if (Object.prototype.hasOwnProperty.call(req.body, 'completed')) {
         updates.completed = Boolean(req.body.completed);
+      }
+      if (Object.prototype.hasOwnProperty.call(req.body, 'status')) {
+        const st = normalizeTaskStatus(req.body.status);
+        updates.status = st;
+        updates.completed = st === 'DONE';
       }
       Object.assign(updates, pickTaskScheduleFields(req.body));
 

@@ -5,6 +5,7 @@ class TaskModel {
     title,
     description,
     completed,
+    status,
     createdAt,
     updatedAt,
     assigneeId,
@@ -16,6 +17,7 @@ class TaskModel {
     this.title = title;
     this.description = description ?? '';
     this.completed = Boolean(completed);
+    this.status = status ?? 'PENDING';
     this.createdAt = createdAt;
     this.updatedAt = updatedAt ?? null;
     this.assigneeId = assigneeId ?? null;

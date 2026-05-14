@@ -10,6 +10,7 @@ function mapTaskRow(row) {
     title: row.title,
     description: row.description ?? '',
     completed: Boolean(row.completed),
+    status: row.status ?? 'PENDING',
     assigneeId: row.responsable_id,
     startDate: row.fecha_inicio,
     endDate: row.fecha_termino,
@@ -45,20 +46,33 @@ class TaskRepository {
     return rows[0] ? mapTaskRow(rows[0]) : null;
   }
 
+  async findByProjectId(projectId) {
+    if (!projectId) throw new Error('projectId is required');
+    const pool = getPool();
+    const { rows } = await pool.query(
+      `SELECT * FROM "TASK" WHERE project_id = $1 ORDER BY created_at ASC`,
+      [projectId]
+    );
+    return rows.map(mapTaskRow);
+  }
+
   async create(data) {
     if (!data?.projectId || !data?.title) {
       throw new Error('projectId and title are required');
     }
     const pool = getPool();
+    const completed = Boolean(data.completed);
+    const status = data.status ?? (completed ? 'DONE' : 'PENDING');
     const { rows } = await pool.query(
-      `INSERT INTO "TASK" (project_id, title, description, completed, responsable_id, fecha_inicio, fecha_termino)
-       VALUES ($1, $2, $3, $4, $5, $6, $7)
+      `INSERT INTO "TASK" (project_id, title, description, completed, status, responsable_id, fecha_inicio, fecha_termino)
+       VALUES ($1, $2, $3, $4, $5, $6, $7, $8)
        RETURNING *`,
       [
         data.projectId,
         data.title,
         data.description ?? '',
-        Boolean(data.completed),
+        completed,
+        status,
         data.assigneeId ?? null,
         data.startDate ?? null,
         data.endDate ?? null
@@ -84,6 +98,11 @@ class TaskRepository {
     if (updates.completed !== undefined) {
       sets.push(`completed = $${n}`);
       vals.push(updates.completed);
+      n += 1;
+    }
+    if (updates.status !== undefined) {
+      sets.push(`status = $${n}`);
+      vals.push(updates.status);
       n += 1;
     }
     if (updates.assigneeId !== undefined) {

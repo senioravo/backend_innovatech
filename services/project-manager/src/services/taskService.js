@@ -12,10 +12,17 @@ class TaskService {
       title: payload.title,
       description: payload.description ?? '',
       completed: Boolean(payload.completed),
+      status: payload.status,
       assigneeId: payload.assigneeId ?? null,
       startDate: payload.startDate ?? null,
       endDate: payload.endDate ?? null
     });
+  }
+
+  async listTasksByProject(projectId, userId) {
+    if (!projectId || !userId) throw new Error('projectId and userId are required');
+    await resourceAvailabilityService.assertProjectAvailable(projectId, userId);
+    return taskRepository.findByProjectId(projectId);
   }
 
   async getTask(projectId, taskId, userId) {
@@ -23,6 +30,17 @@ class TaskService {
       throw new Error('projectId, taskId and userId are required');
     }
     return resourceAvailabilityService.assertTaskInProject(projectId, taskId, userId);
+  }
+
+  async updateTaskStatus(projectId, taskId, userId, status) {
+    if (!projectId || !taskId || !userId || !status) {
+      throw new Error('projectId, taskId, userId and status are required');
+    }
+    await resourceAvailabilityService.assertTaskInProject(projectId, taskId, userId);
+    const completed = status === 'DONE';
+    const task = await taskRepository.update(taskId, userId, { status, completed });
+    if (!task) throw new NotFoundError('Task not found');
+    return task;
   }
 
   async updateTask(taskId, userId, updates) {

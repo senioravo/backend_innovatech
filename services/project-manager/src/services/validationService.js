@@ -111,6 +111,23 @@ class ValidationService {
     };
   }
 
+  static validateTaskStatusInput(data) {
+    const errors = [];
+    const { isValidTaskStatus, normalizeTaskStatus, TASK_STATUSES } = require('../constants/taskStatuses');
+    const s = data.status;
+    if (s === undefined || s === null || (typeof s === 'string' && !s.trim())) {
+      errors.push('status is required');
+    } else if (!isValidTaskStatus(s)) {
+      errors.push(`status must be one of: ${TASK_STATUSES.join(', ')}`);
+    }
+    const normalized = errors.length === 0 ? normalizeTaskStatus(s) : undefined;
+    return {
+      isValid: errors.length === 0,
+      errors,
+      normalized
+    };
+  }
+
   static validateTaskUpdateInput(data) {
     const errors = [];
     const title = data.title;
@@ -119,12 +136,13 @@ class ValidationService {
     const hasTitle = ValidationService.hasOwn(data, 'title');
     const hasDescription = ValidationService.hasOwn(data, 'description');
     const hasCompleted = ValidationService.hasOwn(data, 'completed');
+    const hasStatus = ValidationService.hasOwn(data, 'status');
     const hasStart = ValidationService.hasOwn(data, 'startDate');
     const hasEnd = ValidationService.hasOwn(data, 'endDate');
 
-    if (!hasTitle && !hasDescription && !hasCompleted && !hasStart && !hasEnd) {
+    if (!hasTitle && !hasDescription && !hasCompleted && !hasStatus && !hasStart && !hasEnd) {
       errors.push(
-        'Provide at least one of: title, description, completed, startDate, endDate'
+        'Provide at least one of: title, description, completed, status, startDate, endDate'
       );
     }
 
@@ -142,6 +160,13 @@ class ValidationService {
 
     if (hasCompleted && typeof data.completed !== 'boolean') {
       errors.push('completed must be a boolean');
+    }
+
+    if (hasStatus) {
+      const { isValidTaskStatus, TASK_STATUSES } = require('../constants/taskStatuses');
+      if (!isValidTaskStatus(data.status)) {
+        errors.push(`status must be one of: ${TASK_STATUSES.join(', ')}`);
+      }
     }
 
     const start = hasStart ? ValidationService.optionalIsoDate(data, 'startDate', errors) : undefined;
