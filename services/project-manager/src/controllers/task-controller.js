@@ -65,6 +65,20 @@ const taskController = {
     }
   },
 
+  assignResponsable(req, res, next) {
+    try {
+      const validation = ValidationService.validateResponsableInput(req.body);
+      if (!validation.isValid) {
+        throw new ValidationError(validation.errors);
+      }
+      const responsableId = String(req.body.responsableId ?? req.body.userId).trim();
+      const task = taskService.assignResponsable(req.params.id, req.user.id, responsableId);
+      res.json(taskToDto(task));
+    } catch (error) {
+      next(error);
+    }
+  },
+
   deleteTask(req, res, next) {
     try {
       taskService.deleteTask(req.params.id, req.user.id);

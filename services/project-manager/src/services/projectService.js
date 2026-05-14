@@ -34,7 +34,8 @@ class ProjectService {
       userId,
       name: name.trim(),
       description: description.trim(),
-      createdAt: new Date().toISOString()
+      createdAt: new Date().toISOString(),
+      responsableId: null
     });
   }
 
@@ -48,6 +49,15 @@ class ProjectService {
 
     if (!project) throw new NotFoundError('Proyecto no encontrado');
     return project;
+  }
+
+  assignResponsable(projectId, ownerUserId, responsableId) {
+    if (!projectId || !ownerUserId || !responsableId) {
+      throw new Error('projectId, ownerUserId y responsableId son requeridos');
+    }
+    const project = this.repository.findByIdAndUserId(projectId, ownerUserId);
+    if (!project) throw new NotFoundError('Proyecto no encontrado');
+    return this.repository.update(projectId, ownerUserId, { responsableId });
   }
 
   deleteProject(projectId, userId) {

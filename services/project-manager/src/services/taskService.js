@@ -15,6 +15,7 @@ class TaskService {
       title,
       description: description ?? '',
       completed: Boolean(completed),
+      responsableId: null,
       createdAt: now,
       updatedAt: now
     });
@@ -32,6 +33,15 @@ class TaskService {
   updateTask(taskId, userId, updates) {
     if (!taskId || !userId) throw new Error('taskId y userId son requeridos');
     const task = taskRepository.update(taskId, userId, updates);
+    if (!task) throw new NotFoundError('Tarea no encontrada');
+    return task;
+  }
+
+  assignResponsable(taskId, userId, responsableId) {
+    if (!taskId || !userId || !responsableId) {
+      throw new Error('taskId, userId y responsableId son requeridos');
+    }
+    const task = taskRepository.update(taskId, userId, { responsableId });
     if (!task) throw new NotFoundError('Tarea no encontrada');
     return task;
   }

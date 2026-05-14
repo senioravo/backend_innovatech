@@ -21,6 +21,7 @@ function taskToDto(task) {
     title: task.title,
     description: task.description,
     completed: task.completed,
+    responsableId: task.responsableId ?? null,
     createdAt: task.createdAt,
     updatedAt: task.updatedAt
   };

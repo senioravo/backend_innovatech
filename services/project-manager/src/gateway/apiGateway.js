@@ -15,6 +15,13 @@ gatewayRouter.put(
   projectController.updateProject
 );
 
+gatewayRouter.patch(
+  '/project/:id/responsable',
+  authMiddleware,
+  requireRole('Gestor', 'Profesional'),
+  projectController.assignResponsable
+);
+
 gatewayRouter.use('/proyectos', proyectosRoutes);
 gatewayRouter.use('/tasks', taskRoutes);
 gatewayRouter.use('/projects', projectRoutes);

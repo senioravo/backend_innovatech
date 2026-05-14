@@ -7,6 +7,11 @@ const router = express.Router();
 
 router.use(authMiddleware);
 router.put('/:id', requireRole('Gestor', 'Profesional'), taskController.updateTask);
+router.patch(
+  '/:id/responsable',
+  requireRole('Gestor', 'Profesional'),
+  taskController.assignResponsable
+);
 router.delete('/:id', requireRole('Gestor'), taskController.deleteTask);
 
 module.exports = router;
