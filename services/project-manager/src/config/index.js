@@ -18,5 +18,14 @@ module.exports = {
     failureThreshold: int(process.env.CB_FAILURE_THRESHOLD, 5),
     resetTimeoutMs: int(process.env.CB_RESET_TIMEOUT_MS, 30000),
     successThreshold: int(process.env.CB_SUCCESS_THRESHOLD, 1)
+  },
+  /** Logs de auditoría centralizados (opcional). Sin ELASTICSEARCH_NODE solo se usa consola. */
+  elasticsearch: {
+    node: (process.env.ELASTICSEARCH_NODE || '').trim(),
+    index: (process.env.ELASTICSEARCH_AUDIT_INDEX || 'project-manager-audit').trim(),
+    apiKey: (process.env.ELASTICSEARCH_API_KEY || '').trim(),
+    username: (process.env.ELASTICSEARCH_USERNAME || '').trim(),
+    password: process.env.ELASTICSEARCH_PASSWORD || '',
+    tlsInsecure: process.env.ELASTICSEARCH_TLS_INSECURE === '1'
   }
 };

@@ -9,6 +9,7 @@
     "db:migrate": "node scripts/apply-migration.js"
   },
   "dependencies": {
+    "@elastic/elasticsearch": "^8.15.1",
     "cors": "^2.8.5",
     "dotenv": "^16.6.1",
     "express": "^4.18.2",
