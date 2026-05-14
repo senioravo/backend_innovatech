@@ -1,7 +1,7 @@
 const express = require('express');
 const cors = require('cors');
 const config = require('./config');
-const projectRoutes = require('./routes/projectRoutes');
+const apiGateway = require('./gateway/apiGateway');
 const { handleNotFound, handleError } = require('./utils/responseUtil');
 
 const app = express();
@@ -15,8 +15,8 @@ app.get('/health', (req, res) => {
   res.json({ status: 'OK', service: 'Project Manager' });
 });
 
-// Rutas de dominio
-app.use('/projects', projectRoutes);
+// API Gateway: enrutamiento centralizado (p. ej. /api/v1/projects)
+app.use(config.API_GATEWAY_PREFIX, apiGateway);
 
 // Manejo de errores: NO ENCONTRADO antes de errores generales
 app.use(handleNotFound);
