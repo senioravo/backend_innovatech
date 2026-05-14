@@ -1,0 +1,19 @@
+-- Estados de avance para el panel "Consultas" y API.
+
+ALTER TABLE "TASK" ADD COLUMN IF NOT EXISTS status TEXT;
+
+UPDATE "TASK"
+SET status = CASE WHEN completed THEN 'DONE' ELSE 'PENDING' END
+WHERE status IS NULL;
+
+ALTER TABLE "TASK" ALTER COLUMN status SET DEFAULT 'PENDING';
+ALTER TABLE "TASK" ALTER COLUMN status SET NOT NULL;
+
+DO $$
+BEGIN
+  IF NOT EXISTS (SELECT 1 FROM pg_constraint WHERE conname = 'chk_task_status') THEN
+    ALTER TABLE "TASK"
+      ADD CONSTRAINT chk_task_status
+      CHECK (status IN ('PENDING', 'IN_PROGRESS', 'IN_REVIEW', 'DONE'));
+  END IF;
+END $$;

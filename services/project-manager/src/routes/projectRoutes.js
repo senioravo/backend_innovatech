@@ -25,6 +25,16 @@ router.get(
   requireRole('Gestor', 'Profesional', 'Directivo'),
   taskController.getTask
 );
+router.patch(
+  '/:projectId/tasks/:taskId/status',
+  requireRole('Gestor', 'Profesional', 'Directivo'),
+  taskController.patchTaskStatus
+);
+router.get(
+  '/:projectId/tasks',
+  requireRole('Gestor', 'Profesional', 'Directivo'),
+  taskController.listTasksForProject
+);
 router.post(
   '/:projectId/tasks',
   requireRole('Gestor', 'Profesional'),
