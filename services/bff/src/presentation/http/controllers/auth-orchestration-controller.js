@@ -1,4 +1,4 @@
-const authOrchestrationService = require('../services/authOrchestrationService');
+const authOrchestrationService = require('../../../application/auth/authOrchestrationService');
 
 function sendUpstream(res, { status, data }) {
   if (status === 204) {

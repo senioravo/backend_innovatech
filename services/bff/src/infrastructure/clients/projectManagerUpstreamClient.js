@@ -1,5 +1,5 @@
-const config = require('../config');
-const { joinUrl, upstreamJson } = require('../lib/httpUpstream');
+const config = require('../../config');
+const { joinUrl, upstreamJson } = require('../http/httpUpstream');
 
 function pickForwardHeaders(req) {
   const out = {};

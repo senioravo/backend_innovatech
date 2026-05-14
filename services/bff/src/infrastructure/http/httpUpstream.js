@@ -1,4 +1,4 @@
-const { UpstreamError } = require('../utils/errorHandler');
+const { UpstreamError } = require('../../utils/errorHandler');
 
 function joinUrl(base, pathWithQuery) {
   const b = String(base).replace(/\/$/, '');

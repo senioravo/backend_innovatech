@@ -1,7 +1,7 @@
-const authUpstreamClient = require('../clients/authUpstreamClient');
+const authUpstreamClient = require('../../infrastructure/clients/authUpstreamClient');
 
 /**
- * Orquestación hacia el microservicio **auth** (sin lógica de negocio en el BFF).
+ * Capa de aplicación: orquestación hacia **auth** (sin reglas de dominio del BFF).
  */
 const authOrchestrationService = {
   register(body) {

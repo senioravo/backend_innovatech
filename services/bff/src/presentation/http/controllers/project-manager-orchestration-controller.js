@@ -1,4 +1,4 @@
-const projectManagerOrchestrationService = require('../services/projectManagerOrchestrationService');
+const projectManagerOrchestrationService = require('../../../application/projectManager/projectManagerOrchestrationService');
 
 const projectManagerOrchestrationController = {
   async forward(req, res, next) {

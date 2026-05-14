@@ -1,7 +1,7 @@
-const projectManagerUpstreamClient = require('../clients/projectManagerUpstreamClient');
+const projectManagerUpstreamClient = require('../../infrastructure/clients/projectManagerUpstreamClient');
 
 /**
- * Orquestación hacia **project-manager**: reenvío transparente de rutas bajo /api/v1.
+ * Capa de aplicación: orquestación hacia **project-manager** (reenvío HTTP).
  */
 const projectManagerOrchestrationService = {
   forward(req) {
