@@ -1,4 +1,5 @@
 const projectRepository = require('../repositories/projectRepository');
+const taskRepository = require('../repositories/taskRepository');
 const { NotFoundError } = require('../utils/errorHandler');
 
 /**
@@ -51,8 +52,10 @@ class ProjectService {
 
   deleteProject(projectId, userId) {
     if (!projectId || !userId) throw new Error('projectId y userId son requeridos');
-    const deleted = this.repository.delete(projectId, userId);
-    if (!deleted) throw new NotFoundError('Proyecto no encontrado');
+    const project = this.repository.findByIdAndUserId(projectId, userId);
+    if (!project) throw new NotFoundError('Proyecto no encontrado');
+    taskRepository.deleteByProjectId(projectId);
+    this.repository.delete(projectId, userId);
     return true;
   }
 }
