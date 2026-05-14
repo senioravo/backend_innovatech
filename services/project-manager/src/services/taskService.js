@@ -3,53 +3,51 @@ const resourceAvailabilityService = require('./resourceAvailabilityService');
 const { NotFoundError } = require('../utils/errorHandler');
 
 class TaskService {
-  createTask(projectId, userId, { title, description, completed }) {
-    if (!projectId || !userId) throw new Error('projectId y userId son requeridos');
-    resourceAvailabilityService.assertProjectAvailable(projectId, userId);
+  async createTask(projectId, userId, payload) {
+    if (!projectId || !userId) throw new Error('projectId and userId are required');
+    await resourceAvailabilityService.assertProjectAvailable(projectId, userId);
 
-    const now = new Date().toISOString();
     return taskRepository.create({
-      id: `task-${Date.now()}-${Math.random().toString(36).slice(2, 9)}`,
       projectId,
-      title,
-      description: description ?? '',
-      completed: Boolean(completed),
-      responsableId: null,
-      createdAt: now,
-      updatedAt: now
+      title: payload.title,
+      description: payload.description ?? '',
+      completed: Boolean(payload.completed),
+      assigneeId: payload.assigneeId ?? null,
+      startDate: payload.startDate ?? null,
+      endDate: payload.endDate ?? null
     });
   }
 
-  getTask(projectId, taskId, userId) {
+  async getTask(projectId, taskId, userId) {
     if (!projectId || !taskId || !userId) {
-      throw new Error('projectId, taskId y userId son requeridos');
+      throw new Error('projectId, taskId and userId are required');
     }
     return resourceAvailabilityService.assertTaskInProject(projectId, taskId, userId);
   }
 
-  updateTask(taskId, userId, updates) {
-    if (!taskId || !userId) throw new Error('taskId y userId son requeridos');
-    resourceAvailabilityService.assertTaskAvailable(taskId, userId);
-    const task = taskRepository.update(taskId, userId, updates);
-    if (!task) throw new NotFoundError('Tarea no encontrada');
+  async updateTask(taskId, userId, updates) {
+    if (!taskId || !userId) throw new Error('taskId and userId are required');
+    await resourceAvailabilityService.assertTaskAvailable(taskId, userId);
+    const task = await taskRepository.update(taskId, userId, updates);
+    if (!task) throw new NotFoundError('Task not found');
     return task;
   }
 
-  assignResponsable(taskId, userId, responsableId) {
-    if (!taskId || !userId || !responsableId) {
-      throw new Error('taskId, userId y responsableId son requeridos');
+  async assignAssignee(taskId, userId, assigneeId) {
+    if (!taskId || !userId || !assigneeId) {
+      throw new Error('taskId, userId and assigneeId are required');
     }
-    resourceAvailabilityService.assertTaskAvailable(taskId, userId);
-    const task = taskRepository.update(taskId, userId, { responsableId });
-    if (!task) throw new NotFoundError('Tarea no encontrada');
+    await resourceAvailabilityService.assertTaskAvailable(taskId, userId);
+    const task = await taskRepository.update(taskId, userId, { assigneeId });
+    if (!task) throw new NotFoundError('Task not found');
     return task;
   }
 
-  deleteTask(taskId, userId) {
-    if (!taskId || !userId) throw new Error('taskId y userId son requeridos');
-    resourceAvailabilityService.assertTaskAvailable(taskId, userId);
-    const deleted = taskRepository.delete(taskId, userId);
-    if (!deleted) throw new NotFoundError('Tarea no encontrada');
+  async deleteTask(taskId, userId) {
+    if (!taskId || !userId) throw new Error('taskId and userId are required');
+    await resourceAvailabilityService.assertTaskAvailable(taskId, userId);
+    const deleted = await taskRepository.delete(taskId, userId);
+    if (!deleted) throw new NotFoundError('Task not found');
     return true;
   }
 }

@@ -1,7 +1,7 @@
 const { ApplicationError, ValidationError } = require('./errorHandler');
 
 function handleNotFound(req, res) {
-  res.status(404).json({ error: 'Ruta no encontrada' });
+  res.status(404).json({ error: 'Route not found' });
 }
 
 function handleError(err, req, res, next) {
@@ -24,7 +24,7 @@ function handleError(err, req, res, next) {
 
   // Error genérico
   res.status(500).json({
-    error: 'Error interno del servidor'
+    error: 'Internal server error'
   });
 }
 

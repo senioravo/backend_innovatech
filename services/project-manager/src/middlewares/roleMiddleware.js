@@ -4,13 +4,13 @@ function requireRole(...allowedRoles) {
 
     if (!userRole) {
       return res.status(403).json({
-        error: 'Usuario sin rol asignado. Solicita acceso al gestor del proyecto.'
+        error: 'User has no role assigned'
       });
     }
 
     if (!allowedRoles.includes(userRole)) {
       return res.status(403).json({
-        error: `No tienes permisos. Roles permitidos: ${allowedRoles.join(', ')}`
+        error: `Forbidden. Allowed roles: ${allowedRoles.join(', ')}`
       });
     }
 

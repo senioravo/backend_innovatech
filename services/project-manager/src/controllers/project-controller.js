@@ -1,46 +1,44 @@
 const projectService = require('../services/projectService');
 const ValidationService = require('../services/validationService');
-const { createProjectDto, projectToDto } = require('../dtos/projectDto');
+const {
+  createProjectDto,
+  projectToDto,
+  pickProjectScheduleFields
+} = require('../dtos/projectDto');
 const { ValidationError } = require('../utils/errorHandler');
 
-/**
- * Controlador de proyectos
- * Responsabilidad única: manejar peticiones HTTP
- * Delegación: validación → ValidationService, lógica → projectService, transformación → DTO
- */
 const projectController = {
-  listProjects(req, res, next) {
+  async listProjects(req, res, next) {
     try {
-      const projects = projectService.listProjects(req.user.id);
+      const projects = await projectService.listProjects(req.user.id);
       res.json({ projects: projects.map(projectToDto) });
     } catch (error) {
       next(error);
     }
   },
 
-  getProject(req, res, next) {
+  async getProject(req, res, next) {
     try {
-      const project = projectService.getProject(req.params.id, req.user.id);
+      const project = await projectService.getProject(req.params.id, req.user.id);
       res.json(projectToDto(project));
     } catch (error) {
       next(error);
     }
   },
 
-  createProject(req, res, next) {
+  async createProject(req, res, next) {
     try {
-      // 1. Validar entrada
       const validation = ValidationService.validateProjectInput(req.body);
       if (!validation.isValid) {
         throw new ValidationError(validation.errors);
       }
 
-      // 2. Mapear DTO
       const data = createProjectDto(req.body);
+      const schedule = pickProjectScheduleFields(req.body);
 
-      // 3. Procesar (delegado al servicio)
-      const project = projectService.createProject({
+      const project = await projectService.createProject({
         ...data,
+        ...schedule,
         userId: req.user.id
       });
 
@@ -50,19 +48,23 @@ const projectController = {
     }
   },
 
-  updateProject(req, res, next) {
+  async updateProject(req, res, next) {
     try {
-      // 1. Validar entrada
       const validation = ValidationService.validateUpdateInput(req.body);
       if (!validation.isValid) {
         throw new ValidationError(validation.errors);
       }
 
-      // 2. Mapear DTO
-      const updates = createProjectDto(req.body);
+      const updates = {};
+      if (Object.prototype.hasOwnProperty.call(req.body, 'name')) {
+        updates.name = String(req.body.name).trim();
+      }
+      if (Object.prototype.hasOwnProperty.call(req.body, 'description')) {
+        updates.description = String(req.body.description).trim();
+      }
+      Object.assign(updates, pickProjectScheduleFields(req.body));
 
-      // 3. Procesar (delegado al servicio)
-      const project = projectService.updateProject(req.params.id, req.user.id, updates);
+      const project = await projectService.updateProject(req.params.id, req.user.id, updates);
 
       res.json(projectToDto(project));
     } catch (error) {
@@ -70,23 +72,23 @@ const projectController = {
     }
   },
 
-  assignResponsable(req, res, next) {
+  async assignAssignee(req, res, next) {
     try {
-      const validation = ValidationService.validateResponsableInput(req.body);
+      const validation = ValidationService.validateAssigneeInput(req.body);
       if (!validation.isValid) {
         throw new ValidationError(validation.errors);
       }
-      const responsableId = String(req.body.responsableId ?? req.body.userId).trim();
-      const project = projectService.assignResponsable(req.params.id, req.user.id, responsableId);
+      const assigneeId = String(req.body.assigneeId).trim();
+      const project = await projectService.assignAssignee(req.params.id, req.user.id, assigneeId);
       res.json(projectToDto(project));
     } catch (error) {
       next(error);
     }
   },
 
-  deleteProject(req, res, next) {
+  async deleteProject(req, res, next) {
     try {
-      projectService.deleteProject(req.params.id, req.user.id);
+      await projectService.deleteProject(req.params.id, req.user.id);
       res.status(204).send();
     } catch (error) {
       next(error);

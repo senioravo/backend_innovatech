@@ -2,31 +2,27 @@ const projectRepository = require('../repositories/projectRepository');
 const taskRepository = require('../repositories/taskRepository');
 const { NotFoundError } = require('../utils/errorHandler');
 
-/**
- * Validación centralizada de disponibilidad de recursos (existencia + pertenencia al usuario).
- * No comprueba existencia en otros microservicios (p. ej. usuarios).
- */
 const resourceAvailabilityService = {
-  assertProjectAvailable(projectId, userId) {
-    if (!projectId || !userId) throw new Error('projectId y userId son requeridos');
-    const project = projectRepository.findByIdAndUserId(projectId, userId);
-    if (!project) throw new NotFoundError('Proyecto no encontrado');
+  async assertProjectAvailable(projectId, userId) {
+    if (!projectId || !userId) throw new Error('projectId and userId are required');
+    const project = await projectRepository.findByIdAndUserId(projectId, userId);
+    if (!project) throw new NotFoundError('Project not found');
     return project;
   },
 
-  assertTaskAvailable(taskId, userId) {
-    if (!taskId || !userId) throw new Error('taskId y userId son requeridos');
-    const task = taskRepository.findByIdAndUserId(taskId, userId);
-    if (!task) throw new NotFoundError('Tarea no encontrada');
+  async assertTaskAvailable(taskId, userId) {
+    if (!taskId || !userId) throw new Error('taskId and userId are required');
+    const task = await taskRepository.findByIdAndUserId(taskId, userId);
+    if (!task) throw new NotFoundError('Task not found');
     return task;
   },
 
-  assertTaskInProject(projectId, taskId, userId) {
+  async assertTaskInProject(projectId, taskId, userId) {
     if (!projectId || !taskId || !userId) {
-      throw new Error('projectId, taskId y userId son requeridos');
+      throw new Error('projectId, taskId and userId are required');
     }
-    const task = taskRepository.findByProjectIdAndTaskId(projectId, taskId, userId);
-    if (!task) throw new NotFoundError('Tarea no encontrada en el proyecto');
+    const task = await taskRepository.findByProjectIdAndTaskId(projectId, taskId, userId);
+    if (!task) throw new NotFoundError('Task not found in this project');
     return task;
   }
 };

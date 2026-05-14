@@ -14,9 +14,9 @@ router.get(
 );
 router.put('/:id', requireRole('Gestor', 'Profesional'), taskController.updateTask);
 router.patch(
-  '/:id/responsable',
+  '/:id/assignee',
   requireRole('Gestor', 'Profesional'),
-  taskController.assignResponsable
+  taskController.assignAssignee
 );
 router.delete('/:id', requireRole('Gestor'), taskController.deleteTask);
 

@@ -3,6 +3,7 @@ const authMiddleware = require('../middlewares/authMiddleware');
 const requireRole = require('../middlewares/roleMiddleware');
 const projectController = require('../controllers/project-controller');
 const resourceAvailabilityController = require('../controllers/resource-availability-controller');
+const taskController = require('../controllers/task-controller');
 
 const router = express.Router();
 
@@ -12,6 +13,22 @@ router.get(
   '/',
   requireRole('Gestor', 'Profesional', 'Directivo'),
   projectController.listProjects
+);
+
+router.get(
+  '/:projectId/tasks/:taskId/availability',
+  requireRole('Gestor', 'Profesional', 'Directivo'),
+  resourceAvailabilityController.checkTaskInProject
+);
+router.get(
+  '/:projectId/tasks/:taskId',
+  requireRole('Gestor', 'Profesional', 'Directivo'),
+  taskController.getTask
+);
+router.post(
+  '/:projectId/tasks',
+  requireRole('Gestor', 'Profesional'),
+  taskController.createTask
 );
 
 router.get(
@@ -26,28 +43,16 @@ router.get(
   projectController.getProject
 );
 
-router.post(
-  '/',
-  requireRole('Gestor'),
-  projectController.createProject
-);
+router.post('/', requireRole('Gestor'), projectController.createProject);
 
-router.put(
-  '/:id',
-  requireRole('Gestor', 'Profesional'),
-  projectController.updateProject
-);
+router.put('/:id', requireRole('Gestor', 'Profesional'), projectController.updateProject);
 
 router.patch(
-  '/:id/responsable',
+  '/:id/assignee',
   requireRole('Gestor', 'Profesional'),
-  projectController.assignResponsable
+  projectController.assignAssignee
 );
 
-router.delete(
-  '/:id',
-  requireRole('Gestor'),
-  projectController.deleteProject
-);
+router.delete('/:id', requireRole('Gestor'), projectController.deleteProject);
 
 module.exports = router;
