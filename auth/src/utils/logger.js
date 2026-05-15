@@ -84,6 +84,28 @@ class Logger {
   }
 
   /**
+   * API estilo Winston: mensaje + metadata opcional (usado por servicios internos).
+   */
+  info(message, meta) {
+    this.winstonLogger.info(this._formatSimpleMessage(message, meta));
+  }
+
+  warn(message, meta) {
+    this.winstonLogger.warn(this._formatSimpleMessage(message, meta));
+  }
+
+  error(message, meta) {
+    this.winstonLogger.error(this._formatSimpleMessage(message, meta));
+  }
+
+  _formatSimpleMessage(message, meta) {
+    if (meta !== undefined && meta !== null && typeof meta === 'object') {
+      return `${String(message)} ${JSON.stringify(meta)}`;
+    }
+    return message;
+  }
+
+  /**
    * Formatear mensaje de log estandarizado
    * @param {string} status - [OK], [ERROR], [WARNING]
    * @param {Object} options - Opciones del log
