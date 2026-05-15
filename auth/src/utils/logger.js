@@ -1,16 +1,17 @@
-// AS-TASK-13: Logger Helper con Winston para logs centralizados
-// Responsabilidad: Gestión centralizada de logs con Winston
+// Logger Helper con Winston para logs centralizados
+// Responsabilidad: Gestión centralizada de logs con Winston + Elasticsearch
 // Principio SOLID: Single Responsibility - Solo maneja logging y persistencia
-// Migración de AS-TASK-12 (sistema custom) a Winston (librería profesional)
 
 const winston = require('winston');
 const DailyRotateFile = require('winston-daily-rotate-file');
 const path = require('path');
+const { sendAuditToElasticsearch } = require('../clients/elasticAuditClient');
 
 /**
- * Clase Logger - Sistema de logging centralizado con Winston
+ * Clase Logger - Sistema de logging centralizado con Winston + Elasticsearch
  * Características:
- * - Librería Winston para logging profesional
+ * - Librería Winston para logging profesional (archivos locales)
+ * - Elasticsearch para auditoría centralizada y buscable (opcional)
  * - Formato estandarizado: [OK]/[ERROR] - Fecha - UsuarioId - Operación - Detalle
  * - Rotación automática por fecha (daily) y tamaño (20MB)
  * - Múltiples transportes: consola (desarrollo) + archivos rotativos (producción)
@@ -144,12 +145,40 @@ class Logger {
   }
 
   /**
+   * AS-TASK-23: Enviar log de auditoría a Elasticsearch
+   * @param {string} level - Nivel del log (success, error, warning)
+   * @param {Object} options - Datos del log
+   */
+  sendToElasticsearch(level, options = {}) {
+    const doc = {
+      ts: new Date().toISOString(),
+      type: 'AUDIT',
+      level: level,
+      userId: options.userId || 'N/A',
+      email: options.email || 'N/A',
+      operation: options.operation || 'UNKNOWN',
+      detail: options.detail || '',
+      ip: options.ip || 'N/A',
+      taskId: options.taskId || 'AS-TASK-23',
+      responseTime: options.responseTime || null
+    };
+    
+    sendAuditToElasticsearch(doc).catch((err) => {
+      // No bloqueamos la ejecución si Elasticsearch falla
+      console.error('[audit-es] Failed to index:', err.message);
+    });
+  }
+
+  /**
    * Log de operación exitosa (auditoría)
    * @param {Object} options - Opciones del log
    */
   auditSuccess(options = {}) {
     const message = this.formatLogMessage('[OK]', options);
     this.winstonLogger.info(message);
+    
+    // AS-TASK-23: Enviar a Elasticsearch (no bloqueante)
+    this.sendToElasticsearch('success', options);
   }
 
   /**
@@ -159,6 +188,9 @@ class Logger {
   auditError(options = {}) {
     const message = this.formatLogMessage('[ERROR]', options);
     this.winstonLogger.error(message);
+    
+    // AS-TASK-23: Enviar a Elasticsearch (no bloqueante)
+    this.sendToElasticsearch('error', options);
   }
 
   /**
@@ -168,6 +200,9 @@ class Logger {
   auditWarning(options = {}) {
     const message = this.formatLogMessage('[WARNING]', options);
     this.winstonLogger.warn(message);
+    
+    // AS-TASK-23: Enviar a Elasticsearch (no bloqueante)
+    this.sendToElasticsearch('warning', options);
   }
 
   /**
