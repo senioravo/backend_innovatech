@@ -1,14 +1,13 @@
 const express = require('express');
+const jwtAuthMiddleware = require('../middlewares/jwtAuthMiddleware');
 const authOrchestrationController = require('../controllers/auth-orchestration-controller');
 
+/** Rutas /api/auth/* que exigen JWT válido antes de delegar en Auth. */
 const router = express.Router();
 
-router.post('/register', authOrchestrationController.register);
-router.post('/login', authOrchestrationController.login);
+router.use(jwtAuthMiddleware);
+
 router.post('/logout', authOrchestrationController.logout);
-router.get('/roles', authOrchestrationController.getRoles);
-router.get('/roles/simple', authOrchestrationController.getRolesSimple);
 router.put('/usuarios/:id/rol', authOrchestrationController.updateUserRole);
-router.get('/health', authOrchestrationController.health);
 
 module.exports = router;
