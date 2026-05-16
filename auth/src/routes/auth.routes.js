@@ -30,6 +30,7 @@ router.post('/logout', verifyToken, auditCriticalOperation('LOGOUT'), authContro
 router.get('/roles', authController.getRoles);
 // AS-TASK-10: Endpoint simplificado que retorna solo nombres de roles
 router.get('/roles/simple', authController.getRolesSimple);
+router.get('/usuarios/:id', verifyToken, authController.getUserById);
 router.put('/usuarios/:id/rol', auditCriticalOperation('ROLE_CHANGE'), authController.updateUserRole);
 
 // Health check

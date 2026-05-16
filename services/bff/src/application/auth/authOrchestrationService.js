@@ -30,6 +30,14 @@ const authOrchestrationService = {
 
   health() {
     return authUpstreamClient.health();
+  },
+
+  getRoles() {
+    return authUpstreamClient.getRoles();
+  },
+
+  getUserById(userId, req) {
+    return authUpstreamClient.getUserById(userId, req);
   }
 };
 
