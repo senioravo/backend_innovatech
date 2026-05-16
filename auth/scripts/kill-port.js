@@ -2,7 +2,7 @@ const { execSync } = require('child_process');
 
 const PORT = process.env.PORT || 3001;
 
-function killPort() {
+async function killPort() {
   try {
     console.log(`🔍 Verificando puerto ${PORT}...`);
     
@@ -39,8 +39,7 @@ function killPort() {
         
         // Esperar un momento para que el puerto se libere
         console.log('⏳ Esperando que el puerto se libere...');
-        const sleep = (ms) => new Promise(resolve => setTimeout(resolve, ms));
-        return sleep(1000);
+        await new Promise(resolve => setTimeout(resolve, 1000));
       } else {
         console.log(`✅ Puerto ${PORT} está libre`);
       }
@@ -54,10 +53,11 @@ function killPort() {
   }
 }
 
-// Ejecutar y retornar una promesa
-killPort().then(() => {
+// Ejecutar la función
+(async () => {
+  await killPort();
   console.log('✨ Puerto listo para usar\n');
-}).catch(error => {
+})().catch(error => {
   console.error('Error:', error);
   process.exit(1);
 });
