@@ -7,6 +7,13 @@ node_modules/
 # Logs
 *.log
 npm-debug.log*
+logs/*.log
+logs/*.log.*
+logs/*.json
+!logs/.gitkeep
+
+# Cobertura de tests
+coverage/
 
 # Sistema operativo
 .DS_Store
