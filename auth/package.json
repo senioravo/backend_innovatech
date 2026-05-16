@@ -4,10 +4,9 @@
   "description": "Microservicio de autenticación para Innovatech",
   "main": "src/app.js",
   "scripts": {
-    "prestart": "node scripts/kill-port.js",
     "start": "node src/app.js",
-    "predev": "node scripts/kill-port.js",
     "dev": "nodemon src/app.js",
+    "clean-port": "node scripts/kill-port.js",
     "test": "jest --verbose --coverage",
     "test:watch": "jest --watch",
     "test:coverage": "jest --coverage --coverageReporters=text-lcov --coverageReporters=html",
