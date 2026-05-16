@@ -1,5 +1,8 @@
 # Microservicio Auth - InnovaTech
 
+> **Guía de estudio (presentación / aprendizaje):** [README-ESTUDIO.md](./README-ESTUDIO.md)  
+> **Documentación del backend completo:** [../README.md](../README.md)
+
 **Task ID:** AS-TASK-20
 
 ## Descripción
