@@ -11,7 +11,7 @@ const jwtHelper = require('../utils/jwt.helper');
 const tokenBlacklistService = require('../services/token.blacklist.service');
 
 // AS-TASK-08: Importar configuración de roles
-const { getAllRolesInfo, getRoleDescription } = require('../config/roles');
+const { getAllRoles, getAllRolesInfo, getRoleDescription } = require('../config/roles');
 
 // AS-TASK-13: Importar logger con Winston para auditoría
 const logger = require('../utils/logger');

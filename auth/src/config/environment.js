@@ -1,4 +1,4 @@
-// AS-TASK-23: Configuración centralizada de variables de entorno
+// Configuración centralizada de variables de entorno
 require('dotenv').config();
 
 const int = (v, fallback) => {
