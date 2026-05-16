@@ -577,6 +577,41 @@ const updateUserRole = async (req, res) => {
 /**
  * GET /health - Health check para monitoreo
  */
+/**
+ * GET /usuarios/:id - Perfil público de usuario (sin contraseña), para agregación BFF.
+ */
+const getUserById = async (req, res) => {
+  try {
+    const user = await userService.findById(req.params.id);
+    if (!user) {
+      return res.status(404).json({
+        success: false,
+        message: 'Usuario no encontrado',
+        taskId: 'BFF-AUTH-USER',
+        data: null
+      });
+    }
+    return res.status(200).json({
+      success: true,
+      message: 'Usuario obtenido',
+      taskId: 'BFF-AUTH-USER',
+      data: {
+        id: user.id,
+        nombre: user.nombre,
+        email: user.email,
+        rol: user.rol
+      }
+    });
+  } catch (error) {
+    return res.status(500).json({
+      success: false,
+      message: 'Error al obtener usuario',
+      error: error.message,
+      taskId: 'BFF-AUTH-USER'
+    });
+  }
+};
+
 const health = async (req, res) => {
   res.status(200).json({
     success: true,
@@ -593,6 +628,7 @@ module.exports = {
   logout,
   getRoles,
   getRolesSimple,
+  getUserById,
   updateUserRole,
   health
 };

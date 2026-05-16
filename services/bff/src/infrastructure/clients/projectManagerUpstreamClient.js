@@ -18,7 +18,27 @@ function shouldSendJsonBody(method, body) {
   return true;
 }
 
+function authHeaders(req) {
+  return pickForwardHeaders(req);
+}
+
 const projectManagerUpstreamClient = {
+  listProjects(req) {
+    const path = `${config.projectManagerApiPrefix}/projects`;
+    return upstreamJson(joinUrl(config.projectManagerBaseUrl, path), {
+      method: 'GET',
+      headers: authHeaders(req)
+    });
+  },
+
+  listTasksByProject(projectId, req) {
+    const path = `${config.projectManagerApiPrefix}/projects/${encodeURIComponent(projectId)}/tasks`;
+    return upstreamJson(joinUrl(config.projectManagerBaseUrl, path), {
+      method: 'GET',
+      headers: authHeaders(req)
+    });
+  },
+
   /**
    * Reenvía la petición tal cual path+query que recibe el BFF (mismo prefijo /api/v1 que en PM).
    */

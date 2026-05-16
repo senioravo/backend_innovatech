@@ -47,6 +47,13 @@ const authUpstreamClient = {
 
   health() {
     return upstreamJson(this._url('/health'), { method: 'GET' });
+  },
+
+  getUserById(userId, req) {
+    return upstreamJson(this._url(`/usuarios/${encodeURIComponent(userId)}`), {
+      method: 'GET',
+      headers: pickForwardHeaders(req)
+    });
   }
 };
 

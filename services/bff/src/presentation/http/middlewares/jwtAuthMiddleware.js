@@ -17,10 +17,11 @@ function jwtAuthMiddleware(req, res, next) {
 
   try {
     const decoded = jwt.verify(token, config.JWT_SECRET);
+    const role = decoded.role ?? decoded.rol;
     req.user = {
       id: decoded.id,
       email: decoded.email,
-      role: decoded.role
+      role
     };
     next();
   } catch (error) {
