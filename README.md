@@ -93,7 +93,7 @@ sequenceDiagram
 |----------|-----------------|-----------------|---------------|
 | **API Gateway** | 8080 | Punto único de entrada, proxy a BFF | `infra/api-gateway/nginx.conf` |
 | **BFF** | 3010 | Orquestación, roles, contrato front | [README-ESTUDIO](services/bff/README-ESTUDIO.md) |
-| **Auth** | 3001 | Registro, login, JWT, roles, blacklist | [README-ESTUDIO](auth/README-ESTUDIO.md) |
+| **Auth** | 3001 | Registro, login, JWT, roles, blacklist | [README-ESTUDIO](services/auth/README-ESTUDIO.md) |
 | **Project Manager** | 3002 | Proyectos, tareas, consultas, auditoría | [README-ESTUDIO](services/project-manager/README-ESTUDIO.md) |
 
 ---
@@ -213,7 +213,7 @@ Estrategia **por capas**: tests unitarios en lógica pura; Auth además incluye 
 
 | Servicio | Herramienta | Ubicación | Qué se prueba |
 |----------|-------------|-----------|---------------|
-| **Auth** | Jest (+ Supertest en rutas) | `auth/tests/` | JWT, bcrypt, roles, rutas auth, métricas |
+| **Auth** | Jest (+ Supertest en rutas) | `services/auth/tests/` | JWT, bcrypt, roles, rutas auth, métricas |
 | **Project Manager** | Jest | `services/project-manager/tests/` | Estados de tarea, validación, DTOs, errores |
 | **BFF** | Jest | `services/bff/tests/` | Transformadores, roles, `joinUrl`, errores |
 
@@ -221,7 +221,7 @@ Estrategia **por capas**: tests unitarios en lógica pura; Auth además incluye 
 
 ```bash
 # Auth
-cd auth && npm test
+cd services/auth && npm test
 
 # Project Manager
 cd services/project-manager && npm test
@@ -278,8 +278,8 @@ backend_innovatech/
 ├── infra/
 │   └── api-gateway/
 │       └── nginx.conf
-├── auth/                        ← microservicio Auth
 ├── services/
+│   ├── auth/                    ← microservicio Auth
 │   ├── bff/                     ← Backend for Frontend
 │   └── project-manager/         ← dominio proyectos/tareas
 └── ...
@@ -293,11 +293,11 @@ Guías orientadas a **entender y presentar** cada componente:
 
 | Microservicio | Guía |
 |---------------|------|
-| Auth | [auth/README-ESTUDIO.md](auth/README-ESTUDIO.md) |
+| Auth | [services/auth/README-ESTUDIO.md](services/auth/README-ESTUDIO.md) |
 | BFF | [services/bff/README-ESTUDIO.md](services/bff/README-ESTUDIO.md) |
 | Project Manager | [services/project-manager/README-ESTUDIO.md](services/project-manager/README-ESTUDIO.md) |
 
-Documentación operativa detallada de Auth: [auth/README.md](auth/README.md).
+Documentación operativa detallada de Auth: [services/auth/README.md](services/auth/README.md).
 
 ---
 

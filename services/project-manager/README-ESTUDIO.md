@@ -192,4 +192,4 @@ Sin conexión a BD: ideal para CI rápido.
 
 - [README backend](../../README.md)
 - [BFF README-ESTUDIO](../bff/README-ESTUDIO.md)
-- [Auth README-ESTUDIO](../../auth/README-ESTUDIO.md)
+- [Auth README-ESTUDIO](../auth/README-ESTUDIO.md)
