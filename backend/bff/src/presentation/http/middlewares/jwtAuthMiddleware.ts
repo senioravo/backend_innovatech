@@ -43,14 +43,13 @@ function jwtAuthMiddleware(req, res, next) {
       algorithms: ['RS256'], // Solo aceptar RS256
       issuer: 'innovatech-auth' // Verificar emisor
     });
-    
     const role = decoded.role ?? decoded.rol;
     req.user = {
       id: decoded.id,
       email: decoded.email,
       role
     };
-    
+
     console.log(`[BFF-JWT-MIDDLEWARE] Token RS256 verificado - UserID: ${decoded.id}`);
     next();
   } catch (error) {

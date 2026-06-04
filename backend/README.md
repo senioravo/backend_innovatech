@@ -250,6 +250,8 @@ cd bff && npm test
 
 ```bash
 cd backend
+cp .env.docker.example .env.docker
+# Editar DATABASE_URL_AUTH y DATABASE_URL_PM
 
 # 1. Generar claves RSA para JWT (solo la primera vez)
 cd ms-auth && node scripts/generate-keys.js && cd ..
