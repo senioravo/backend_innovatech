@@ -1,0 +1,6 @@
+node_modules/
+.env
+.DS_Store
+
+# Clave pública RSA (se puede commitear, pero la privada NO)
+# keys/public.key - Este archivo SÍ se puede commitear

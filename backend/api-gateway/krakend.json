@@ -1,0 +1,286 @@
+{
+  "$schema": "https://www.krakend.io/schema/v2.7/krakend.json",
+  "version": 3,
+  "name": "InnovaTech API Gateway",
+  "timeout": "30s",
+  "cache_ttl": "300s",
+  "output_encoding": "json",
+  "port": 8080,
+  
+  "extra_config": {
+    "telemetry/logging": {
+      "level": "INFO",
+      "prefix": "[KRAKEND]",
+      "syslog": false,
+      "stdout": true
+    },
+    "security/cors": {
+      "allow_origins": ["*"],
+      "allow_methods": ["GET", "POST", "PUT", "DELETE", "PATCH", "OPTIONS"],
+      "allow_headers": ["Origin", "Authorization", "Content-Type"],
+      "expose_headers": ["Content-Length"],
+      "max_age": "12h"
+    }
+  },
+  
+  "endpoints": [
+    {
+      "@comment": "Auth: Login público (sin validación JWT)",
+      "endpoint": "/api/v1/auth/login",
+      "method": "POST",
+      "output_encoding": "json",
+      "backend": [
+        {
+          "url_pattern": "/api/auth/login",
+          "encoding": "json",
+          "method": "POST",
+          "host": ["http://bff:3010"]
+        }
+      ]
+    },
+    {
+      "@comment": "Auth: Register público (sin validación JWT)",
+      "endpoint": "/api/v1/auth/register",
+      "method": "POST",
+      "output_encoding": "json",
+      "backend": [
+        {
+          "url_pattern": "/api/auth/register",
+          "encoding": "json",
+          "method": "POST",
+          "host": ["http://bff:3010"]
+        }
+      ]
+    },
+    {
+      "@comment": "Proyectos: Listar (requiere JWT)",
+      "endpoint": "/api/v1/projects",
+      "method": "GET",
+      "output_encoding": "json",
+      "extra_config": {
+        "auth/validator": {
+          "alg": "RS256",
+          "jwk_url": "http://krakend:8080/.well-known/jwks.json",
+          "cache": true,
+          "cache_duration": 300,
+          "disable_jwk_security": true,
+          "propagate_claims": [
+            ["id", "x-user-id"],
+            ["email", "x-user-email"],
+            ["rol", "x-user-role"]
+          ]
+        }
+      },
+      "backend": [
+        {
+          "url_pattern": "/api/v1/projects",
+          "encoding": "json",
+          "method": "GET",
+          "host": ["http://bff:3010"]
+        }
+      ]
+    },
+    {
+      "@comment": "Proyectos: Crear (requiere JWT + rol gestor)",
+      "endpoint": "/api/v1/projects",
+      "method": "POST",
+      "output_encoding": "json",
+      "extra_config": {
+        "auth/validator": {
+          "alg": "RS256",
+          "jwk_url": "http://krakend:8080/.well-known/jwks.json",
+          "cache": true,
+          "cache_duration": 300,
+          "disable_jwk_security": true,
+          "propagate_claims": [
+            ["id", "x-user-id"],
+            ["email", "x-user-email"],
+            ["rol", "x-user-role"]
+          ],
+          "roles_key": "rol",
+          "roles": ["gestor", "directivo"]
+        }
+      },
+      "backend": [
+        {
+          "url_pattern": "/api/v1/projects",
+          "encoding": "json",
+          "method": "POST",
+          "host": ["http://bff:3010"]
+        }
+      ]
+    },
+    {
+      "@comment": "Proyectos: Ver detalle (requiere JWT)",
+      "endpoint": "/api/v1/projects/{id}",
+      "method": "GET",
+      "output_encoding": "json",
+      "extra_config": {
+        "auth/validator": {
+          "alg": "RS256",
+          "jwk_url": "http://krakend:8080/.well-known/jwks.json",
+          "cache": true,
+          "cache_duration": 300,
+          "disable_jwk_security": true,
+          "propagate_claims": [
+            ["id", "x-user-id"],
+            ["email", "x-user-email"],
+            ["rol", "x-user-role"]
+          ]
+        }
+      },
+      "backend": [
+        {
+          "url_pattern": "/api/v1/projects/{id}",
+          "encoding": "json",
+          "method": "GET",
+          "host": ["http://bff:3010"]
+        }
+      ]
+    },
+    {
+      "@comment": "Proyectos: Actualizar (requiere JWT + rol gestor)",
+      "endpoint": "/api/v1/projects/{id}",
+      "method": "PUT",
+      "output_encoding": "json",
+      "extra_config": {
+        "auth/validator": {
+          "alg": "RS256",
+          "jwk_url": "http://krakend:8080/.well-known/jwks.json",
+          "cache": true,
+          "cache_duration": 300,
+          "disable_jwk_security": true,
+          "propagate_claims": [
+            ["id", "x-user-id"],
+            ["email", "x-user-email"],
+            ["rol", "x-user-role"]
+          ],
+          "roles_key": "rol",
+          "roles": ["gestor", "directivo"]
+        }
+      },
+      "backend": [
+        {
+          "url_pattern": "/api/v1/projects/{id}",
+          "encoding": "json",
+          "method": "PUT",
+          "host": ["http://bff:3010"]
+        }
+      ]
+    },
+    {
+      "@comment": "Proyectos: Eliminar (requiere JWT + rol directivo)",
+      "endpoint": "/api/v1/projects/{id}",
+      "method": "DELETE",
+      "output_encoding": "json",
+      "extra_config": {
+        "auth/validator": {
+          "alg": "RS256",
+          "jwk_url": "http://krakend:8080/.well-known/jwks.json",
+          "cache": true,
+          "cache_duration": 300,
+          "disable_jwk_security": true,
+          "propagate_claims": [
+            ["id", "x-user-id"],
+            ["email", "x-user-email"],
+            ["rol", "x-user-role"]
+          ],
+          "roles_key": "rol",
+          "roles": ["directivo"]
+        }
+      },
+      "backend": [
+        {
+          "url_pattern": "/api/v1/projects/{id}",
+          "encoding": "json",
+          "method": "DELETE",
+          "host": ["http://bff:3010"]
+        }
+      ]
+    },
+    {
+      "@comment": "Tareas: Listar por proyecto (requiere JWT)",
+      "endpoint": "/api/v1/projects/{project_id}/tasks",
+      "method": "GET",
+      "output_encoding": "json",
+      "extra_config": {
+        "auth/validator": {
+          "alg": "RS256",
+          "jwk_url": "http://krakend:8080/.well-known/jwks.json",
+          "cache": true,
+          "cache_duration": 300,
+          "disable_jwk_security": true,
+          "propagate_claims": [
+            ["id", "x-user-id"],
+            ["email", "x-user-email"],
+            ["rol", "x-user-role"]
+          ]
+        }
+      },
+      "backend": [
+        {
+          "url_pattern": "/api/v1/projects/{project_id}/tasks",
+          "encoding": "json",
+          "method": "GET",
+          "host": ["http://bff:3010"]
+        }
+      ]
+    },
+    {
+      "@comment": "Tareas: Crear (requiere JWT)",
+      "endpoint": "/api/v1/projects/{project_id}/tasks",
+      "method": "POST",
+      "output_encoding": "json",
+      "extra_config": {
+        "auth/validator": {
+          "alg": "RS256",
+          "jwk_url": "http://krakend:8080/.well-known/jwks.json",
+          "cache": true,
+          "cache_duration": 300,
+          "disable_jwk_security": true,
+          "propagate_claims": [
+            ["id", "x-user-id"],
+            ["email", "x-user-email"],
+            ["rol", "x-user-role"]
+          ]
+        }
+      },
+      "backend": [
+        {
+          "url_pattern": "/api/v1/projects/{project_id}/tasks",
+          "encoding": "json",
+          "method": "POST",
+          "host": ["http://bff:3010"]
+        }
+      ]
+    },
+    {
+      "@comment": "Health check - sin autenticación",
+      "endpoint": "/health",
+      "method": "GET",
+      "output_encoding": "json",
+      "backend": [
+        {
+          "url_pattern": "/health",
+          "encoding": "json",
+          "method": "GET",
+          "host": ["http://bff:3010"]
+        }
+      ]
+    },
+    {
+      "@comment": "Endpoint para servir JWKS (clave pública)",
+      "endpoint": "/.well-known/jwks.json",
+      "method": "GET",
+      "output_encoding": "json",
+      "backend": [
+        {
+          "url_pattern": "/.well-known/jwks.json",
+          "encoding": "json",
+          "method": "GET",
+          "host": ["http://ms-auth:3001"]
+        }
+      ]
+    }
+  ]
+}
