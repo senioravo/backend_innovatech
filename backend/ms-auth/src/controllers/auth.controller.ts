@@ -1,87 +1,91 @@
 // @ts-nocheck
 export {};
-// AS-TASK-02: Controlador de autenticación y autorización
-// Endpoints para integración con API Gateway
+// AS-TASK-02: Controlador de autenticaciÃ³n y autorizaciÃ³n
+// Endpoints para integraciÃ³n con API Gateway
 
 // AS-TASK-04: Importar servicio de usuario
 const userService = require('../services/user.service');
 
-// AS-TASK-06: Importar JWT Helper para validación y generación de tokens
+// AS-TASK-06: Importar JWT Helper para validaciÃ³n y generaciÃ³n de tokens
 const jwtHelper = require('../utils/jwt.helper');
 
 // AS-TASK-07: Importar servicio de blacklist de tokens
 const tokenBlacklistService = require('../services/token.blacklist.service');
 
-// AS-TASK-08: Importar configuración de roles
+// AS-TASK-08: Importar configuraciÃ³n de roles
 const { getAllRolesInfo, getRoleDescription } = require('../config/roles');
 
-// AS-TASK-13: Importar logger con Winston para auditoría
+// AS-TASK-13: Importar logger con Winston para auditorÃ­a
 const logger = require('../utils/logger');
 
-// AS-TASK-14: Importar funciones de métricas de Prometheus
+// AS-TASK-14: Importar funciones de mÃ©tricas de Prometheus
 const { recordCriticalOperation } = require('../middleware/metricsMiddleware');
+
+// DTO: Importar Data Transfer Objects para validaciÃ³n y formateo
+const {
+  createRegisterDto,
+  createLoginDto,
+  userToDto,
+  authResponseDto,
+  registerResponseDto,
+  errorResponseDto,
+  validateUserData
+} = require('../dtos/userDto');
 
 /**
  * POST /register - Registro de usuarios
- * AS-TASK-04: Implementación completa con PostgreSQL y bcrypt
+ * AS-TASK-04: ImplementaciÃ³n completa con PostgreSQL y bcrypt
+ * DTO: Usa DTOs para validaciÃ³n y formateo de respuestas
  */
 const register = async (req, res) => {
   const startTime = Date.now();
   
   try {
-    let { nombre, email, password, rol } = req.body;
+    // DTO: Limpiar y formatear datos de entrada
+    const userData = createRegisterDto(req.body);
     
     // AS-TASK-08: Asignar rol por defecto si no se especifica
-    if (!rol) {
-      rol = userService.getDefaultRole();
-      console.log(`[AUTH-AUDIT] Rol no especificado, asignando rol por defecto: ${rol}`);
+    if (!userData.rol) {
+      userData.rol = userService.getDefaultRole();
+      console.log(`[AUTH-AUDIT] Rol no especificado, asignando rol por defecto: ${userData.rol}`);
     }
     
-    // Log de auditoría: Inicio de solicitud
-    console.log(`[AUTH-AUDIT] Solicitud de registro recibida - Email: ${email || 'N/A'} - Rol: ${rol} - IP: ${req.ip} - Timestamp: ${new Date().toISOString()}`);
+    // Log de auditorÃ­a: Inicio de solicitud
+    console.log(`[AUTH-AUDIT] Solicitud de registro recibida - Email: ${userData.email || 'N/A'} - Rol: ${userData.rol} - IP: ${req.ip} - Timestamp: ${new Date().toISOString()}`);
 
-    // 1. Validar campos obligatorios (rol ya no es obligatorio)
-    if (!nombre || !email || !password) {
-      console.warn(`[AUTH-AUDIT] Registro fallido - Campos faltantes - Email: ${email || 'N/A'}`);
-      return res.status(400).json({
-        success: false,
-        message: 'Campos obligatorios faltantes: nombre, email, password',
-        taskId: 'AS-TASK-08',
-        data: null
-      });
+    // 1. Validar campos obligatorios
+    if (!userData.nombre || !userData.email || !userData.password) {
+      console.warn(`[AUTH-AUDIT] Registro fallido - Campos faltantes - Email: ${userData.email || 'N/A'}`);
+      return res.status(400).json(
+        errorResponseDto('Campos obligatorios faltantes: nombre, email, password')
+      );
     }
 
-    // 2. Validar formato y estructura de datos (SOLID: Delegación a UserService)
-    const validation = userService.validateUserData({ nombre, email, password, rol });
+    // 2. DTO: Validar formato y estructura de datos
+    const validation = validateUserData(userData);
     if (!validation.valid) {
-      console.warn(`[AUTH-AUDIT] Registro fallido - Validación de datos - Email: ${email} - Errores: ${validation.errors.join(', ')}`);
-      return res.status(400).json({
-        success: false,
-        message: 'Datos de usuario inválidos',
-        taskId: 'AS-TASK-04',
-        data: { errors: validation.errors }
-      });
+      console.warn(`[AUTH-AUDIT] Registro fallido - ValidaciÃ³n de datos - Email: ${userData.email} - Errores: ${validation.errors.join(', ')}`);
+      return res.status(400).json(
+        errorResponseDto('Datos de usuario invÃ¡lidos', { errors: validation.errors })
+      );
     }
 
     // 3. Verificar si el email ya existe (evitar duplicados)
-    const emailExists = await userService.emailExists(email);
+    const emailExists = await userService.emailExists(userData.email);
     if (emailExists) {
-      console.warn(`[AUTH-AUDIT] Registro fallido - Email duplicado - Email: ${email}`);
-      return res.status(400).json({
-        success: false,
-        message: 'El email ya está registrado en el sistema',
-        taskId: 'AS-TASK-04',
-        data: null
-      });
+      console.warn(`[AUTH-AUDIT] Registro fallido - Email duplicado - Email: ${userData.email}`);
+      return res.status(400).json(
+        errorResponseDto('El email ya estÃ¡ registrado en el sistema')
+      );
     }
 
     // 4. Crear usuario (bcrypt cifrado + INSERT en PostgreSQL)
-    const newUser = await userService.createUser({ nombre, email, password, rol });
+    const newUser = await userService.createUser(userData);
     
     // Calcular tiempo de respuesta
     const responseTime = Date.now() - startTime;
 
-    // AS-TASK-13: Log de auditoría con Winston
+    // AS-TASK-13: Log de auditorÃ­a con Winston
     logger.logCriticalOperation('REGISTER', {
       success: true,
       userId: newUser.id,
@@ -92,27 +96,16 @@ const register = async (req, res) => {
       taskId: 'AS-TASK-13'
     });
 
-    // AS-TASK-14: Registrar operación en métricas de Prometheus
+    // AS-TASK-14: Registrar operaciÃ³n en mÃ©tricas de Prometheus
     recordCriticalOperation('REGISTER', true);
 
-    // 5. Responder con éxito (201 Created)
-    res.status(201).json({
-      success: true,
-      message: 'Usuario registrado exitosamente',
-      taskId: 'AS-TASK-13',
-      data: {
-        id: newUser.id,
-        nombre: newUser.nombre,
-        email: newUser.email,
-        rol: newUser.rol,
-        createdAt: newUser.created_at
-      }
-    });
+    // 5. DTO: Responder con formato estÃ¡ndar (sin password)
+    res.status(201).json(registerResponseDto(newUser));
 
   } catch (error) {
     const responseTime = Date.now() - startTime;
     
-    // AS-TASK-13: Log de auditoría con Winston
+    // AS-TASK-13: Log de auditorÃ­a con Winston
     logger.logCriticalOperation('REGISTER', {
       success: false,
       userId: null,
@@ -124,93 +117,78 @@ const register = async (req, res) => {
       taskId: 'AS-TASK-13'
     });
 
-    // AS-TASK-14: Registrar operación fallida en métricas
+    // AS-TASK-14: Registrar operaciÃ³n fallida en mÃ©tricas
     recordCriticalOperation('REGISTER', false);
     
-    // Manejo de errores de BD específicos
+    // Manejo de errores de BD especÃ­ficos
     if (error.code === '23505') { // PostgreSQL unique constraint violation
-      return res.status(400).json({
-        success: false,
-        message: 'El email ya está registrado',
-        taskId: 'AS-TASK-13',
-        data: null
-      });
+      return res.status(400).json(
+        errorResponseDto('El email ya estÃ¡ registrado')
+      );
     }
 
-    // Error genérico del servidor
-    res.status(500).json({
-      success: false,
-      message: 'Error interno del servidor al registrar usuario',
-      taskId: 'AS-TASK-13',
-      data: { error: error.message }
-    });
+    // Error genÃ©rico del servidor
+    res.status(500).json(
+      errorResponseDto('Error interno del servidor al registrar usuario', { error: error.message })
+    );
   }
 };
 
 /**
- * POST /login - Inicio de sesión
- * AS-TASK-06: Validación de credenciales y generación de JWT con helper
+ * POST /login - Inicio de sesiÃ³n
+ * AS-TASK-06: ValidaciÃ³n de credenciales y generaciÃ³n de JWT con helper
+ * DTO: Usa DTOs para validaciÃ³n y formateo de respuestas
  */
 const login = async (req, res) => {
   const startTime = Date.now();
   
   try {
-    const { email, password } = req.body;
+    // DTO: Limpiar y formatear credenciales
+    const credentials = createLoginDto(req.body);
+    const { email, password } = credentials;
     
-    // Log de auditoría: Inicio de solicitud
+    // Log de auditorÃ­a: Inicio de solicitud
     console.log(`[AUTH-AUDIT] Intento de login - Email: ${email || 'N/A'} - IP: ${req.ip} - Timestamp: ${new Date().toISOString()}`);
 
     // 1. Validar campos obligatorios
     if (!email || !password) {
       console.warn(`[AUTH-AUDIT] Login fallido - Campos faltantes - Email: ${email || 'N/A'}`);
-      return res.status(400).json({
-        success: false,
-        message: 'Email y contraseña son requeridos',
-        taskId: 'AS-TASK-06',
-        data: null
-      });
+      return res.status(400).json(
+        errorResponseDto('Email y contraseÃ±a son requeridos')
+      );
     }
 
-    // 2. Validar formato de email (AS-TASK-06: Mejora de validación)
+    // 2. Validar formato de email (AS-TASK-06: Mejora de validaciÃ³n)
     if (!jwtHelper.validateEmail(email)) {
-      console.warn(`[AUTH-AUDIT] Login fallido - Email inválido - Email: ${email}`);
-      return res.status(400).json({
-        success: false,
-        message: 'Formato de email inválido',
-        taskId: 'AS-TASK-06',
-        data: null
-      });
+      console.warn(`[AUTH-AUDIT] Login fallido - Email invÃ¡lido - Email: ${email}`);
+      return res.status(400).json(
+        errorResponseDto('Formato de email invÃ¡lido')
+      );
     }
 
     // 3. Buscar usuario por email en la BD
     const user = await userService.findByEmail(email);
     
     if (!user) {
-      // Log de auditoría: Usuario no encontrado
+      // Log de auditorÃ­a: Usuario no encontrado
       console.warn(`[AUTH-AUDIT] Login fallido - Usuario no encontrado - Email: ${email}`);
-      return res.status(401).json({
-        success: false,
-        message: 'Credenciales inválidas',
-        taskId: 'AS-TASK-06',
-        data: null
-      });
+      return res.status(401).json(
+        errorResponseDto('Credenciales invÃ¡lidas')
+      );
     }
 
-    // 4. Verificar contraseña con bcrypt.compare
+    // 4. Verificar contraseÃ±a con bcrypt.compare
     const isPasswordValid = await userService.verifyPassword(password, user.password);
     
     if (!isPasswordValid) {
-      // Log de auditoría: Contraseña incorrecta
-      console.warn(`[AUTH-AUDIT] Login fallido - Contraseña incorrecta - Email: ${email} - UserID: ${user.id}`);
-      return res.status(401).json({
-        success: false,
-        message: 'Credenciales inválidas',
-        taskId: 'AS-TASK-06',
-        data: null
-      });
+      // Log de auditorÃ­a: ContraseÃ±a incorrecta
+      console.warn(`[AUTH-AUDIT] Login fallido - ContraseÃ±a incorrecta - Email: ${email} - UserID: ${user.id}`);
+      return res.status(401).json(
+        errorResponseDto('Credenciales invÃ¡lidas')
+      );
     }
 
-    // 5. Generar token JWT usando helper (AS-TASK-06: SOLID - Separación de responsabilidades)
+    // 5. Generar token JWT usando helper (AS-TASK-06: SOLID - SeparaciÃ³n de responsabilidades)
     const token = jwtHelper.generateToken({
       id: user.id,
       email: user.email,
@@ -220,10 +198,10 @@ const login = async (req, res) => {
     // Calcular tiempo de respuesta
     const responseTime = Date.now() - startTime;
 
-    // Obtener configuración JWT para logs
+    // Obtener configuraciÃ³n JWT para logs
     const jwtConfig = jwtHelper.getConfig();
 
-    // AS-TASK-13: Log de auditoría con Winston
+    // AS-TASK-13: Log de auditorÃ­a con Winston
     logger.logCriticalOperation('LOGIN', {
       success: true,
       userId: user.id,
@@ -234,30 +212,16 @@ const login = async (req, res) => {
       taskId: 'AS-TASK-13'
     });
 
-    // AS-TASK-14: Registrar operación en métricas de Prometheus
+    // AS-TASK-14: Registrar operaciÃ³n en mÃ©tricas de Prometheus
     recordCriticalOperation('LOGIN', true);
 
-    // 6. Responder con token y datos del usuario (sin password)
-    res.status(200).json({
-      success: true,
-      message: 'Login exitoso',
-      taskId: 'AS-TASK-13',
-      data: {
-        token,
-        usuario: {
-          id: user.id,
-          nombre: user.nombre,
-          email: user.email,
-          rol: user.rol
-        },
-        expiresIn: jwtConfig.expiresIn
-      }
-    });
+    // 6. DTO: Responder con formato estÃ¡ndar (sin password)
+    res.status(200).json(authResponseDto(user, token));
 
   } catch (error) {
     const responseTime = Date.now() - startTime;
     
-    // AS-TASK-13: Log de auditoría con Winston
+    // AS-TASK-13: Log de auditorÃ­a con Winston
     logger.logCriticalOperation('LOGIN', {
       success: false,
       userId: null,
@@ -269,32 +233,29 @@ const login = async (req, res) => {
       taskId: 'AS-TASK-13'
     });
 
-    // AS-TASK-14: Registrar operación fallida en métricas
+    // AS-TASK-14: Registrar operaciÃ³n fallida en mÃ©tricas
     recordCriticalOperation('LOGIN', false);
     
-    // Error genérico del servidor
-    res.status(500).json({
-      success: false,
-      message: 'Error interno del servidor al iniciar sesión',
-      taskId: 'AS-TASK-13',
-      data: { error: error.message }
-    });
+    // Error genÃ©rico del servidor
+    res.status(500).json(
+      errorResponseDto('Error interno del servidor al iniciar sesiÃ³n', { error: error.message })
+    );
   }
 };
 
 /**
- * POST /logout - Invalidar sesión (revocar token JWT)
- * AS-TASK-07: Implementación completa con blacklist de tokens
+ * POST /logout - Invalidar sesiï¿½n (revocar token JWT)
+ * AS-TASK-07: Implementaciï¿½n completa con blacklist de tokens
  */
 const logout = async (req, res) => {
   const startTime = Date.now();
   
   try {
-    // El token ya viene extraído y validado por el middleware verifyToken
+    // El token ya viene extraï¿½do y validado por el middleware verifyToken
     const token = req.token;
     const user = req.user; // { id, email, rol }
 
-    // Log de auditoría: Inicio de logout
+    // Log de auditorï¿½a: Inicio de logout
     console.log(`[AUTH-AUDIT] Solicitud de logout - UserID: ${user.id} - Email: ${user.email} - IP: ${req.ip} - Timestamp: ${new Date().toISOString()}`);
 
     // Agregar token a blacklist
@@ -308,7 +269,7 @@ const logout = async (req, res) => {
       console.error(`[AUTH-AUDIT] [ERROR] Error al invalidar token - UserID: ${user.id} - Email: ${user.email}`);
       return res.status(500).json({
         success: false,
-        message: 'Error al cerrar sesión',
+        message: 'Error al cerrar sesiï¿½n',
         taskId: 'AS-TASK-07',
         data: null
       });
@@ -317,7 +278,7 @@ const logout = async (req, res) => {
     // Calcular tiempo de respuesta
     const responseTime = Date.now() - startTime;
 
-    // AS-TASK-13: Log de auditoría con Winston
+    // AS-TASK-13: Log de auditorï¿½a con Winston
     logger.logCriticalOperation('LOGOUT', {
       success: true,
       userId: user.id,
@@ -328,13 +289,13 @@ const logout = async (req, res) => {
       taskId: 'AS-TASK-13'
     });
 
-    // AS-TASK-14: Registrar operación en métricas de Prometheus
+    // AS-TASK-14: Registrar operaciï¿½n en mï¿½tricas de Prometheus
     recordCriticalOperation('LOGOUT', true);
 
-    // Responder con éxito
+    // Responder con ï¿½xito
     res.status(200).json({
       success: true,
-      message: 'Sesión cerrada exitosamente. Token invalidado.',
+      message: 'Sesiï¿½n cerrada exitosamente. Token invalidado.',
       taskId: 'AS-TASK-13',
       data: {
         userId: user.id,
@@ -346,7 +307,7 @@ const logout = async (req, res) => {
   } catch (error) {
     const responseTime = Date.now() - startTime;
     
-    // AS-TASK-13: Log de auditoría con Winston
+    // AS-TASK-13: Log de auditorï¿½a con Winston
     logger.logCriticalOperation('LOGOUT', {
       success: false,
       userId: req.user?.id || null,
@@ -358,13 +319,13 @@ const logout = async (req, res) => {
       taskId: 'AS-TASK-13'
     });
 
-    // AS-TASK-14: Registrar operación fallida en métricas
+    // AS-TASK-14: Registrar operaciï¿½n fallida en mï¿½tricas
     recordCriticalOperation('LOGOUT', false);
     
-    // Error genérico del servidor
+    // Error genï¿½rico del servidor
     res.status(500).json({
       success: false,
-      message: 'Error interno del servidor al cerrar sesión',
+      message: 'Error interno del servidor al cerrar sesiï¿½n',
       taskId: 'AS-TASK-07',
       data: { error: error.message }
     });
@@ -380,10 +341,10 @@ const logout = async (req, res) => {
  */
 const getRoles = async (req, res) => {
   try {
-    // AS-TASK-08: Obtener roles desde configuración
+    // AS-TASK-08: Obtener roles desde configuraciï¿½n
     const rolesInfo = getAllRolesInfo();
     
-    // Formatear respuesta con índice
+    // Formatear respuesta con ï¿½ndice
     const roles = rolesInfo.map((role, index) => ({
       id: index + 1,
       nombre: role.nombre,
@@ -415,15 +376,15 @@ const getRolesSimple = async (req, res) => {
   const startTime = Date.now();
   
   try {
-    // Log de auditoría: Inicio de consulta
+    // Log de auditorï¿½a: Inicio de consulta
     console.log(`[AUTH-AUDIT] Consulta de roles simplificados - IP: ${req.ip} - Timestamp: ${new Date().toISOString()}`);
     
-    // Obtener roles desde configuración
+    // Obtener roles desde configuraciï¿½n
     const rolesArray = getAllRoles();
     
     const responseTime = Date.now() - startTime;
     
-    // Log de auditoría: Consulta exitosa
+    // Log de auditorï¿½a: Consulta exitosa
     console.log(`[AUTH-AUDIT] [OK] Roles simplificados obtenidos exitosamente - Total: ${rolesArray.length} roles - Tiempo: ${responseTime}ms - IP: ${req.ip} - Timestamp: ${new Date().toISOString()}`);
 
     res.status(200).json({
@@ -437,7 +398,7 @@ const getRolesSimple = async (req, res) => {
   } catch (error) {
     const responseTime = Date.now() - startTime;
     
-    // Log de auditoría: Error
+    // Log de auditorï¿½a: Error
     console.error(`[AUTH-AUDIT] [ERROR] Error al obtener roles simplificados - Error: ${error.message} - Tiempo: ${responseTime}ms - IP: ${req.ip} - Timestamp: ${new Date().toISOString()}`);
     
     res.status(500).json({
@@ -455,7 +416,7 @@ const getRolesSimple = async (req, res) => {
 /**
  * PUT /usuarios/:id/rol - Actualizar rol de usuario
  * AS-TASK-11: Endpoint para cambiar rol de un usuario
- * Nota: Implementación original creada en AS-TASK-08, reutilizada para AS-TASK-11
+ * Nota: Implementaciï¿½n original creada en AS-TASK-08, reutilizada para AS-TASK-11
  * 
  * Requisitos cumplidos:
  * - Recibe :id en la ruta y rol en el body
@@ -464,7 +425,7 @@ const getRolesSimple = async (req, res) => {
  * - Actualiza el rol en la base de datos
  * - Responde con formato JSON estandarizado
  * - Maneja errores con status HTTP apropiados (400, 404, 500)
- * - Registra logs de auditoría (id, rol anterior, rol nuevo, fecha)
+ * - Registra logs de auditorï¿½a (id, rol anterior, rol nuevo, fecha)
  * - Sigue principios SOLID (controller ? service ? config)
  */
 const updateUserRole = async (req, res) => {
@@ -474,12 +435,12 @@ const updateUserRole = async (req, res) => {
     const { id } = req.params;
     const { rol } = req.body;
 
-    // Log de auditoría: Inicio de solicitud
-    console.log(`[AUTH-AUDIT] Solicitud de actualización de rol - UserID: ${id} - Nuevo rol: ${rol || 'N/A'} - IP: ${req.ip} - Timestamp: ${new Date().toISOString()}`);
+    // Log de auditorï¿½a: Inicio de solicitud
+    console.log(`[AUTH-AUDIT] Solicitud de actualizaciï¿½n de rol - UserID: ${id} - Nuevo rol: ${rol || 'N/A'} - IP: ${req.ip} - Timestamp: ${new Date().toISOString()}`);
 
     // 1. Validar campo rol
     if (!rol) {
-      console.warn(`[AUTH-AUDIT] Actualización fallida - Campo rol faltante - UserID: ${id}`);
+      console.warn(`[AUTH-AUDIT] Actualizaciï¿½n fallida - Campo rol faltante - UserID: ${id}`);
       return res.status(400).json({
         success: false,
         message: 'El campo rol es requerido',
@@ -488,13 +449,13 @@ const updateUserRole = async (req, res) => {
       });
     }
 
-    // 2. Validar que el ID sea un número
+    // 2. Validar que el ID sea un nï¿½mero
     const userId = parseInt(id);
     if (isNaN(userId)) {
-      console.warn(`[AUTH-AUDIT] Actualización fallida - ID inválido - ID: ${id}`);
+      console.warn(`[AUTH-AUDIT] Actualizaciï¿½n fallida - ID invï¿½lido - ID: ${id}`);
       return res.status(400).json({
         success: false,
-        message: 'ID de usuario inválido',
+        message: 'ID de usuario invï¿½lido',
         taskId: 'AS-TASK-11',
         data: null
       });
@@ -503,7 +464,7 @@ const updateUserRole = async (req, res) => {
     // 3. Obtener usuario actual para logs
     const currentUser = await userService.findById(userId);
     if (!currentUser) {
-      console.warn(`[AUTH-AUDIT] Actualización fallida - Usuario no encontrado - UserID: ${userId}`);
+      console.warn(`[AUTH-AUDIT] Actualizaciï¿½n fallida - Usuario no encontrado - UserID: ${userId}`);
       return res.status(404).json({
         success: false,
         message: 'Usuario no encontrado',
@@ -520,7 +481,7 @@ const updateUserRole = async (req, res) => {
     // Calcular tiempo de respuesta
     const responseTime = Date.now() - startTime;
 
-    // AS-TASK-13: Log de auditoría con Winston
+    // AS-TASK-13: Log de auditorï¿½a con Winston
     logger.logCriticalOperation('ROLE_CHANGE', {
       success: true,
       userId: userId,
@@ -531,10 +492,10 @@ const updateUserRole = async (req, res) => {
       taskId: 'AS-TASK-13'
     });
 
-    // AS-TASK-14: Registrar operación en métricas de Prometheus
+    // AS-TASK-14: Registrar operaciï¿½n en mï¿½tricas de Prometheus
     recordCriticalOperation('ROLE_CHANGE', true);
 
-    // 5. Responder con éxito
+    // 5. Responder con ï¿½xito
     res.status(200).json({
       success: true,
       message: `Rol actualizado exitosamente de "${oldRole}" a "${rol}"`,
@@ -552,7 +513,7 @@ const updateUserRole = async (req, res) => {
   } catch (error) {
     const responseTime = Date.now() - startTime;
     
-    // AS-TASK-13: Log de auditoría con Winston
+    // AS-TASK-13: Log de auditorï¿½a con Winston
     logger.logCriticalOperation('ROLE_CHANGE', {
       success: false,
       userId: req.params.id || null,
@@ -564,7 +525,7 @@ const updateUserRole = async (req, res) => {
       taskId: 'AS-TASK-13'
     });
 
-    // AS-TASK-14: Registrar operación fallida en métricas
+    // AS-TASK-14: Registrar operaciï¿½n fallida en mï¿½tricas
     recordCriticalOperation('ROLE_CHANGE', false);
     
     res.status(500).json({
@@ -580,7 +541,7 @@ const updateUserRole = async (req, res) => {
  * GET /health - Health check para monitoreo
  */
 /**
- * GET /usuarios/:id - Perfil público de usuario (sin contraseña), para agregación BFF.
+ * GET /usuarios/:id - Perfil pï¿½blico de usuario (sin contraseï¿½a), para agregaciï¿½n BFF.
  */
 const getUserById = async (req, res) => {
   try {
