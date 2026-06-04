@@ -24,7 +24,7 @@ Plataforma backend basada en **microservicios** para gestión de proyectos, tare
 |--------|---------|
 | **Entrada HTTP** | `http://localhost:8010/api/v1/...` |
 | **Stack** | Node.js, Express, PostgreSQL (Neon), Docker Compose |
-| **Seguridad** | JWT compartido (`JWT_SECRET`) entre Auth, PM y BFF |
+| **Seguridad** | JWT con RSA (RS256) - Auth firma con clave privada, BFF/PM verifican con pública. Ver [docs/JWT_RSA_MIGRATION.md](../docs/JWT_RSA_MIGRATION.md) |
 | **Roles** | `gestor`, `profesional`, `directivo` (RBAC) |
 
 El diseño separa **identidad** (Auth), **dominio de negocio** (Project Manager) y **adaptación al cliente** (BFF), de modo que el frontend no conoce URLs internas ni contratos crudos de cada microservicio.
@@ -130,7 +130,7 @@ sequenceDiagram
 - **Single responsibility:** cada microservicio tiene un bounded context claro.
 - **Fail fast:** validación en BFF/PM antes de llamar a BD o upstream.
 - **Contrato único hacia el cliente:** el front solo habla con `/api/v1` vía gateway.
-- **Secretos compartidos con criterio:** mismo `JWT_SECRET` solo entre servicios que validan el mismo token.
+- **Seguridad con RSA:** ms-auth firma tokens con clave privada (RS256), BFF/PM solo verifican con clave pública (no pueden crear tokens).
 
 ---
 
@@ -250,9 +250,17 @@ cd bff && npm test
 
 ```bash
 cd backend
-cp .env.docker.example .env.docker
-# Editar DATABASE_URL_AUTH, DATABASE_URL_PM, JWT_SECRET
 
+# 1. Generar claves RSA para JWT (solo la primera vez)
+cd ms-auth && node scripts/generate-keys.js && cd ..
+cp ms-auth/keys/public.key bff/keys/public.key
+cp ms-auth/keys/public.key ms-project-manager/keys/public.key
+
+# 2. Configurar bases de datos
+cp .env.docker.example .env.docker
+# Editar DATABASE_URL_AUTH, DATABASE_URL_PM
+
+# 3. Iniciar servicios
 docker compose --env-file .env.docker up --build
 ```
 

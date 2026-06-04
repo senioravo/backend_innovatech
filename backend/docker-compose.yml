@@ -1,8 +1,14 @@
 # Stack local: API Gateway (nginx) → BFF → auth | project-manager
 # Uso:
-#   1. Copia .env.docker.example a .env.docker y rellena variables (p. ej. DATABASE_URL).
-#   2. docker compose --env-file .env.docker up --build
+#   1. Genera claves RSA: cd ms-auth && node scripts/generate-keys.js
+#   2. Copia public.key al BFF: cp ms-auth/keys/public.key bff/keys/public.key
+#   3. Copia .env.docker.example a .env.docker y rellena DATABASE_URL
+#   4. docker compose --env-file .env.docker up --build
 # Entrada HTTP: http://localhost:8080/api/v1/…
+# 
+# SEGURIDAD JWT (RS256):
+#   - ms-auth: usa clave PRIVADA para FIRMAR tokens
+#   - BFF: usa clave PÚBLICA para VERIFICAR tokens (NO puede crearlos)
 
 services:
   api-gateway:
@@ -21,11 +27,14 @@ services:
     environment:
       PORT: "3010"
       API_GATEWAY_PREFIX: /api/v1
-      JWT_SECRET: ${JWT_SECRET:-changeme}
+      # Ya NO necesita JWT_SECRET - usa clave pública RSA
       AUTH_SERVICE_BASE_URL: http://auth:3001
       AUTH_API_PREFIX: /api/auth
       PROJECT_MANAGER_BASE_URL: http://project-manager:3002
       PROJECT_MANAGER_API_PREFIX: /api/v1
+    volumes:
+      # Clave PÚBLICA RSA para verificar tokens (solo lectura)
+      - ./bff/keys/public.key:/app/keys/public.key:ro
     expose:
       - "3010"
     depends_on:
@@ -38,7 +47,14 @@ services:
     environment:
       PORT: "3001"
       DATABASE_URL: ${DATABASE_URL_AUTH:-}
-      JWT_SECRET: ${JWT_SECRET:-changeme}
+      # Ya NO necesita JWT_SECRET - usa clave privada RSA
+      JWT_EXPIRES_IN: "1h"
+      JWT_ISSUER: "innovatech-auth"
+    volumes:
+      # Clave PRIVADA RSA para firmar tokens (solo lectura)
+      - ./ms-auth/keys/private.key:/app/keys/private.key:ro
+      # Clave PÚBLICA RSA (opcional, para verificación local)
+      - ./ms-auth/keys/public.key:/app/keys/public.key:ro
     expose:
       - "3001"
 
@@ -48,7 +64,10 @@ services:
     environment:
       PORT: "3002"
       DATABASE_URL: ${DATABASE_URL_PM:-}
-      JWT_SECRET: ${JWT_SECRET:-changeme}
+      # Ya NO necesita JWT_SECRET - usa clave pública RSA
       API_GATEWAY_PREFIX: /api/v1
+    volumes:
+      # Clave PÚBLICA RSA para verificar tokens (solo lectura)
+      - ./ms-project-manager/keys/public.key:/app/keys/public.key:ro
     expose:
       - "3002"
