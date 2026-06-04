@@ -1,6 +1,6 @@
 # InnovaTech — Backend
 
-Plataforma backend basada en **microservicios** para gestión de proyectos, tareas y autenticación. El cliente (frontend) se comunica **únicamente** con el **BFF**, expuesto a través de un **API Gateway** (nginx).
+Plataforma backend basada en **microservicios** para gestión de proyectos, tareas y autenticación. El cliente (frontend) se comunica **únicamente** con el **API Gateway (KrakenD)**, que valida JWT y enruta al **BFF**.
 
 ---
 
@@ -23,11 +23,11 @@ Plataforma backend basada en **microservicios** para gestión de proyectos, tare
 | Aspecto | Detalle |
 |--------|---------|
 | **Entrada HTTP** | `http://localhost:8010/api/v1/...` |
-| **Stack** | Node.js, Express, PostgreSQL (Neon), Docker Compose |
-| **Seguridad** | JWT compartido (`JWT_SECRET`) entre Auth, PM y BFF |
+| **Stack** | Node.js, Express, PostgreSQL (Neon), Docker Compose, KrakenD |
+| **Seguridad** | JWT con RSA (RS256) - KrakenD valida tokens, Auth firma con clave privada. Ver [docs/JWT_RSA_MIGRATION.md](../docs/JWT_RSA_MIGRATION.md) |
 | **Roles** | `gestor`, `profesional`, `directivo` (RBAC) |
 
-El diseño separa **identidad** (Auth), **dominio de negocio** (Project Manager) y **adaptación al cliente** (BFF), de modo que el frontend no conoce URLs internas ni contratos crudos de cada microservicio.
+El diseño separa **identidad** (Auth), **dominio de negocio** (Project Manager) y **adaptación al cliente** (BFF), de modo que el frontend no conoce URLs internas ni contratos crudos de cada microservicio. **KrakenD** centraliza autenticación, CORS y rate limiting.
 
 ---
 
@@ -40,7 +40,7 @@ flowchart LR
   end
 
   subgraph Infra
-    GW[API Gateway<br/>nginx :8080]
+    GW[API Gateway<br/>KrakenD :8080]
   end
 
   subgraph Backend
@@ -54,8 +54,9 @@ flowchart LR
     DBP[(PostgreSQL PM)]
   end
 
-  FE -->|HTTPS /api/v1| GW
-  GW --> BFF
+  FE -->|HTTPS /api/v1 + JWT| GW
+  GW -->|Valida JWT| AUTH
+  GW -->|Headers X-User-*| BFF
   BFF --> AUTH
   BFF --> PM
   AUTH --> DBA
@@ -130,7 +131,7 @@ sequenceDiagram
 - **Single responsibility:** cada microservicio tiene un bounded context claro.
 - **Fail fast:** validación en BFF/PM antes de llamar a BD o upstream.
 - **Contrato único hacia el cliente:** el front solo habla con `/api/v1` vía gateway.
-- **Secretos compartidos con criterio:** mismo `JWT_SECRET` solo entre servicios que validan el mismo token.
+- **Seguridad con RSA:** ms-auth firma tokens con clave privada (RS256), BFF/PM solo verifican con clave pública (no pueden crear tokens).
 
 ---
 
@@ -251,15 +252,25 @@ cd bff && npm test
 ```bash
 cd backend
 cp .env.docker.example .env.docker
-# Editar DATABASE_URL_AUTH, DATABASE_URL_PM, JWT_SECRET
+# Editar DATABASE_URL_AUTH y DATABASE_URL_PM
 
+# 1. Generar claves RSA para JWT (solo la primera vez)
+cd ms-auth && node scripts/generate-keys.js && cd ..
+
+# 2. Configurar bases de datos
+cp .env.docker.example .env.docker
+# Editar DATABASE_URL_AUTH, DATABASE_URL_PM
+
+# 3. Iniciar servicios con KrakenD
 docker compose --env-file .env.docker up --build
 ```
 
+**Nota:** Ya **NO** es necesario copiar `public.key` al BFF ni a ms-project-manager. KrakenD valida JWT centralizadamente consultando el endpoint JWKS de ms-auth.
+
 | Endpoint | URL |
 |----------|-----|
-| API (gateway) | http://localhost:8010/api/v1/ |
-| Health gateway | http://localhost:8010/gateway-health |
+| API (KrakenD) | http://localhost:8010/api/v1/ |
+| JWKS (clave pública) | http://localhost:8010/.well-known/jwks.json |
 | Health BFF | http://localhost:8010/health |
 
 ### Desarrollo local (servicio a servicio)
@@ -277,7 +288,7 @@ backend_innovatech/
 │   ├── docker-compose.yml
 │   ├── .env.docker
 │   ├── api-gateway/
-│   │   └── nginx.conf
+│   │   └── krakend.json         ← Config KrakenD (JWT, CORS, routes)
 │   ├── bff/
 │   ├── ms-auth/
 │   └── ms-project-manager/
