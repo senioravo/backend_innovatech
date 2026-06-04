@@ -1,0 +1,54 @@
+# Stack local: API Gateway (nginx) → BFF → auth | project-manager
+# Uso:
+#   1. Copia .env.docker.example a .env.docker y rellena variables (p. ej. DATABASE_URL).
+#   2. docker compose --env-file .env.docker up --build
+# Entrada HTTP: http://localhost:8080/api/v1/…
+
+services:
+  api-gateway:
+    image: nginx:1.27-alpine
+    ports:
+      - "8010:8080"
+    volumes:
+      - ./api-gateway/nginx.conf:/etc/nginx/nginx.conf:ro
+    depends_on:
+      bff:
+        condition: service_started
+
+  bff:
+    build:
+      context: ./bff
+    environment:
+      PORT: "3010"
+      API_GATEWAY_PREFIX: /api/v1
+      JWT_SECRET: ${JWT_SECRET:-changeme}
+      AUTH_SERVICE_BASE_URL: http://auth:3001
+      AUTH_API_PREFIX: /api/auth
+      PROJECT_MANAGER_BASE_URL: http://project-manager:3002
+      PROJECT_MANAGER_API_PREFIX: /api/v1
+    expose:
+      - "3010"
+    depends_on:
+      - auth
+      - project-manager
+
+  auth:
+    build:
+      context: ./ms-auth
+    environment:
+      PORT: "3001"
+      DATABASE_URL: ${DATABASE_URL_AUTH:-}
+      JWT_SECRET: ${JWT_SECRET:-changeme}
+    expose:
+      - "3001"
+
+  project-manager:
+    build:
+      context: ./ms-project-manager
+    environment:
+      PORT: "3002"
+      DATABASE_URL: ${DATABASE_URL_PM:-}
+      JWT_SECRET: ${JWT_SECRET:-changeme}
+      API_GATEWAY_PREFIX: /api/v1
+    expose:
+      - "3002"
