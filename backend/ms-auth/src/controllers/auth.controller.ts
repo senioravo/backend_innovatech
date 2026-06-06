@@ -3,8 +3,11 @@ export {};
 // AS-TASK-02: Controlador de autenticación y autorización
 // Endpoints para integración con API Gateway
 
-// AS-TASK-04: Importar servicio de usuario
+// AS-TASK-04: Importar servicio de usuario (mantenido para verificación de password)
 const userService = require('../services/user.service');
+
+// Cliente para comunicación con ms-users
+const usersClient = require('../clients/usersClient');
 
 // AS-TASK-06: Importar JWT Helper para validación y generación de tokens
 const jwtHelper = require('../utils/jwt.helper');
@@ -33,10 +36,16 @@ const {
 } = require('../dtos/userDto');
 
 /**
+ * ============================================================
+ * FUNCIÓN DEPRECADA - MOVIDA A MS-USERS
+ * ============================================================
  * POST /register - Registro de usuarios
- * AS-TASK-04: Implementación completa con PostgreSQL y bcrypt
- * DTO: Usa DTOs para validación y formateo de respuestas
+ * AHORA EN: ms-users → POST /api/users
+ * 
+ * Esta función se mantiene comentada por referencia histórica.
+ * NO debe usarse en ms-auth.
  */
+/*
 const register = async (req, res) => {
   const startTime = Date.now();
   
@@ -133,6 +142,7 @@ const register = async (req, res) => {
     );
   }
 };
+*/
 
 /**
  * POST /login - Inicio de sesión
@@ -166,8 +176,8 @@ const login = async (req, res) => {
       );
     }
 
-    // 3. Buscar usuario por email en la BD
-    const user = await userService.findByEmail(email);
+    // 3. Buscar usuario por email en ms-users
+    const user = await usersClient.findByEmailWithPassword(email);
     
     if (!user) {
       // Log de auditoría: Usuario no encontrado
@@ -411,23 +421,16 @@ const getRolesSimple = async (req, res) => {
 };
 
 /**
- * PUT /usuarios/:id/rol - Asignar o cambiar rol a un usuario
+ * ============================================================
+ * FUNCIONES DEPRECADAS - MOVIDAS A MS-USERS
+ * ============================================================
+ * Las siguientes funciones updateUserRole y getUserById fueron
+ * movidas a ms-users y se comentan por referencia histórica.
+ * NO deben usarse en ms-auth.
  */
-/**
- * PUT /usuarios/:id/rol - Actualizar rol de usuario
- * AS-TASK-11: Endpoint para cambiar rol de un usuario
- * Nota: Implementaci�n original creada en AS-TASK-08, reutilizada para AS-TASK-11
- * 
- * Requisitos cumplidos:
- * - Recibe :id en la ruta y rol en el body
- * - Valida que el rol sea uno de: gestor, profesional, directivo
- * - Consulta PostgreSQL para verificar existencia del usuario
- * - Actualiza el rol en la base de datos
- * - Responde con formato JSON estandarizado
- * - Maneja errores con status HTTP apropiados (400, 404, 500)
- * - Registra logs de auditor�a (id, rol anterior, rol nuevo, fecha)
- * - Sigue principios SOLID (controller ? service ? config)
- */
+
+/*
+// DEPRECADO: Movido a ms-users → PUT /api/users/:id/role
 const updateUserRole = async (req, res) => {
   const startTime = Date.now();
   
@@ -536,13 +539,19 @@ const updateUserRole = async (req, res) => {
     });
   }
 };
+*/
 
 /**
- * GET /health - Health check para monitoreo
+ * ============================================================
+ * FUNCIÓN DEPRECADA - MOVIDA A MS-USERS
+ * ============================================================
+ * GET /usuarios/:id - Perfil público de usuario
+ * AHORA EN: ms-users → GET /api/users/:id
+ * 
+ * Esta función se mantiene comentada por referencia histórica.
+ * NO debe usarse en ms-auth.
  */
-/**
- * GET /usuarios/:id - Perfil p�blico de usuario (sin contrase�a), para agregaci�n BFF.
- */
+/*
 const getUserById = async (req, res) => {
   try {
     const user = await userService.findById(req.params.id);
@@ -574,7 +583,11 @@ const getUserById = async (req, res) => {
     });
   }
 };
+*/
 
+/**
+ * GET /health - Health check para monitoreo
+ */
 const health = async (req, res) => {
   res.status(200).json({
     success: true,
@@ -585,15 +598,66 @@ const health = async (req, res) => {
   });
 };
 
+// NOTA: Las siguientes funciones fueron MOVIDAS a ms-users:
+// - register → ms-users: POST /api/users
+// - getUserById → ms-users: GET /api/users/:id
+// - updateUserRole → ms-users: PUT /api/users/:id/role
+// El código original se mantiene comentado al final del archivo por referencia histórica
+
 module.exports = {
-  register,
   login,
   logout,
   getRoles,
   getRolesSimple,
-  getUserById,
-  updateUserRole,
   health
 };
+
+/* ============================================================
+ * FUNCIONES DEPRECADAS - MOVIDAS A MS-USERS
+ * ============================================================
+ * Las siguientes funciones ya NO deben usarse en ms-auth.
+ * Se mantienen comentadas solo como referencia histórica.
+ * 
+ * Para gestión de usuarios, usar ms-users:
+ * - POST /api/users (crear usuario)
+ * - GET /api/users/:id (obtener usuario)
+ * - PUT /api/users/:id/role (cambiar rol)
+ * ============================================================
+ */
+
+/*
+// DEPRECADO: Movido a ms-users
+const register = async (req, res) => {
+  // Esta función ya no debe usarse
+  // Usar POST /api/users en ms-users
+  return res.status(410).json({
+    success: false,
+    error: 'Este endpoint ha sido movido a ms-users',
+    redirect: 'POST /api/users'
+  });
+};
+
+// DEPRECADO: Movido a ms-users
+const getUserById = async (req, res) => {
+  // Esta función ya no debe usarse
+  // Usar GET /api/users/:id en ms-users
+  return res.status(410).json({
+    success: false,
+    error: 'Este endpoint ha sido movido a ms-users',
+    redirect: 'GET /api/users/:id'
+  });
+};
+
+// DEPRECADO: Movido a ms-users
+const updateUserRole = async (req, res) => {
+  // Esta función ya no debe usarse
+  // Usar PUT /api/users/:id/role en ms-users
+  return res.status(410).json({
+    success: false,
+    error: 'Este endpoint ha sido movido a ms-users',
+    redirect: 'PUT /api/users/:id/role'
+  });
+};
+*/
 
 
