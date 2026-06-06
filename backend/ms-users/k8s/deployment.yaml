@@ -1,0 +1,72 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: ms-users
+  labels:
+    app.kubernetes.io/name: ms-users
+    app.kubernetes.io/part-of: innovatech
+    app.kubernetes.io/component: microservice
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: ms-users
+  template:
+    metadata:
+      labels:
+        app.kubernetes.io/name: ms-users
+        app.kubernetes.io/part-of: innovatech
+        app.kubernetes.io/component: microservice
+    spec:
+      containers:
+        - name: ms-users
+          image: innovatech/ms-users:1.0.0
+          imagePullPolicy: IfNotPresent
+          ports:
+            - name: http
+              containerPort: 3003
+          envFrom:
+            - configMapRef:
+                name: ms-users-config
+          env:
+            - name: DATABASE_URL
+              valueFrom:
+                secretKeyRef:
+                  name: innovatech-secrets
+                  key: DATABASE_URL_USERS
+            - name: INTERNAL_SERVICE_TOKEN
+              valueFrom:
+                secretKeyRef:
+                  name: innovatech-secrets
+                  key: INTERNAL_SERVICE_TOKEN
+          volumeMounts:
+            - name: jwt-public-key
+              mountPath: /app/keys/jwt_public.pem
+              subPath: public.key
+              readOnly: true
+          readinessProbe:
+            httpGet:
+              path: /health
+              port: http
+            initialDelaySeconds: 10
+            periodSeconds: 10
+          livenessProbe:
+            httpGet:
+              path: /health
+              port: http
+            initialDelaySeconds: 30
+            periodSeconds: 20
+          resources:
+            requests:
+              cpu: 100m
+              memory: 128Mi
+            limits:
+              cpu: 500m
+              memory: 512Mi
+      volumes:
+        - name: jwt-public-key
+          secret:
+            secretName: innovatech-jwt-keys
+            items:
+              - key: public.key
+                path: public.key
