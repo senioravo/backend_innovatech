@@ -53,6 +53,10 @@ services:
       # Ya NO necesita JWT_SECRET - usa clave privada RSA
       JWT_EXPIRES_IN: "1h"
       JWT_ISSUER: "innovatech-auth"
+      # URL del microservicio de usuarios para consultar datos durante login
+      USERS_SERVICE_URL: ${USERS_SERVICE_URL:-http://users:3003}
+      # Token de seguridad para comunicación interna entre servicios
+      INTERNAL_SERVICE_TOKEN: ${INTERNAL_SERVICE_TOKEN:-development-token}
     volumes:
       # Clave PRIVADA RSA para firmar tokens (solo lectura)
       - ./ms-auth/keys/private.key:/app/keys/private.key:ro
@@ -60,6 +64,8 @@ services:
       - ./ms-auth/keys/public.key:/app/keys/public.key:ro
     expose:
       - "3001"
+    depends_on:
+      - users
 
   project-manager:
     build:
@@ -74,3 +80,21 @@ services:
       - ./ms-project-manager/keys/public.key:/app/keys/public.key:ro
     expose:
       - "3002"
+
+  users:
+    build:
+      context: ./ms-users
+    environment:
+      PORT: "3003"
+      DATABASE_URL: ${DATABASE_URL_USERS:-}
+      # Verifica tokens JWT con clave pública RSA
+      JWT_PUBLIC_KEY_PATH: /app/keys/jwt_public.pem
+      JWT_ISSUER: "innovatech-auth"
+      LOG_LEVEL: "info"
+      # Token de seguridad para validar llamadas internas de otros servicios
+      INTERNAL_SERVICE_TOKEN: ${INTERNAL_SERVICE_TOKEN:-development-token}
+    volumes:
+      # Clave PÚBLICA RSA para verificar tokens (solo lectura)
+      - ./ms-auth/keys/public.key:/app/keys/jwt_public.pem:ro
+    expose:
+      - "3003"

@@ -21,19 +21,21 @@ router.use((req, res, next) => {
   next();
 });
 
-// Endpoints de autenticación
-router.post('/register', auditCriticalOperation('REGISTER'), authController.register);
+// Endpoints de autenticación (SOLO autenticación)
+// NOTA: /register fue movido a ms-users (POST /api/users)
 router.post('/login', auditCriticalOperation('LOGIN'), authController.login);
 
 // AS-TASK-07: Logout requiere token válido
 router.post('/logout', verifyToken, auditCriticalOperation('LOGOUT'), authController.logout);
 
-// Endpoints de roles
+// Endpoints de roles (solo lectura - información de configuración)
 router.get('/roles', authController.getRoles);
 // AS-TASK-10: Endpoint simplificado que retorna solo nombres de roles
 router.get('/roles/simple', authController.getRolesSimple);
-router.get('/usuarios/:id', verifyToken, authController.getUserById);
-router.put('/usuarios/:id/rol', auditCriticalOperation('ROLE_CHANGE'), authController.updateUserRole);
+
+// NOTA: Endpoints de gestión de usuarios fueron movidos a ms-users:
+// - GET /usuarios/:id → ms-users: GET /api/users/:id
+// - PUT /usuarios/:id/rol → ms-users: PUT /api/users/:id/role
 
 // Health check
 router.get('/health', authController.health);
