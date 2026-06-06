@@ -65,6 +65,12 @@ router.patch(
   projectController.assignAssignee
 );
 
+router.patch(
+  '/:id/status',
+  requireRole('Gestor', 'Profesional', 'Directivo'),
+  projectController.patchProjectStatus
+);
+
 router.delete('/:id', requireRole('Gestor'), projectController.deleteProject);
 
 module.exports = router;

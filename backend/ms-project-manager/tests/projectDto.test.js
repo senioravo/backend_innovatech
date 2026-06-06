@@ -16,12 +16,14 @@ describe('projectDto', () => {
       name: 'N',
       description: 'D',
       assigneeId: null,
+      status: 'active',
       startDate: new Date('2026-05-10T12:00:00.000Z'),
       endDate: null,
       createdAt: '2026-05-01T00:00:00.000Z',
       updatedAt: null
     });
     expect(dto.id).toBe('uuid-1');
+    expect(dto.status).toBe('active');
     expect(dto.startDate).toBe('2026-05-10');
     expect(dto.endDate).toBeNull();
   });

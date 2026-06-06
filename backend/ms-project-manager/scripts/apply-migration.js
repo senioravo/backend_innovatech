@@ -4,7 +4,7 @@
  */
 const { readFileSync, readdirSync } = require('fs');
 const path = require('path');
-const { getPool, endPool } = require('../src/db/pool');
+const { getPool, endPool } = require('../dist/db/pool');
 
 async function main() {
   const migrationsDir = path.join(__dirname, '..', 'db', 'migrations');

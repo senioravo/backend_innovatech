@@ -58,6 +58,16 @@ class ProjectService {
     return project;
   }
 
+  async updateProjectStatus(projectId, userId, status) {
+    if (!projectId || !userId || !status) {
+      throw new Error('projectId, userId and status are required');
+    }
+    await resourceAvailabilityService.assertProjectResponsable(projectId, userId);
+    const project = await this.repository.updateStatusByAssignee(projectId, userId, status);
+    if (!project) throw new NotFoundError('Project not found');
+    return project;
+  }
+
   async assignAssignee(projectId, ownerUserId, assigneeId) {
     if (!projectId || !ownerUserId || !assigneeId) {
       throw new Error('projectId, ownerUserId and assigneeId are required');

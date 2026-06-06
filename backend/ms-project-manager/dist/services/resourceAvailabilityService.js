@@ -2,7 +2,7 @@
 Object.defineProperty(exports, "__esModule", { value: true });
 const projectRepository = require('../repositories/projectRepository');
 const taskRepository = require('../repositories/taskRepository');
-const { NotFoundError } = require('../utils/errorHandler');
+const { NotFoundError, ForbiddenError } = require('../utils/errorHandler');
 const resourceAvailabilityService = {
     async assertProjectAvailable(projectId, userId) {
         if (!projectId || !userId)
@@ -19,6 +19,17 @@ const resourceAvailabilityService = {
         if (!task)
             throw new NotFoundError('Task not found');
         return task;
+    },
+    async assertProjectResponsable(projectId, userId) {
+        if (!projectId || !userId)
+            throw new Error('projectId and userId are required');
+        const project = await projectRepository.findById(projectId);
+        if (!project)
+            throw new NotFoundError('Project not found');
+        if (!project.assigneeId || project.assigneeId !== userId) {
+            throw new ForbiddenError('Only the project responsable can perform this action');
+        }
+        return project;
     },
     async assertTaskInProject(projectId, taskId, userId) {
         if (!projectId || !taskId || !userId) {

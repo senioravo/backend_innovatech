@@ -184,6 +184,23 @@ class ValidationService {
     };
   }
 
+  static validateProjectStatusInput(data) {
+    const errors = [];
+    const { isValidProjectStatus, normalizeProjectStatus, PROJECT_STATUSES } = require('../constants/projectStatuses');
+    const s = data.status;
+    if (s === undefined || s === null || (typeof s === 'string' && !s.trim())) {
+      errors.push('status is required');
+    } else if (!isValidProjectStatus(s)) {
+      errors.push(`status must be one of: ${PROJECT_STATUSES.join(', ')}`);
+    }
+    const normalized = errors.length === 0 ? normalizeProjectStatus(s) : undefined;
+    return {
+      isValid: errors.length === 0,
+      errors,
+      normalized
+    };
+  }
+
   static validateAssigneeInput(data) {
     const errors = [];
     const id = data.assigneeId;
