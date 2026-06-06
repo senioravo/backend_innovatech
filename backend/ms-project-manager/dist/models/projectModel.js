@@ -1,7 +1,7 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
 class ProjectModel {
-    constructor({ id, userId, name, description, createdAt, updatedAt, assigneeId, startDate, endDate }) {
+    constructor({ id, userId, name, description, createdAt, updatedAt, assigneeId, startDate, endDate, status }) {
         this.id = id;
         this.userId = userId;
         this.name = name;
@@ -11,6 +11,7 @@ class ProjectModel {
         this.assigneeId = assigneeId ?? null;
         this.startDate = startDate ?? null;
         this.endDate = endDate ?? null;
+        this.status = status ?? 'active';
     }
 }
 module.exports = ProjectModel;

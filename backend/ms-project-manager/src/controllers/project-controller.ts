@@ -88,6 +88,31 @@ const projectController = {
     }
   },
 
+  async patchProjectStatus(req, res, next) {
+    try {
+      const validation = ValidationService.validateProjectStatusInput(req.body);
+      if (!validation.isValid) {
+        throw new ValidationError(validation.errors);
+      }
+      const project = await projectService.updateProjectStatus(
+        req.params.id,
+        req.user.id,
+        validation.normalized
+      );
+
+      auditFromRequest(req, {
+        action: 'PROJECT_STATUS_UPDATE',
+        resource: 'project',
+        resourceId: req.params.id,
+        meta: { status: validation.normalized }
+      });
+
+      res.json(projectToDto(project));
+    } catch (error) {
+      next(error);
+    }
+  },
+
   async assignAssignee(req, res, next) {
     try {
       const validation = ValidationService.validateAssigneeInput(req.body);

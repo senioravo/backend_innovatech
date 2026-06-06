@@ -24,6 +24,7 @@ function projectToDto(project) {
     name: project.name,
     description: project.description,
     assigneeId: project.assigneeId ?? null,
+    status: project.status ?? 'active',
     startDate: formatDate(project.startDate),
     endDate: formatDate(project.endDate),
     createdAt: project.createdAt,

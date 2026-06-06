@@ -31,6 +31,17 @@ describe('ValidationService', () => {
     expect(result.isValid).toBe(false);
   });
 
+  test('validateProjectStatusInput normaliza status válido', () => {
+    const result = ValidationService.validateProjectStatusInput({ status: 'TERMINATED' });
+    expect(result.isValid).toBe(true);
+    expect(result.normalized).toBe('terminated');
+  });
+
+  test('validateProjectStatusInput rechaza status inválido', () => {
+    const result = ValidationService.validateProjectStatusInput({ status: 'paused' });
+    expect(result.isValid).toBe(false);
+  });
+
   test('validateTaskStatusInput normaliza status válido', () => {
     const result = ValidationService.validateTaskStatusInput({ status: 'in_review' });
     expect(result.isValid).toBe(true);

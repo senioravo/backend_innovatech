@@ -19,5 +19,6 @@ router.get('/:id', requireRole('Gestor', 'Profesional', 'Directivo'), projectCon
 router.post('/', requireRole('Gestor'), projectController.createProject);
 router.put('/:id', requireRole('Gestor', 'Profesional'), projectController.updateProject);
 router.patch('/:id/assignee', requireRole('Gestor', 'Profesional'), projectController.assignAssignee);
+router.patch('/:id/status', requireRole('Gestor', 'Profesional', 'Directivo'), projectController.patchProjectStatus);
 router.delete('/:id', requireRole('Gestor'), projectController.deleteProject);
 module.exports = router;
