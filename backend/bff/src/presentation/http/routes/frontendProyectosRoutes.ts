@@ -11,6 +11,17 @@ const router = express.Router();
 
 router.use(jwtAuthMiddleware);
 
+/**
+ * @openapi
+ * /api/v1/proyectos:
+ *   get:
+ *     tags: [Projects]
+ *     summary: Listar proyectos para frontend
+ * /api/v1/proyectos/{id}/tareas:
+ *   get:
+ *     tags: [Projects]
+ *     summary: Listar tareas de un proyecto para frontend
+ */
 router.get(
   '/proyectos',
   requireRole('Gestor', 'Profesional', 'Directivo'),

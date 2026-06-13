@@ -9,6 +9,17 @@ const authOrchestrationController = require('../controllers/auth-orchestration-c
  * POST /logout → Auth Service (requiere JWT válido en el BFF)
  */
 const router = express.Router();
+/**
+ * @openapi
+ * /api/v1/login:
+ *   post:
+ *     tags: [Auth]
+ *     summary: Iniciar sesión
+ * /api/v1/logout:
+ *   post:
+ *     tags: [Auth]
+ *     summary: Cerrar sesión
+ */
 router.post('/login', authOrchestrationController.login);
 router.post('/logout', jwtAuthMiddleware, authOrchestrationController.logout);
 module.exports = router;

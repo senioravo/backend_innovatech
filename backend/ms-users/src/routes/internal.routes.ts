@@ -12,14 +12,38 @@ const { validateInternalToken } = require('../middleware/internal.middleware');
 router.use(validateInternalToken);
 
 /**
- * GET /api/users/internal/by-email/:email
- * Buscar usuario por email incluyendo password (solo para ms-auth)
+ * @openapi
+ * /api/users/internal/by-email/{email}:
+ *   get:
+ *     tags: [Internal]
+ *     summary: Buscar usuario por email (incluye password hash)
+ *     description: Endpoint interno para comunicación entre microservicios.
+ *     parameters:
+ *       - in: path
+ *         name: email
+ *         required: true
+ *         schema:
+ *           type: string
+ *     responses:
+ *       200:
+ *         description: Usuario encontrado
+ *       404:
+ *         description: Usuario no encontrado
  */
 router.get('/by-email/:email', internalController.getUserByEmailWithPassword);
 
 /**
- * POST /api/users/internal
- * Crear usuario desde otro microservicio
+ * @openapi
+ * /api/users/internal:
+ *   post:
+ *     tags: [Internal]
+ *     summary: Crear usuario desde otro microservicio
+ *     description: Endpoint interno para comunicación entre microservicios.
+ *     responses:
+ *       201:
+ *         description: Usuario creado
+ *       400:
+ *         description: Solicitud inválida
  */
 router.post('/', internalController.createUserInternal);
 

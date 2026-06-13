@@ -176,8 +176,8 @@ const login = async (req, res) => {
       );
     }
 
-    // 3. Buscar usuario por email en ms-users
-    const user = await usersClient.findByEmailWithPassword(email);
+    // 3. Buscar usuario por email en la base de datos local
+    const user = await userService.findByEmail(email);
     
     if (!user) {
       // Log de auditoría: Usuario no encontrado

@@ -8,8 +8,14 @@ require('dotenv').config();
 const logger = require('../utils/logger');
 
 // Validar variables de entorno requeridas
-if (!process.env.DATABASE_URL && !process.env.DB_PASSWORD) {
-  throw new Error('DATABASE_URL o DB_PASSWORD es requerido. Verifica tu archivo .env');
+// Permite iniciar con defaults locales si no hay .env configurado
+const hasDatabaseUrl = Boolean(process.env.DATABASE_URL);
+const hasLocalDbConfig = Boolean(process.env.DB_HOST || process.env.DB_USER || process.env.DB_NAME || process.env.DB_PASSWORD);
+
+if (!hasDatabaseUrl && !hasLocalDbConfig) {
+  logger.warn('[Database] No se encontró configuración explícita de DB. Se usarán valores locales por defecto (localhost:5432/postgres).', {
+    service: 'ms-users'
+  });
 }
 
 // SSL seguro para Neon u otros servicios gestionados
