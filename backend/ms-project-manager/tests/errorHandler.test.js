@@ -1,7 +1,8 @@
 const {
   ValidationError,
   NotFoundError,
-  ApplicationError
+  ApplicationError,
+  UnauthorizedError
 } = require('../src/utils/errorHandler');
 
 describe('errorHandler', () => {
@@ -16,5 +17,11 @@ describe('errorHandler', () => {
     const err = new NotFoundError('Task not found');
     expect(err.status).toBe(404);
     expect(err.message).toBe('Task not found');
+  });
+
+  test('UnauthorizedError usa mensaje por defecto', () => {
+    const err = new UnauthorizedError();
+    expect(err.status).toBe(401);
+    expect(err.message).toBe('Unauthorized');
   });
 });

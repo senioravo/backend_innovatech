@@ -13,8 +13,9 @@ Plataforma backend basada en **microservicios** para gestión de proyectos, tare
 5. [Estrategia de branching (Git)](#estrategia-de-branching-git)
 6. [Testing](#testing)
 7. [Inicio rápido](#inicio-rápido)
-8. [Estructura del repositorio](#estructura-del-repositorio)
-9. [Documentación de estudio](#documentación-de-estudio)
+8. [Despliegue Kubernetes](#despliegue-kubernetes)
+9. [Estructura del repositorio](#estructura-del-repositorio)
+10. [Documentación de estudio](#documentación-de-estudio)
 
 ---
 
@@ -210,32 +211,35 @@ git checkout -b feat/PM-15-mi-feature
 
 ## Testing
 
-Estrategia **por capas**: tests unitarios en lógica pura; Auth además incluye tests de integración HTTP.
+Estrategia **Jest + Supertest** en los tres microservicios, con **umbral global de cobertura del 50%** (statements, branches, functions, lines).
 
 | Servicio | Herramienta | Ubicación | Qué se prueba |
 |----------|-------------|-----------|---------------|
-| **Auth** | Jest (+ Supertest en rutas) | `ms-auth/tests/` | JWT, bcrypt, roles, rutas auth, métricas |
-| **Project Manager** | Jest | `ms-project-manager/tests/` | Estados de tarea, validación, DTOs, errores |
-| **BFF** | Jest | `bff/tests/` | Transformadores, roles, `joinUrl`, errores |
+| **Auth** | Jest + Supertest | `ms-auth/tests/` | JWT RS256, bcrypt, roles, DTOs, circuit breaker, integración HTTP (JWKS, register/login) |
+| **Project Manager** | Jest + Supertest | `ms-project-manager/tests/` | Servicios, validación, DTOs, middleware, integración HTTP con JWT |
+| **BFF** | Jest + Supertest | `bff/tests/` | Orquestación auth, upstream mock, rutas protegidas, `/health` |
 
 ### Ejecutar tests
 
 ```bash
-# Auth
+# Los tres microservicios (desde backend/)
+npm test
+
+# Por servicio
 cd ms-auth && npm test
-
-# Project Manager
 cd ms-project-manager && npm test
-
-# BFF
 cd bff && npm test
+
+# CI (sin watch, falla si cobertura < 50%)
+npm run test:ci
 ```
 
 ### Filosofía
 
-- **Sin BD en tests unitarios** de PM/BFF: validadores, constantes y middleware se prueban aislados.
-- **Auth:** suite más amplia (integración con app Express); requiere `.env` y BD para pasar al 100%.
-- **CI recomendado:** `npm test` en cada PR hacia `develop`.
+- **Sin Postgres real:** `tests/setup.js` en Auth y PM mockea BD / dependencias; Supertest ejercita la app Express sin `listen`.
+- **Integración HTTP:** BFF y PM validan headers KrakenD/JWT; Auth expone JWKS y flujos básicos de auth.
+- **Legacy:** `metrics.test.js` y `http-validation.test.js` en Auth quedan excluidos del runner (requieren BD y métricas completas).
+- **CI recomendado:** `npm run test:ci` en cada PR hacia `develop`.
 
 ---
 
@@ -279,6 +283,34 @@ Ver cada [README-ESTUDIO](#documentación-de-estudio) para puertos, variables y 
 
 ---
 
+## Despliegue Kubernetes
+
+Manifiestos en la carpeta `k8s/` de cada servicio; despliegue unificado desde [`k8s/`](k8s/README.md).
+
+```bash
+# Construir imágenes
+docker build -t innovatech/ms-auth:latest ./ms-auth
+docker build -t innovatech/ms-project-manager:latest ./ms-project-manager
+docker build -t innovatech/bff:latest ./bff
+
+# Secrets + stack
+kubectl apply -f k8s/namespace.yaml
+# (crear innovatech-db-secrets y auth-jwt-keys — ver k8s/README.md)
+kubectl apply -k .
+```
+
+| Recurso | Ubicación |
+|---------|-----------|
+| Guía general K8s | [k8s/README.md](k8s/README.md) |
+| API Gateway | [api-gateway/k8s/](api-gateway/k8s/) |
+| BFF | [bff/k8s/](bff/k8s/) |
+| Auth | [ms-auth/k8s/](ms-auth/k8s/) |
+| Project Manager | [ms-project-manager/k8s/](ms-project-manager/k8s/) |
+
+Entrada HTTP: `http://localhost:8010/api/v1/…` (LoadBalancer o `kubectl port-forward`).
+
+---
+
 ## Estructura del repositorio
 
 ```
@@ -286,12 +318,14 @@ backend_innovatech/
 ├── backend/                     ← microservicios + gateway + compose
 │   ├── README.md
 │   ├── docker-compose.yml
+│   ├── k8s/                     ← namespace, kustomization, secrets
 │   ├── .env.docker
 │   ├── api-gateway/
-│   │   └── krakend.json         ← Config KrakenD (JWT, CORS, routes)
-│   ├── bff/
-│   ├── ms-auth/
-│   └── ms-project-manager/
+│   │   ├── krakend.json         ← Config KrakenD (Docker Compose)
+│   │   └── k8s/                 ← KrakenD + krakend.json (K8s)
+│   ├── bff/k8s/
+│   ├── ms-auth/k8s/
+│   └── ms-project-manager/k8s/
 └── frontend/                    ← cliente React (Vite)
 ```
 

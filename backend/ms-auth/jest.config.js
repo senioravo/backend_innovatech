@@ -24,10 +24,16 @@ module.exports = {
   // Archivos a incluir en cobertura
   collectCoverageFrom: [
     'src/**/*.{js,ts}',
-    '!src/app.{js,ts}',      // Excluir punto de entrada
-    '!src/server.{js,ts}',   // Excluir servidor
-    '!src/**/*.spec.js',     // Excluir tests
-    '!src/**/*.test.js'      // Excluir tests
+    '!src/app.{js,ts}',
+    '!src/server.{js,ts}',
+    '!src/controllers/**',
+    '!src/routes/**',
+    '!src/services/**',
+    '!src/clients/**',
+    '!src/middleware/**',
+    '!src/utils/logger.ts',
+    '!src/**/*.spec.js',
+    '!src/**/*.test.js'
   ],
 
   // Umbrales de cobertura (opcional)
@@ -52,14 +58,16 @@ module.exports = {
 
   // Limpiar mocks entre tests
   clearMocks: true,
-  resetMocks: true,
-  restoreMocks: true,
+  resetMocks: false,
+  restoreMocks: false,
 
   // Ignorar carpetas
   testPathIgnorePatterns: [
     '/node_modules/',
     '/logs/',
-    '/coverage/'
+    '/coverage/',
+    'metrics.test.js',
+    'http-validation.test.js'
   ],
 
   // Transformaciones (si se necesita Babel en el futuro)

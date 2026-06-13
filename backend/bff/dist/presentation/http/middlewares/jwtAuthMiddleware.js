@@ -1,30 +1,38 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
-const jwt = require('jsonwebtoken');
-const config = require('../../../config');
 /**
- * BFF-TASK-06: Valida JWT (mismo secreto que emite Auth) y rellena req.user.
+ * BFF-TASK-06: Middleware de autenticación simplificado
+ *
+ * ARQUITECTURA CON KRAKEND:
+ * - KrakenD ya validó el JWT con la clave pública RSA
+ * - KrakenD inyecta headers X-User-Id, X-User-Email, X-User-Role
+ * - Este middleware solo lee esos headers (confía en el gateway)
+ *
+ * SEGURIDAD:
+ * - Este middleware SOLO debe usarse detrás de KrakenD
+ * - Nunca exponer el BFF directamente al público
+ * - KrakenD es la única fuente de verdad para autenticación
  */
 function jwtAuthMiddleware(req, res, next) {
-    const authHeader = req.headers.authorization;
-    if (!authHeader || !authHeader.startsWith('Bearer ')) {
+    // Leer headers que KrakenD ya validó
+    const userId = req.headers['x-user-id'];
+    const userEmail = req.headers['x-user-email'];
+    const userRole = req.headers['x-user-role'];
+    // Verificar que los headers existan (protección básica)
+    if (!userId || !userEmail || !userRole) {
+        console.warn('[BFF-JWT-MIDDLEWARE] ⚠️  Headers de usuario no encontrados - ¿BFF expuesto directamente?');
         return res.status(401).json({
-            error: 'Missing or invalid Authorization header (Bearer token required)'
+            error: 'Unauthorized',
+            message: 'Authentication headers missing. This service must be accessed through the API Gateway.'
         });
     }
-    const token = authHeader.slice(7);
-    try {
-        const decoded = jwt.verify(token, config.JWT_SECRET);
-        const role = decoded.role ?? decoded.rol;
-        req.user = {
-            id: decoded.id,
-            email: decoded.email,
-            role
-        };
-        next();
-    }
-    catch (error) {
-        return res.status(401).json({ error: 'Invalid or expired token' });
-    }
+    // Poblar req.user con los datos validados por KrakenD
+    req.user = {
+        id: parseInt(userId, 10),
+        email: userEmail,
+        role: userRole
+    };
+    console.log(`[BFF-JWT-MIDDLEWARE] ✅ Usuario autenticado por KrakenD - UserID: ${req.user.id} - Role: ${req.user.role}`);
+    next();
 }
 module.exports = jwtAuthMiddleware;

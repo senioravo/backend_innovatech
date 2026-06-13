@@ -21,7 +21,7 @@ describe('Autenticación - Register y Login', () => {
     
     if (response.status === 201) {
       expect(response.body).toHaveProperty('success', true);
-      expect(response.body.data).toHaveProperty('id');
+      expect(response.body.data.user).toHaveProperty('id');
     }
   });
 
