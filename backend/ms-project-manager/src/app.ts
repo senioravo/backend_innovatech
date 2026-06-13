@@ -35,15 +35,17 @@ app.use(handleError);
 
 const PORT = config.PORT;
 
-verifyDatabase()
-  .then(() => {
-    app.listen(PORT, () => {
-      console.log(`🚀 Project Manager ejecutándose en puerto ${PORT}`);
+if (process.env.NODE_ENV !== 'test') {
+  verifyDatabase()
+    .then(() => {
+      app.listen(PORT, () => {
+        console.log(`🚀 Project Manager ejecutándose en puerto ${PORT}`);
+      });
+    })
+    .catch((err) => {
+      console.error('No se pudo conectar a PostgreSQL:', err.message);
+      process.exit(1);
     });
-  })
-  .catch((err) => {
-    console.error('No se pudo conectar a PostgreSQL:', err.message);
-    process.exit(1);
-  });
+}
 
 module.exports = app;

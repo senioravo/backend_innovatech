@@ -9,6 +9,8 @@ const authRoutes = require('./routes/auth.routes');
 const circuitBreakerRoutes = require('./routes/circuitBreaker.routes');
 // AS-TASK-09: Importar rutas de ejemplo para demostrar middleware de autorización
 const exampleRoutes = require('./routes/example.routes');
+// JWKS: Endpoint para servir clave pública en formato JWK (para KrakenD)
+const jwksRoutes = require('./routes/jwks.routes');
 const app = express();
 // Middlewares básicos
 app.use(express.json());
@@ -19,6 +21,8 @@ app.use('/api/auth', authRoutes);
 app.use('/api/circuit-breaker', circuitBreakerRoutes);
 // AS-TASK-09: Configurar rutas de ejemplo para demostrar middleware de autorización por rol
 app.use('/api/example', exampleRoutes);
+// JWKS: Servir clave pública en formato estándar para KrakenD
+app.use('/', jwksRoutes);
 // Iniciar servidor
 const PORT = process.env.PORT || 3001;
 app.listen(PORT, () => {

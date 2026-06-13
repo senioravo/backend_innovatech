@@ -200,7 +200,7 @@
     },
     {
       "@comment": "Tareas: Listar por proyecto (requiere JWT)",
-      "endpoint": "/api/v1/projects/{project_id}/tasks",
+      "endpoint": "/api/v1/projects/{id}/tasks",
       "method": "GET",
       "output_encoding": "json",
       "extra_config": {
@@ -219,7 +219,7 @@
       },
       "backend": [
         {
-          "url_pattern": "/api/v1/projects/{project_id}/tasks",
+          "url_pattern": "/api/v1/projects/{id}/tasks",
           "encoding": "json",
           "method": "GET",
           "host": ["http://bff:3010"]
@@ -228,7 +228,7 @@
     },
     {
       "@comment": "Tareas: Crear (requiere JWT)",
-      "endpoint": "/api/v1/projects/{project_id}/tasks",
+      "endpoint": "/api/v1/projects/{id}/tasks",
       "method": "POST",
       "output_encoding": "json",
       "extra_config": {
@@ -247,7 +247,7 @@
       },
       "backend": [
         {
-          "url_pattern": "/api/v1/projects/{project_id}/tasks",
+          "url_pattern": "/api/v1/projects/{id}/tasks",
           "encoding": "json",
           "method": "POST",
           "host": ["http://bff:3010"]

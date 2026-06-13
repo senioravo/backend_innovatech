@@ -18,10 +18,6 @@ services:
       - "8010:8080"
     volumes:
       - ./api-gateway/krakend.json:/etc/krakend/krakend.json:ro
-    environment:
-      FC_ENABLE: "1"
-      FC_SETTINGS: "/etc/krakend/settings"
-      FC_TEMPLATES: "/etc/krakend/templates"
     command: ["run", "-c", "/etc/krakend/krakend.json"]
     depends_on:
       - bff

@@ -1,24 +1,49 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
-// AS-TASK-06: Helper para gestión de JWT
+// AS-TASK-06: Helper para gestión de JWT con RSA (RS256)
 // Responsabilidad: Generación, verificación y validación de tokens JWT
 // Principio SOLID: Single Responsibility - Solo maneja operaciones JWT
+// SEGURIDAD: Usa criptografía asimétrica (clave privada para firmar, pública para verificar)
 const jwt = require('jsonwebtoken');
+const fs = require('fs');
+const path = require('path');
 /**
- * Clase JWTHelper - Gestión centralizada de tokens JWT
+ * Clase JWTHelper - Gestión centralizada de tokens JWT con RSA
+ * Usa RS256 (RSA + SHA256) en lugar de HS256 (HMAC)
+ *
+ * Ventajas de RS256:
+ * - Solo este servicio puede FIRMAR tokens (tiene la clave privada)
+ * - Otros servicios (BFF) solo pueden VERIFICAR (tienen la clave pública)
+ * - No se comparte secreto sensible entre servicios
  */
 class JWTHelper {
     constructor() {
         // Configuración desde variables de entorno
-        this.secret = process.env.JWT_SECRET || 'secret_key_default_CHANGE_THIS';
         this.expiresIn = process.env.JWT_EXPIRES_IN || '1h';
         this.issuer = process.env.JWT_ISSUER || 'innovatech-auth';
-        this.algorithm = 'HS256'; // Algoritmo de firma
+        this.algorithm = 'RS256'; // Algoritmo asimétrico con RSA
+        // Cargar claves RSA
+        const keysDir = path.join(__dirname, '..', '..', 'keys');
+        const privateKeyPath = path.join(keysDir, 'private.key');
+        const publicKeyPath = path.join(keysDir, 'public.key');
+        try {
+            // Clave PRIVADA: solo para este servicio, para FIRMAR tokens
+            this.privateKey = fs.readFileSync(privateKeyPath, 'utf8');
+            console.log('[JWT-HELPER] ✅ Clave privada RSA cargada correctamente');
+            // Clave PÚBLICA: para verificar tokens localmente (opcional)
+            this.publicKey = fs.readFileSync(publicKeyPath, 'utf8');
+            console.log('[JWT-HELPER] ✅ Clave pública RSA cargada correctamente');
+        }
+        catch (error) {
+            console.error('[JWT-HELPER] ❌ Error al cargar claves RSA:', error.message);
+            console.error('[JWT-HELPER] Ejecuta: node scripts/generate-keys.js');
+            throw new Error('No se pudieron cargar las claves RSA. Genera las claves primero.');
+        }
     }
     /**
      * Generar token JWT para un usuario
      * @param {Object} user - Datos del usuario (id, email, rol)
-     * @returns {string} - Token JWT firmado
+     * @returns {string} - Token JWT firmado con clave privada RSA
      */
     generateToken(user) {
         try {
@@ -36,11 +61,11 @@ class JWTHelper {
             const options = {
                 expiresIn: this.expiresIn,
                 issuer: this.issuer,
-                algorithm: this.algorithm
+                algorithm: this.algorithm // RS256
             };
-            // Generar y firmar token
-            const token = jwt.sign(payload, this.secret, options);
-            console.log(`[JWT-HELPER] Token generado - UserID: ${user.id} - Email: ${user.email} - Expira: ${this.expiresIn}`);
+            // Generar y firmar token con CLAVE PRIVADA
+            const token = jwt.sign(payload, this.privateKey, options);
+            console.log(`[JWT-HELPER] Token RS256 generado - UserID: ${user.id} - Email: ${user.email} - Expira: ${this.expiresIn}`);
             return token;
         }
         catch (error) {
@@ -58,12 +83,12 @@ class JWTHelper {
             if (!token) {
                 throw new Error('Token no proporcionado');
             }
-            // Verificar firma y validez del token
-            const decoded = jwt.verify(token, this.secret, {
+            // Verificar firma y validez del token con CLAVE PÚBLICA
+            const decoded = jwt.verify(token, this.publicKey, {
                 issuer: this.issuer,
-                algorithms: [this.algorithm]
+                algorithms: [this.algorithm] // RS256
             });
-            console.log(`[JWT-HELPER] Token verificado - UserID: ${decoded.id}`);
+            console.log(`[JWT-HELPER] Token RS256 verificado - UserID: ${decoded.id}`);
             return decoded;
         }
         catch (error) {

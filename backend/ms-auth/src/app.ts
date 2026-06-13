@@ -34,12 +34,13 @@ app.use('/api/example', exampleRoutes);
 // JWKS: Servir clave pública en formato estándar para KrakenD
 app.use('/', jwksRoutes);
 
-// Iniciar servidor
 const PORT = process.env.PORT || 3001;
 
-app.listen(PORT, () => {
-  console.log(`🚀 Microservicio Auth ejecutándose en puerto ${PORT}`);
-});
+if (process.env.NODE_ENV !== 'test') {
+  app.listen(PORT, () => {
+    console.log(`🚀 Microservicio Auth ejecutándose en puerto ${PORT}`);
+  });
+}
 
 module.exports = app;
 

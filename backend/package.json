@@ -1,0 +1,9 @@
+{
+  "name": "innovatech-backend",
+  "private": true,
+  "description": "Monorepo scripts for InnovaTech microservices",
+  "scripts": {
+    "test": "npm test --prefix ms-auth && npm test --prefix ms-project-manager && npm test --prefix bff",
+    "test:ci": "npm run test:ci --prefix ms-auth && npm run test:ci --prefix ms-project-manager && npm run test:ci --prefix bff"
+  }
+}

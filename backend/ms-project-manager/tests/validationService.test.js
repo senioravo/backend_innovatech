@@ -52,4 +52,22 @@ describe('ValidationService', () => {
     const result = ValidationService.validateTaskInput({ title: 'ab' });
     expect(result.isValid).toBe(false);
   });
+
+  test('validateUpdateInput acepta actualización parcial', () => {
+    const result = ValidationService.validateUpdateInput({
+      name: 'Proyecto actualizado',
+      endDate: '2026-12-31'
+    });
+    expect(result.isValid).toBe(true);
+  });
+
+  test('validateTaskUpdateInput acepta cambio de status', () => {
+    const result = ValidationService.validateTaskUpdateInput({ status: 'IN_PROGRESS' });
+    expect(result.isValid).toBe(true);
+  });
+
+  test('validateAssigneeInput acepta assigneeId válido', () => {
+    const result = ValidationService.validateAssigneeInput({ assigneeId: 'user-42' });
+    expect(result.isValid).toBe(true);
+  });
 });

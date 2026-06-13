@@ -30,8 +30,10 @@ app.use(handleError);
 
 const PORT = config.PORT;
 
-app.listen(PORT, () => {
-  console.log(`BFF escuchando en puerto ${PORT}`);
-});
+if (process.env.NODE_ENV !== 'test') {
+  app.listen(PORT, () => {
+    console.log(`BFF escuchando en puerto ${PORT}`);
+  });
+}
 
 module.exports = app;
