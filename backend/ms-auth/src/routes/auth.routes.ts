@@ -23,21 +23,93 @@ router.use((req, res, next) => {
 
 // Endpoints de autenticación (SOLO autenticación)
 // NOTA: /register fue movido a ms-users (POST /api/users)
+/**
+ * @openapi
+ * /api/auth/login:
+ *   post:
+ *     tags: [Auth]
+ *     summary: Iniciar sesión
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             required: [email, password]
+ *             properties:
+ *               email:
+ *                 type: string
+ *                 example: juan@innovatech.cl
+ *               password:
+ *                 type: string
+ *                 example: Secret123!
+ *     responses:
+ *       200:
+ *         description: Login exitoso, retorna JWT
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 token:
+ *                   type: string
+ *                 usuario:
+ *                   type: object
+ *       401:
+ *         description: Credenciales inválidas
+ */
 router.post('/login', auditCriticalOperation('LOGIN'), authController.login);
 
-// AS-TASK-07: Logout requiere token válido
+/**
+ * @openapi
+ * /api/auth/logout:
+ *   post:
+ *     tags: [Auth]
+ *     summary: Cerrar sesión
+ *     security:
+ *       - bearerAuth: []
+ *     responses:
+ *       200:
+ *         description: Sesión cerrada
+ *       401:
+ *         description: Token inválido
+ */
 router.post('/logout', verifyToken, auditCriticalOperation('LOGOUT'), authController.logout);
 
-// Endpoints de roles (solo lectura - información de configuración)
+/**
+ * @openapi
+ * /api/auth/roles:
+ *   get:
+ *     tags: [Auth]
+ *     summary: Obtener todos los roles disponibles
+ *     responses:
+ *       200:
+ *         description: Lista de roles
+ * /api/auth/roles/simple:
+ *   get:
+ *     tags: [Auth]
+ *     summary: Obtener nombres de roles (versión simple)
+ *     responses:
+ *       200:
+ *         description: Lista simple de roles
+ */
 router.get('/roles', authController.getRoles);
-// AS-TASK-10: Endpoint simplificado que retorna solo nombres de roles
 router.get('/roles/simple', authController.getRolesSimple);
 
 // NOTA: Endpoints de gestión de usuarios fueron movidos a ms-users:
 // - GET /usuarios/:id → ms-users: GET /api/users/:id
 // - PUT /usuarios/:id/rol → ms-users: PUT /api/users/:id/role
 
-// Health check
+/**
+ * @openapi
+ * /api/auth/health:
+ *   get:
+ *     tags: [Health]
+ *     summary: Health check del microservicio auth
+ *     responses:
+ *       200:
+ *         description: Servicio operativo
+ */
 router.get('/health', authController.health);
 
 module.exports = router;

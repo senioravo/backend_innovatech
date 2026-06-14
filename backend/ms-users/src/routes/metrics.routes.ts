@@ -7,8 +7,14 @@ const router = express.Router();
 const { getMetrics } = require('../middleware/metricsMiddleware');
 
 /**
- * GET /metrics - Endpoint para Prometheus
- * Retorna métricas en formato Prometheus
+ * @openapi
+ * /metrics:
+ *   get:
+ *     tags: [Metrics]
+ *     summary: Endpoint de métricas Prometheus
+ *     responses:
+ *       200:
+ *         description: Métricas en formato Prometheus
  */
 router.get('/', async (req, res) => {
   try {

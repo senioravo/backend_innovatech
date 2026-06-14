@@ -9,6 +9,15 @@ const router = express.Router();
 
 router.use(authMiddleware);
 
+/**
+ * @openapi
+ * /api/v1/consultations/dashboard:
+ *   get:
+ *     tags: [Consultations]
+ *     summary: Obtener dashboard de tareas
+ *     security:
+ *       - bearerAuth: []
+ */
 router.get(
   '/dashboard',
   requireRole('Gestor', 'Profesional', 'Directivo'),

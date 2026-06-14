@@ -14,6 +14,30 @@ const router = express.Router();
 
 router.use(jwtAuthMiddleware);
 
+/**
+ * @openapi
+ * /api/v1/consultations/dashboard:
+ *   get:
+ *     tags: [Consultations]
+ *     summary: Dashboard de tareas
+ * /api/v1/projects:
+ *   get:
+ *     tags: [Projects]
+ *     summary: Listar proyectos
+ *   post:
+ *     tags: [Projects]
+ *     summary: Crear proyecto
+ * /api/v1/projects/{id}:
+ *   get:
+ *     tags: [Projects]
+ *     summary: Obtener proyecto
+ *   put:
+ *     tags: [Projects]
+ *     summary: Actualizar proyecto
+ *   delete:
+ *     tags: [Projects]
+ *     summary: Eliminar proyecto
+ */
 router.get(
   '/consultations/dashboard',
   requireRole('Gestor', 'Profesional', 'Directivo'),
