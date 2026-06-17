@@ -14,5 +14,5 @@ export function buildSwaggerApiGlobs(baseDir: string, relativeDirs: string[] = [
     globs.push(path.join(dir, '**', '*.ts'));
   }
 
-  return globs;
+  return globs.map((globPath) => globPath.replace(/\\/g, '/'));
 }

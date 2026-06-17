@@ -6,25 +6,42 @@ import { __dirname } from './esm-path.js';
 class JWTHelper {
   issuer: string;
   algorithm: string;
-  publicKey: string;
+  publicKey: string | null;
+  private _publicKeyPath: string;
+  private _keysLoaded = false;
 
   constructor() {
     this.issuer = process.env.JWT_ISSUER || 'innovatech-auth';
     this.algorithm = 'RS256';
+    this.publicKey = null;
+    this._publicKeyPath =
+      process.env.JWT_PUBLIC_KEY_PATH || path.join(__dirname, '../../keys/jwt_public.pem');
 
-    const publicKeyPath = process.env.JWT_PUBLIC_KEY_PATH || path.join(__dirname, '../../keys/jwt_public.pem');
+    if (!fs.existsSync(this._publicKeyPath)) {
+      console.warn(
+        '[JWT-HELPER] ⚠️ Clave pública RSA no encontrada. Swagger y /health funcionan; endpoints protegidos requieren setup-keys.bat'
+      );
+    }
+  }
+
+  private _ensureKeys() {
+    if (this._keysLoaded) {
+      return;
+    }
 
     try {
-      this.publicKey = fs.readFileSync(publicKeyPath, 'utf8');
-      console.log('[JWT-HELPER] ✅ Clave pública RSA cargada correctamente');
+      this.publicKey = fs.readFileSync(this._publicKeyPath, 'utf8');
+      this._keysLoaded = true;
+      console.log('[JWT-HELPER] ✅ Clave pública RSA cargada');
     } catch (error) {
       const err = error as Error;
-      console.error('[JWT-HELPER] ❌ Error al cargar clave pública RSA:', err.message);
-      throw new Error('No se pudo cargar la clave pública RSA. Verifica la configuración.');
+      throw new Error(`No se pudo cargar la clave pública RSA: ${err.message}`);
     }
   }
 
   verifyToken(token: string) {
+    this._ensureKeys();
+
     try {
       if (!token) {
         throw new Error('Token no proporcionado');
