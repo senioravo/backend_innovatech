@@ -1,6 +1,6 @@
 // @ts-nocheck
 import { getPool } from './pool.js';
-import config from '../config.js';
+import config from '../config/index.js';
 
 async function verifyDatabase() {
   if (!config.databaseUrl) {

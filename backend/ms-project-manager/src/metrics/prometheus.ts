@@ -1,6 +1,6 @@
 // @ts-nocheck
 import client from 'prom-client';
-import config from '../config.js';
+import config from '../config/index.js';
 
 const register = new client.Registry();
 

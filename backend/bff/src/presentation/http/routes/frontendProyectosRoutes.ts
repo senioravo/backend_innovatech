@@ -2,7 +2,7 @@
 import express from 'express';
 import jwtAuthMiddleware from '../middlewares/jwtAuthMiddleware.js';
 import requireRole from '../middlewares/requireRoleMiddleware.js';
-import * as proyectosOrchestrationController from '../controllers/proyectos-orchestration-controller.js';
+import proyectosOrchestrationController from '../controllers/proyectos-orchestration-controller.js';
 
 /**
  * BFF-TASK-08 / 09 / 10: contrato en español para el frontend.

@@ -1,4 +1,7 @@
 // @ts-nocheck
+import { isValidTaskStatus, normalizeTaskStatus, TASK_STATUSES } from '../constants/taskStatuses.js';
+import { isValidProjectStatus, normalizeProjectStatus, PROJECT_STATUSES } from '../constants/projectStatuses.js';
+
 class ValidationService {
   static hasOwn(data, key) {
     return Object.prototype.hasOwnProperty.call(data, key);
@@ -114,7 +117,6 @@ class ValidationService {
 
   static validateTaskStatusInput(data) {
     const errors = [];
-    import { isValidTaskStatus, normalizeTaskStatus, TASK_STATUSES } from '../constants/taskStatuses.js';
     const s = data.status;
     if (s === undefined || s === null || (typeof s === 'string' && !s.trim())) {
       errors.push('status is required');
@@ -164,7 +166,6 @@ class ValidationService {
     }
 
     if (hasStatus) {
-      import { isValidTaskStatus, TASK_STATUSES } from '../constants/taskStatuses.js';
       if (!isValidTaskStatus(data.status)) {
         errors.push(`status must be one of: ${TASK_STATUSES.join(', ')}`);
       }
@@ -185,7 +186,6 @@ class ValidationService {
 
   static validateProjectStatusInput(data) {
     const errors = [];
-    import { isValidProjectStatus, normalizeProjectStatus, PROJECT_STATUSES } from '../constants/projectStatuses.js';
     const s = data.status;
     if (s === undefined || s === null || (typeof s === 'string' && !s.trim())) {
       errors.push('status is required');

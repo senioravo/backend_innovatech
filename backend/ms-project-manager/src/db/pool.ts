@@ -1,6 +1,6 @@
 // @ts-nocheck
 import { Pool } from 'pg';
-import config from '../config.js';
+import config from '../config/index.js';
 
 let pool;
 

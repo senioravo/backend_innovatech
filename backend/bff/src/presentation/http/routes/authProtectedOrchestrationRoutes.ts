@@ -1,7 +1,7 @@
 // @ts-nocheck
 import express from 'express';
 import jwtAuthMiddleware from '../middlewares/jwtAuthMiddleware.js';
-import * as authOrchestrationController from '../controllers/auth-orchestration-controller.js';
+import authOrchestrationController from '../controllers/auth-orchestration-controller.js';
 
 /** Rutas /api/auth/* que exigen JWT válido antes de delegar en Auth. */
 const router = express.Router();

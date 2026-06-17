@@ -2,7 +2,7 @@
 import express from 'express';
 import jwtAuthMiddleware from '../middlewares/jwtAuthMiddleware.js';
 import requireRole from '../middlewares/requireRoleMiddleware.js';
-import * as projectManagerOrchestrationController from '../controllers/project-manager-orchestration-controller.js';
+import projectManagerOrchestrationController from '../controllers/project-manager-orchestration-controller.js';
 
 const forward = (req, res, next) =>
   projectManagerOrchestrationController.forward(req, res, next);

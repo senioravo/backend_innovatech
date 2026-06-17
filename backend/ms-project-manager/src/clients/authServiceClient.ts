@@ -1,5 +1,5 @@
 // @ts-nocheck
-import config from '../config.js';
+import config from '../config/index.js';
 import { createInternalHttpClient } from '../lib/internalHttpClient.js';
 
 let httpClient;

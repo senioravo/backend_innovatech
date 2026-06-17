@@ -2,9 +2,9 @@
 import express from 'express';
 import authMiddleware from '../middlewares/authMiddleware.js';
 import requireRole from '../middlewares/roleMiddleware.js';
-import * as projectController from '../controllers/project-controller.js';
-import * as resourceAvailabilityController from '../controllers/resource-availability-controller.js';
-import * as taskController from '../controllers/task-controller.js';
+import projectController from '../controllers/project-controller.js';
+import resourceAvailabilityController from '../controllers/resource-availability-controller.js';
+import taskController from '../controllers/task-controller.js';
 
 const router = express.Router();
 

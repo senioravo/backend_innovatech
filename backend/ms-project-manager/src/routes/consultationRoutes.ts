@@ -2,7 +2,7 @@
 import express from 'express';
 import authMiddleware from '../middlewares/authMiddleware.js';
 import requireRole from '../middlewares/roleMiddleware.js';
-import * as consultationController from '../controllers/consultation-controller.js';
+import consultationController from '../controllers/consultation-controller.js';
 
 const router = express.Router();
 

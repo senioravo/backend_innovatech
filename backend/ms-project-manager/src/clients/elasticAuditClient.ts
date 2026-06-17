@@ -1,6 +1,6 @@
 // @ts-nocheck
 import { Client } from '@elastic/elasticsearch';
-import config from '../config.js';
+import config from '../config/index.js';
 
 let esClient;
 let initAttempted;
