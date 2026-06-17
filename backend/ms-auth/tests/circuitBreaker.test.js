@@ -1,8 +1,6 @@
-const {
-  createCircuitBreaker,
+import { createCircuitBreaker,
   getBreakerStats,
-  circuitBreakerOptions
-} = require('../src/utils/circuitBreaker');
+  circuitBreakerOptions } from '../src/utils/circuitBreaker.js';
 
 describe('circuitBreaker', () => {
   test('circuitBreakerOptions usa valores de entorno', () => {

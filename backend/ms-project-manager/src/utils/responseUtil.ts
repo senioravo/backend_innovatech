@@ -1,6 +1,5 @@
 // @ts-nocheck
-export {};
-const { ApplicationError, ValidationError } = require('./errorHandler');
+import { ApplicationError, ValidationError } from './errorHandler.js';
 
 function handleNotFound(req, res) {
   res.status(404).json({ error: 'Route not found' });
@@ -30,4 +29,4 @@ function handleError(err, req, res, next) {
   });
 }
 
-module.exports = { handleNotFound, handleError };
+export { handleNotFound, handleError };

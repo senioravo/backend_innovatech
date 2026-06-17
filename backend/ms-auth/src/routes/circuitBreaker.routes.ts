@@ -1,9 +1,8 @@
 // @ts-nocheck
-export {};
 // AS-TASK-03: Rutas para pruebas de Circuit Breaker
-const express = require('express');
+import express from 'express';
 const router = express.Router();
-const circuitBreakerController = require('../controllers/circuitBreaker.controller');
+import * as circuitBreakerController from '../controllers/circuitBreaker.controller.js';
 
 /**
  * @openapi
@@ -33,5 +32,4 @@ router.get('/test/auth', circuitBreakerController.testAuthServiceBreaker);
 router.get('/test/project', circuitBreakerController.testProjectManagerBreaker);
 router.get('/stats', circuitBreakerController.getBreakerStatistics);
 
-module.exports = router;
-
+export default router;

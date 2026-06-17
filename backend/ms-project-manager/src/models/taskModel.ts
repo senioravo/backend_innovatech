@@ -1,5 +1,4 @@
 // @ts-nocheck
-export {};
 class TaskModel {
   constructor({
     id,
@@ -28,4 +27,4 @@ class TaskModel {
   }
 }
 
-module.exports = TaskModel;
+export default TaskModel;;

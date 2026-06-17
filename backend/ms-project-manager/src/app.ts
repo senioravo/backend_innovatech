@@ -1,17 +1,21 @@
 // @ts-nocheck
-export {};
-require('dotenv').config();
+import path from 'path';
+import { fileURLToPath } from 'url';
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
+import dotenv from 'dotenv';
+dotenv.config();
 console.log("DATABASE_URL:", process.env.DATABASE_URL);
-const express = require('express');
-const cors = require('cors');
-const swaggerUi = require('swagger-ui-express');
-const swaggerJsdoc = require('swagger-jsdoc');
-const config = require('./config');
-const apiGateway = require('./gateway/apiGateway');
-const { getAuthDependencyStatus } = require('./clients/authServiceClient');
-const { handleNotFound, handleError } = require('./utils/responseUtil');
-const { verifyDatabase } = require('./db/verify');
-const { metricsMiddleware, metricsHandler } = require('./metrics/prometheus');
+import express from 'express';
+import cors from 'cors';
+import swaggerUi from 'swagger-ui-express';
+import swaggerJsdoc from 'swagger-jsdoc';
+import config from './config.js';
+import apiGateway from './gateway/apiGateway.js';
+import { getAuthDependencyStatus } from './clients/authServiceClient.js';
+import { handleNotFound, handleError } from './utils/responseUtil.js';
+import { verifyDatabase } from './db/verify.js';
+import { metricsMiddleware, metricsHandler } from './metrics/prometheus.js';
 
 const app = express();
 
@@ -90,4 +94,4 @@ if (process.env.NODE_ENV !== 'test') {
     });
 }
 
-module.exports = app;
+export default app;;

@@ -1,12 +1,9 @@
 // @ts-nocheck
-export {};
-const taskRepository = require('../repositories/taskRepository');
-const resourceAvailabilityService = require('./resourceAvailabilityService');
-const {
-  isAllowedTaskStatusTransition,
-  normalizeTaskStatus
-} = require('../constants/taskStatuses');
-const { NotFoundError, ValidationError } = require('../utils/errorHandler');
+import taskRepository from '../repositories/taskRepository.js';
+import resourceAvailabilityService from './resourceAvailabilityService.js';
+import { isAllowedTaskStatusTransition,
+  normalizeTaskStatus } from '../constants/taskStatuses.js';
+import { NotFoundError, ValidationError } from '../utils/errorHandler.js';
 
 class TaskService {
   async createTask(projectId, userId, payload) {
@@ -96,4 +93,4 @@ class TaskService {
   }
 }
 
-module.exports = new TaskService();
+export default new TaskService();;

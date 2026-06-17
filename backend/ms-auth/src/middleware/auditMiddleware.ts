@@ -1,10 +1,9 @@
 // @ts-nocheck
-export {};
 // AS-TASK-12: Middleware de Auditoría para accesos y operaciones críticas
 // Responsabilidad: Interceptar requests y registrar accesos automáticamente
 // Principio SOLID: Single Responsibility - Solo audita accesos a endpoints
 
-const logger = require('../utils/logger');
+import logger from '../utils/logger.js';
 
 /**
  * Middleware de auditoría - Registra accesos a endpoints protegidos
@@ -150,8 +149,4 @@ const auditUnauthorizedAccess = (req, res, next) => {
   next();
 };
 
-module.exports = {
-  auditMiddleware,
-  auditCriticalOperation,
-  auditUnauthorizedAccess
-};
+export { auditMiddleware, auditCriticalOperation, auditUnauthorizedAccess };

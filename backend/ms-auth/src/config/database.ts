@@ -1,14 +1,12 @@
 // @ts-nocheck
-export {};
-
+import dotenv from 'dotenv';
 // AS-TASK-21: Configuraci�n de base de datos production-ready
 // Mejoras: SSL seguro, graceful shutdown, retry logic, Winston logging, m�tricas Prometheus
-const { Pool } = require('pg');
-const { Gauge } = require('prom-client');
-require('dotenv').config();
-
+import { Pool } from 'pg';
+import { Gauge } from 'prom-client';
+dotenv.config();
 // AS-TASK-21: Importar Winston logger en vez de console.log
-const logger = require('../utils/logger');
+import logger from '../utils/logger.js';
 
 // AS-TASK-21: Validar variables de entorno requeridas
 // Acepta dos modos:
@@ -142,10 +140,6 @@ const checkConnection = async (retries = 3) => {
   return false;
 };
 
-module.exports = {
-  pool,
-  checkConnection,
-  query: (text, params) => pool.query(text, params)
-};
+const query = (text: string, params?: unknown[]) => pool.query(text, params);
 
-
+export { pool, checkConnection, query };

@@ -1,4 +1,4 @@
-const { projectToDto, createProjectDto } = require('../src/dtos/projectDto');
+import { projectToDto, createProjectDto } from '../src/dtos/projectDto.js';
 
 describe('projectDto', () => {
   test('createProjectDto recorta name y description', () => {

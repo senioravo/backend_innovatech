@@ -1,8 +1,6 @@
-const {
-  isValidTaskStatus,
+import { isValidTaskStatus,
   normalizeTaskStatus,
-  isAllowedTaskStatusTransition
-} = require('../src/constants/taskStatuses');
+  isAllowedTaskStatusTransition } from '../src/constants/taskStatuses.js';
 
 describe('taskStatuses', () => {
   test('normalizeTaskStatus convierte a mayúsculas', () => {

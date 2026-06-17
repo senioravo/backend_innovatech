@@ -1,13 +1,16 @@
 // @ts-nocheck
-export {};
+import path from 'path';
+import { fileURLToPath } from 'url';
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
 // AS-TASK-06: Helper para gestión de JWT con RSA (RS256)
 // Responsabilidad: Generación, verificación y validación de tokens JWT
 // Principio SOLID: Single Responsibility - Solo maneja operaciones JWT
 // SEGURIDAD: Usa criptografía asimétrica (clave privada para firmar, pública para verificar)
 
-const jwt = require('jsonwebtoken');
-const fs = require('fs');
-const path = require('path');
+import jwt from 'jsonwebtoken';
+import fs from 'fs';
+import path from 'path';
 
 /**
  * Clase JWTHelper - Gestión centralizada de tokens JWT con RSA
@@ -202,5 +205,4 @@ class JWTHelper {
 }
 
 // Exportar instancia única (Singleton pattern)
-module.exports = new JWTHelper();
-
+export default new JWTHelper();;

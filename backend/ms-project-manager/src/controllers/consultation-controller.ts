@@ -1,6 +1,5 @@
 // @ts-nocheck
-export {};
-const consultationService = require('../services/consultationService');
+import consultationService from '../services/consultationService.js';
 
 const consultationController = {
   async getTaskDashboard(req, res, next) {
@@ -13,4 +12,4 @@ const consultationController = {
   }
 };
 
-module.exports = consultationController;
+export default consultationController;;

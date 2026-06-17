@@ -1,16 +1,15 @@
 // @ts-nocheck
-export {};
 // AS-TASK-04: Servicio de gestión de usuarios
 // Responsabilidad: Lógica de negocio y acceso a datos de usuarios
 
-const bcrypt = require('bcrypt');
-const { query } = require('../config/database');
+import bcrypt from 'bcrypt';
+import { query } from '../config/database.js';
 
 // AS-TASK-21: Importar Winston logger
-const logger = require('../utils/logger');
+import logger from '../utils/logger.js';
 
 // AS-TASK-08: Importar configuración de roles
-const { ROLES, DEFAULT_ROLE, getAllRoles, isValidRole } = require('../config/roles');
+import { ROLES, DEFAULT_ROLE, getAllRoles, isValidRole } from '../config/roles.js';
 
 // Constantes
 const SALT_ROUNDS = 10;
@@ -222,5 +221,4 @@ class UserService {
 }
 
 // Exportar instancia única (Singleton pattern)
-module.exports = new UserService();
-
+export default new UserService();;

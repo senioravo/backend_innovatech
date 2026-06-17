@@ -1,6 +1,5 @@
 // @ts-nocheck
-export {};
-const resourceAvailabilityService = require('../services/resourceAvailabilityService');
+import resourceAvailabilityService from '../services/resourceAvailabilityService.js';
 
 const resourceAvailabilityController = {
   async checkProject(req, res, next) {
@@ -52,4 +51,4 @@ const resourceAvailabilityController = {
   }
 };
 
-module.exports = resourceAvailabilityController;
+export default resourceAvailabilityController;;

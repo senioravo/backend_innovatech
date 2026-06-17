@@ -1,7 +1,7 @@
+import dotenv from 'dotenv';
 // Script para inicializar las tablas en la base de datos de Neon
-const { Pool } = require('pg');
-require('dotenv').config();
-
+import { Pool } from 'pg';
+dotenv.config();
 // Conexión a Neon Cloud
 const DATABASE_URL = 'postgresql://neondb_owner:npg_mUZLr81Eslyx@ep-super-tooth-ata043sj-pooler.us-east-1.aws.neon.tech/neondb?sslmode=require';
 

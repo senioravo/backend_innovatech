@@ -1,7 +1,6 @@
 // @ts-nocheck
-export {};
-const config = require('../config');
-const { createInternalHttpClient } = require('../lib/internalHttpClient');
+import config from '../config.js';
+import { createInternalHttpClient } from '../lib/internalHttpClient.js';
 
 let httpClient;
 
@@ -49,7 +48,4 @@ async function getAuthDependencyStatus() {
   }
 }
 
-module.exports = {
-  getAuthDependencyStatus,
-  getAuthHttpClient
-};
+export { getAuthDependencyStatus, getAuthHttpClient };

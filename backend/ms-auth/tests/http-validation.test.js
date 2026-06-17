@@ -2,9 +2,9 @@
 // Framework: Jest + Supertest
 // Objetivo: Validar estructura JSON estandarizada y status codes en todos los endpoints
 
-const request = require('supertest');
-const app = require('../src/app');
-const { generateToken } = require('../src/utils/jwt.helper');
+import request from 'supertest';
+import app from '../src/app.js';
+import { generateToken } from '../src/utils/jwt.helper.js';
 
 describe('AS-TASK-18: Validación de respuestas JSON y códigos HTTP', () => {
   

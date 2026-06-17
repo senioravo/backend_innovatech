@@ -1,17 +1,16 @@
 // @ts-nocheck
-export {};
 // AS-TASK-02: Integrar con API Gateway
 // Rutas de autenticación y autorización
 
-const express = require('express');
+import express from 'express';
 const router = express.Router();
-const authController = require('../controllers/auth.controller');
+import * as authController from '../controllers/auth.controller.js';
 
 // AS-TASK-07: Importar middleware de autenticación
-const { verifyToken } = require('../middleware/auth.middleware');
+import { verifyToken } from '../middleware/auth.middleware.js';
 
 // AS-TASK-12: Importar middleware de auditoría
-const { auditMiddleware, auditCriticalOperation } = require('../middleware/auditMiddleware');
+import { auditMiddleware, auditCriticalOperation } from '../middleware/auditMiddleware.js';
 
 // AS-TASK-12: Aplicar auditoría a todas las rutas (excepto health check)
 router.use((req, res, next) => {
@@ -112,5 +111,4 @@ router.get('/roles/simple', authController.getRolesSimple);
  */
 router.get('/health', authController.health);
 
-module.exports = router;
-
+export default router;

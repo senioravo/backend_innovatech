@@ -1,6 +1,6 @@
 // Script para crear un usuario de prueba
-const { Pool } = require('pg');
-const bcrypt = require('bcrypt');
+import { Pool } from 'pg';
+import bcrypt from 'bcrypt';
 
 const DATABASE_URL = 'postgresql://neondb_owner:npg_mUZLr81Eslyx@ep-super-tooth-ata043sj-pooler.c-9.us-east-1.aws.neon.tech/neondb?sslmode=require&channel_binding=require';
 

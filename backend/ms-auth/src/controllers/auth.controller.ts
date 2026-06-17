@@ -1,39 +1,36 @@
 // @ts-nocheck
-export {};
 // AS-TASK-02: Controlador de autenticación y autorización
 // Endpoints para integración con API Gateway
 
 // AS-TASK-04: Importar servicio de usuario (mantenido para verificación de password)
-const userService = require('../services/user.service');
+import userService from '../services/user.service.js';
 
 // Cliente para comunicación con ms-users
-const usersClient = require('../clients/usersClient');
+import usersClient from '../clients/usersClient.js';
 
 // AS-TASK-06: Importar JWT Helper para validación y generación de tokens
-const jwtHelper = require('../utils/jwt.helper');
+import jwtHelper from '../utils/jwt.helper.js';
 
 // AS-TASK-07: Importar servicio de blacklist de tokens
-const tokenBlacklistService = require('../services/token.blacklist.service');
+import tokenBlacklistService from '../services/token.blacklist.service.js';
 
 // AS-TASK-08: Importar configuración de roles
-const { getAllRolesInfo, getRoleDescription } = require('../config/roles');
+import { getAllRolesInfo, getRoleDescription, getAllRoles } from '../config/roles.js';
 
 // AS-TASK-13: Importar logger con Winston para auditoría
-const logger = require('../utils/logger');
+import logger from '../utils/logger.js';
 
 // AS-TASK-14: Importar funciones de métricas de Prometheus
-const { recordCriticalOperation } = require('../middleware/metricsMiddleware');
+import { recordCriticalOperation } from '../middleware/metricsMiddleware.js';
 
 // DTO: Importar Data Transfer Objects para validación y formateo
-const {
-  createRegisterDto,
+import { createRegisterDto,
   createLoginDto,
   userToDto,
   authResponseDto,
   registerResponseDto,
   errorResponseDto,
-  validateUserData
-} = require('../dtos/userDto');
+  validateUserData } from '../dtos/userDto.js';
 
 /**
  * ============================================================
@@ -604,14 +601,7 @@ const health = async (req, res) => {
 // - updateUserRole → ms-users: PUT /api/users/:id/role
 // El código original se mantiene comentado al final del archivo por referencia histórica
 
-module.exports = {
-  login,
-  logout,
-  getRoles,
-  getRolesSimple,
-  health
-};
-
+export { login, logout, getRoles, getRolesSimple, health };
 /* ============================================================
  * FUNCIONES DEPRECADAS - MOVIDAS A MS-USERS
  * ============================================================

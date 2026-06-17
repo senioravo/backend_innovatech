@@ -23,22 +23,25 @@ process.env.CIRCUIT_BREAKER_RESET_TIMEOUT = '30000';
 // Desactivar logs durante tests (opcional)
 process.env.LOG_LEVEL = 'error';
 
-jest.mock('../src/utils/logger', () => ({
-  info: jest.fn(),
-  error: jest.fn(),
-  warn: jest.fn(),
-  logCriticalOperation: jest.fn(),
-  logEndpointAccess: jest.fn()
+jest.mock('../src/utils/logger.js', () => ({
+  __esModule: true,
+  default: {
+    info: jest.fn(),
+    error: jest.fn(),
+    warn: jest.fn(),
+    logCriticalOperation: jest.fn(),
+    logEndpointAccess: jest.fn()
+  }
 }));
 
-jest.mock('../src/middleware/metricsMiddleware', () => ({
+jest.mock('../src/middleware/metricsMiddleware.js', () => ({
   recordCriticalOperation: jest.fn(),
   metricsMiddleware: (req, res, next) => next()
 }));
 
 const usersByEmail = new Map();
 
-jest.mock('../src/config/database', () => ({
+jest.mock('../src/config/database.js', () => ({
   query: jest.fn().mockImplementation(async (sql, params = []) => {
     const text = String(sql).toLowerCase();
 

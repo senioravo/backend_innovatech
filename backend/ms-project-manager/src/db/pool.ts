@@ -1,7 +1,6 @@
 // @ts-nocheck
-export {};
-const { Pool } = require('pg');
-const config = require('../config');
+import { Pool } from 'pg';
+import config from '../config.js';
 
 let pool;
 
@@ -27,4 +26,4 @@ async function endPool() {
   }
 }
 
-module.exports = { getPool, endPool };
+export { getPool, endPool };

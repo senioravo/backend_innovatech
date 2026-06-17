@@ -1,9 +1,8 @@
 // @ts-nocheck
-export {};
-const express = require('express');
-const authMiddleware = require('../middlewares/authMiddleware');
-const requireRole = require('../middlewares/roleMiddleware');
-const consultationController = require('../controllers/consultation-controller');
+import express from 'express';
+import authMiddleware from '../middlewares/authMiddleware.js';
+import requireRole from '../middlewares/roleMiddleware.js';
+import * as consultationController from '../controllers/consultation-controller.js';
 
 const router = express.Router();
 
@@ -24,4 +23,4 @@ router.get(
   consultationController.getTaskDashboard
 );
 
-module.exports = router;
+export default router;

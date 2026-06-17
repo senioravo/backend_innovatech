@@ -1,9 +1,8 @@
 // @ts-nocheck
-export {};
 // Cliente HTTP para comunicación con ms-users
 // Responsabilidad: Facilitar llamadas entre microservicios
 
-const logger = require('../utils/logger');
+import logger from '../utils/logger.js';
 
 /**
  * Cliente para interactuar con el microservicio ms-users
@@ -102,4 +101,4 @@ class UsersClient {
   }
 }
 
-module.exports = new UsersClient();
+export default new UsersClient();;

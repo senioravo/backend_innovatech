@@ -1,4 +1,4 @@
-const { joinUrl } = require('../src/infrastructure/http/httpUpstream');
+import { joinUrl } from '../src/infrastructure/http/httpUpstream.js';
 
 describe('httpUpstream.joinUrl', () => {
   test('une base y path sin doble barra', () => {

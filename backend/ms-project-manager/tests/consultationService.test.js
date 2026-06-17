@@ -1,9 +1,9 @@
-jest.mock('../src/repositories/taskRepository', () => ({
+jest.mock('../src/repositories/taskRepository.js', () => ({
   findForUserDashboard: jest.fn()
 }));
 
-const taskRepository = require('../src/repositories/taskRepository');
-const consultationService = require('../src/services/consultationService');
+import taskRepository from '../src/repositories/taskRepository.js';
+import consultationService from '../src/services/consultationService.js';
 
 describe('consultationService', () => {
   beforeEach(() => {

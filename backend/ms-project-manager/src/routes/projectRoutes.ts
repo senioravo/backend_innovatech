@@ -1,11 +1,10 @@
 // @ts-nocheck
-export {};
-const express = require('express');
-const authMiddleware = require('../middlewares/authMiddleware');
-const requireRole = require('../middlewares/roleMiddleware');
-const projectController = require('../controllers/project-controller');
-const resourceAvailabilityController = require('../controllers/resource-availability-controller');
-const taskController = require('../controllers/task-controller');
+import express from 'express';
+import authMiddleware from '../middlewares/authMiddleware.js';
+import requireRole from '../middlewares/roleMiddleware.js';
+import * as projectController from '../controllers/project-controller.js';
+import * as resourceAvailabilityController from '../controllers/resource-availability-controller.js';
+import * as taskController from '../controllers/task-controller.js';
 
 const router = express.Router();
 
@@ -407,4 +406,4 @@ router.patch(
  */
 router.delete('/:id', requireRole('Gestor'), projectController.deleteProject);
 
-module.exports = router;
+export default router;

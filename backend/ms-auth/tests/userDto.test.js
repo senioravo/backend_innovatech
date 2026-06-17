@@ -1,12 +1,10 @@
-const {
-  createRegisterDto,
+import { createRegisterDto,
   createLoginDto,
   userToDto,
   usersToDto,
   authResponseDto,
   registerResponseDto,
-  errorResponseDto
-} = require('../src/dtos/userDto');
+  errorResponseDto } from '../src/dtos/userDto.js';
 
 describe('userDto', () => {
   test('createRegisterDto normaliza email y nombre', () => {

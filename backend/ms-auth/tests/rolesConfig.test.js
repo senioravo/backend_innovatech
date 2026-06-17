@@ -1,13 +1,11 @@
-const {
-  ROLES,
+import { ROLES,
   DEFAULT_ROLE,
   isValidRole,
   getAllRoles,
   getRoleInfo,
   getAllRolesInfo,
   hasPermission,
-  getRoleDescription
-} = require('../src/config/roles');
+  getRoleDescription } from '../src/config/roles.js';
 
 describe('roles config', () => {
   test('isValidRole reconoce roles del sistema', () => {

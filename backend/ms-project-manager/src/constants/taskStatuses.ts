@@ -1,5 +1,4 @@
 // @ts-nocheck
-export {};
 const TASK_STATUSES = Object.freeze([
   'PENDING',
   'IN_PROGRESS',
@@ -27,10 +26,4 @@ function isAllowedTaskStatusTransition(from, to) {
   return j === i + 1;
 }
 
-module.exports = {
-  TASK_STATUSES,
-  TASK_STATUS_SET,
-  isValidTaskStatus,
-  normalizeTaskStatus,
-  isAllowedTaskStatusTransition
-};
+export { TASK_STATUSES, TASK_STATUS_SET, isValidTaskStatus, normalizeTaskStatus, isAllowedTaskStatusTransition };

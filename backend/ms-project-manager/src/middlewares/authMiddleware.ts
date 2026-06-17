@@ -1,8 +1,11 @@
 // @ts-nocheck
-export {};
-const jwt = require('jsonwebtoken');
-const fs = require('fs');
-const path = require('path');
+import path from 'path';
+import { fileURLToPath } from 'url';
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
+import jwt from 'jsonwebtoken';
+import fs from 'fs';
+import path from 'path';
 
 // Cargar clave PÚBLICA RSA para verificar tokens (NO puede firmar)
 const publicKeyPath = path.join(__dirname, '..', '..', 'keys', 'public.key');
@@ -51,4 +54,4 @@ function authMiddleware(req, res, next) {
   }
 }
 
-module.exports = authMiddleware;
+export default authMiddleware;;

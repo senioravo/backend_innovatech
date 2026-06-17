@@ -1,18 +1,19 @@
-// @ts-nocheck
-export {};
-const express = require('express');
-const cors = require('cors');
-require('dotenv').config();
-const swaggerUi = require('swagger-ui-express');
-const swaggerJsdoc = require('swagger-jsdoc');
+import express from 'express';
+import cors from 'cors';
+import dotenv from 'dotenv';
+import swaggerUi from 'swagger-ui-express';
+import swaggerJsdoc from 'swagger-jsdoc';
+import path from 'path';
+import { fileURLToPath } from 'url';
+import userRoutes from './routes/user.routes.js';
+import internalRoutes from './routes/internal.routes.js';
+import metricsRoutes from './routes/metrics.routes.js';
+import logger from './utils/logger.js';
 
-// Importar rutas
-const userRoutes = require('./routes/user.routes');
-const internalRoutes = require('./routes/internal.routes');
-const metricsRoutes = require('./routes/metrics.routes');
+dotenv.config();
 
-// Importar logger
-const logger = require('./utils/logger');
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
 
 const app = express();
 const PORT = process.env.PORT || 3003;
@@ -48,68 +49,47 @@ const swaggerSpec = swaggerJsdoc({
   ],
 });
 
-// Middlewares básicos
 app.use(express.json());
 app.use(cors());
 
-// Swagger
 app.use('/api-docs', swaggerUi.serve, swaggerUi.setup(swaggerSpec));
 app.get('/api-docs.json', (req, res) => {
   res.setHeader('Content-Type', 'application/json');
   res.send(swaggerSpec);
 });
 
-// Log de requests
 app.use((req, res, next) => {
   logger.info(`[${req.method}] ${req.path}`, { ip: req.ip });
   next();
 });
 
-// Configurar rutas con prefijo /api/users
 app.use('/api/users', userRoutes);
-
-// Rutas internas (solo para comunicación entre microservicios)
 app.use('/api/users/internal', internalRoutes);
-
-// Métricas de Prometheus
 app.use('/metrics', metricsRoutes);
 
-// Health check básico
-/**
- * @openapi
- * /health:
- *   get:
- *     tags: [Health]
- *     summary: Health check del microservicio
- *     responses:
- *       200:
- *         description: Servicio operativo
- */
 app.get('/health', (req, res) => {
-  res.status(200).json({ 
-    status: 'ok', 
+  res.status(200).json({
+    status: 'ok',
     service: 'ms-users',
-    timestamp: new Date().toISOString() 
+    timestamp: new Date().toISOString()
   });
 });
 
-// Manejo de errores global
 app.use((err, req, res, next) => {
-  logger.error('[Global Error Handler]', { 
-    error: err.message, 
+  logger.error('[Global Error Handler]', {
+    error: err.message,
     stack: err.stack,
-    path: req.path 
+    path: req.path
   });
-  res.status(500).json({ 
+  res.status(500).json({
     error: 'Error interno del servidor',
     message: process.env.NODE_ENV === 'development' ? err.message : undefined
   });
 });
 
-// Iniciar servidor
 app.listen(PORT, () => {
   logger.info(`🚀 Microservicio Users ejecutándose en puerto ${PORT}`);
   console.log(`🚀 Microservicio Users ejecutándose en puerto ${PORT}`);
 });
 
-module.exports = app;
+export default app;

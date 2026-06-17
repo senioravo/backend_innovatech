@@ -1,6 +1,4 @@
 // @ts-nocheck
-export {};
-
 /**
  * userDto.ts - Data Transfer Objects para Usuario
  * 
@@ -156,13 +154,4 @@ function validateUserData(userData) {
   };
 }
 
-module.exports = {
-  createRegisterDto,
-  createLoginDto,
-  userToDto,
-  usersToDto,
-  authResponseDto,
-  registerResponseDto,
-  errorResponseDto,
-  validateUserData
-};
+export { createRegisterDto, createLoginDto, userToDto, usersToDto, authResponseDto, registerResponseDto, errorResponseDto, validateUserData };

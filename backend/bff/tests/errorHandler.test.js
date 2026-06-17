@@ -1,4 +1,4 @@
-const { UpstreamError, ValidationError } = require('../src/utils/errorHandler');
+import { UpstreamError, ValidationError } from '../src/utils/errorHandler.js';
 
 describe('bff errorHandler', () => {
   test('UpstreamError guarda status y data', () => {

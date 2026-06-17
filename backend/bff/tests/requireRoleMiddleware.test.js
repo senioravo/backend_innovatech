@@ -1,4 +1,4 @@
-const requireRole = require('../src/presentation/http/middlewares/requireRoleMiddleware');
+import requireRole from '../src/presentation/http/middlewares/requireRoleMiddleware.js';
 
 function mockRes() {
   const res = { statusCode: 200 };

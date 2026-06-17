@@ -1,11 +1,14 @@
 // @ts-nocheck
-export {};
-const express = require('express');
-const cors = require('cors');
-const swaggerUi = require('swagger-ui-express');
-const swaggerJsdoc = require('swagger-jsdoc');
-require('dotenv').config();
-
+import path from 'path';
+import { fileURLToPath } from 'url';
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
+import dotenv from 'dotenv';
+import express from 'express';
+import cors from 'cors';
+import swaggerUi from 'swagger-ui-express';
+import swaggerJsdoc from 'swagger-jsdoc';
+dotenv.config();
 const app = express();
 
 // Middlewares básicos
@@ -45,16 +48,16 @@ app.use('/api-docs', swaggerUi.serve, swaggerUi.setup(swaggerSpec));
 app.get('/api-docs.json', (req, res) => res.json(swaggerSpec));
 
 // AS-TASK-02: Importar rutas de autenticación para API Gateway
-const authRoutes = require('./routes/auth.routes');
+import authRoutes from './routes/auth.routes.js';
 
 // AS-TASK-03: Importar rutas de Circuit Breaker
-const circuitBreakerRoutes = require('./routes/circuitBreaker.routes');
+import circuitBreakerRoutes from './routes/circuitBreaker.routes.js';
 
 // AS-TASK-09: Importar rutas de ejemplo para demostrar middleware de autorización
-const exampleRoutes = require('./routes/example.routes');
+import exampleRoutes from './routes/example.routes.js';
 
 // JWKS: Endpoint para servir clave pública en formato JWK (para KrakenD)
-const jwksRoutes = require('./routes/jwks.routes');
+import jwksRoutes from './routes/jwks.routes.js';
 
 // Configurar rutas
 app.use('/api/auth', authRoutes);
@@ -67,6 +70,4 @@ app.listen(PORT, () => {
   console.log(`🚀 Microservicio Auth ejecutándose en puerto ${PORT}`);
 });
 
-module.exports = app;
-
-
+export default app;;

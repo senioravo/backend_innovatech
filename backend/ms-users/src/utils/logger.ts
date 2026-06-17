@@ -1,17 +1,16 @@
-// @ts-nocheck
-export {};
-// Logger Helper con Winston para logs centralizados
-const winston = require('winston');
-const DailyRotateFile = require('winston-daily-rotate-file');
-const path = require('path');
+import winston from 'winston';
+import DailyRotateFile from 'winston-daily-rotate-file';
+import path from 'path';
+import { __dirname } from './esm-path.js';
 
 class Logger {
+  logsDir: string;
+  winstonLogger: winston.Logger;
+
   constructor() {
     this.logsDir = path.join(__dirname, '../../logs');
-    
-    const customFormat = winston.format.printf(({ level, message, timestamp, ...metadata }) => {
-      return message;
-    });
+
+    const customFormat = winston.format.printf(({ message }) => message as string);
 
     const auditTransport = new DailyRotateFile({
       filename: path.join(this.logsDir, 'audit-%DATE%.log'),
@@ -61,19 +60,19 @@ class Logger {
     this.winstonLogger.info(`[LOGGER] Winston inicializado - Directorio: ${this.logsDir}`);
   }
 
-  info(message, meta) {
+  info(message: string, meta?: unknown) {
     this.winstonLogger.info(this._formatSimpleMessage(message, meta));
   }
 
-  warn(message, meta) {
+  warn(message: string, meta?: unknown) {
     this.winstonLogger.warn(this._formatSimpleMessage(message, meta));
   }
 
-  error(message, meta) {
+  error(message: string, meta?: unknown) {
     this.winstonLogger.error(this._formatSimpleMessage(message, meta));
   }
 
-  _formatSimpleMessage(message, meta) {
+  _formatSimpleMessage(message: string, meta?: unknown) {
     if (meta !== undefined && meta !== null && typeof meta === 'object') {
       return `${String(message)} ${JSON.stringify(meta)}`;
     }
@@ -82,4 +81,4 @@ class Logger {
 }
 
 const logger = new Logger();
-module.exports = logger;
+export default logger;
