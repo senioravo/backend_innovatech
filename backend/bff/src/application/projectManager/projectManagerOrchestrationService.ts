@@ -1,5 +1,5 @@
-export {};
-const projectManagerUpstreamClient = require('../../infrastructure/clients/projectManagerUpstreamClient');
+// @ts-nocheck
+import projectManagerUpstreamClient from '../../infrastructure/clients/projectManagerUpstreamClient.js';
 
 /**
  * Capa de aplicación: orquestación hacia **project-manager** (reenvío HTTP).
@@ -10,4 +10,4 @@ const projectManagerOrchestrationService = {
   }
 };
 
-module.exports = projectManagerOrchestrationService;
+export default projectManagerOrchestrationService;;

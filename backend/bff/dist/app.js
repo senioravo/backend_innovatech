@@ -1,65 +1,20 @@
-"use strict";
-Object.defineProperty(exports, "__esModule", { value: true });
-require('dotenv').config();
-/**
- * Arquitectura en capas (dependencias hacia abajo):
- * - presentation/http → application → infrastructure
- * - config / utils: transversales
- */
-const express = require('express');
-const cors = require('cors');
-const swaggerUi = require('swagger-ui-express');
-const swaggerJsdoc = require('swagger-jsdoc');
-const config = require('./config');
-const apiGateway = require('./presentation/http/gateway/apiGateway');
-const { handleNotFound, handleError } = require('./utils/responseUtil');
+// @ts-nocheck
+import express from 'express';
+import cors from 'cors';
+import config from './config/index.js'; // Asegúrate de la ruta
+import apiGateway from './presentation/http/gateway/apiGateway.js';
+import { handleNotFound, handleError } from './utils/responseUtil.js';
 const app = express();
-const swaggerSpec = swaggerJsdoc({
-    definition: {
-        openapi: '3.0.0',
-        info: {
-            title: 'BFF API',
-            version: '1.0.0',
-            description: 'Documentación del Backend For Frontend de Innovatech',
-        },
-        servers: [{ url: `http://localhost:${config.PORT}` }],
-        components: {
-            securitySchemes: {
-                bearerAuth: {
-                    type: 'http',
-                    scheme: 'bearer',
-                    bearerFormat: 'JWT',
-                },
-            },
-        },
-    },
-    apis: [`${__dirname}/presentation/http/routes/*.ts`, `${__dirname}/app.ts`],
-});
 app.use(express.json());
 app.use(cors());
-app.use('/api-docs', swaggerUi.serve, swaggerUi.setup(swaggerSpec));
-app.get('/api-docs.json', (req, res) => res.json(swaggerSpec));
-/**
- * @openapi
- * /health:
- *   get:
- *     tags: [Health]
- *     summary: Health check del BFF
- *     responses:
- *       200:
- *         description: Servicio operativo
- */
-app.get('/health', (req, res) => {
-    res.json({
-        status: 'OK',
-        service: 'bff'
-    });
-});
-app.use(config.API_GATEWAY_PREFIX, apiGateway);
+// ✅ EL CAMBIO MÁS IMPORTANTE:
+// Cambia el prefijo a '/api' para que coincida con lo que KrakenD envía.
+// KrakenD recibe /api/v1/auth/login y lo reenvía al BFF como /api/auth/login.
+app.use('/api', apiGateway);
 app.use(handleNotFound);
 app.use(handleError);
-const PORT = config.PORT;
+const PORT = config.PORT || 3010;
 app.listen(PORT, () => {
-    console.log(`BFF escuchando en puerto ${PORT}`);
+    console.log(`🚀 BFF (Orquestador) escuchando en puerto ${PORT}`);
 });
-module.exports = app;
+export default app;

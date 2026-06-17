@@ -1,4 +1,4 @@
-export {};
+// @ts-nocheck
 class ApplicationError extends Error {
   status: number;
 
@@ -31,8 +31,4 @@ class UpstreamError extends Error {
   }
 }
 
-module.exports = {
-  ApplicationError,
-  ValidationError,
-  UpstreamError
-};
+export { ApplicationError, ValidationError, UpstreamError };

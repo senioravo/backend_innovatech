@@ -1,6 +1,5 @@
-"use strict";
-Object.defineProperty(exports, "__esModule", { value: true });
-const proyectosOrchestrationService = require('../../../application/proyectos/proyectosOrchestrationService');
+// @ts-nocheck
+import proyectosOrchestrationService from '../../../application/proyectos/proyectosOrchestrationService.js';
 const proyectosOrchestrationController = {
     async listProyectos(req, res, next) {
         try {
@@ -21,4 +20,5 @@ const proyectosOrchestrationController = {
         }
     }
 };
-module.exports = proyectosOrchestrationController;
+export default proyectosOrchestrationController;
+;

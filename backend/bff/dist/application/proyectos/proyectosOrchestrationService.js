@@ -1,9 +1,8 @@
-"use strict";
-Object.defineProperty(exports, "__esModule", { value: true });
-const authOrchestrationService = require('../auth/authOrchestrationService');
-const projectManagerUpstreamClient = require('../../infrastructure/clients/projectManagerUpstreamClient');
-const { UpstreamError } = require('../../utils/errorHandler');
-const { buildUsuarioSesion, toProyecto, toTarea, buildResumenTareas, extractAuthUser, extractRolesCatalog } = require('../transformers/frontendResponseTransformers');
+// @ts-nocheck
+import authOrchestrationService from '../auth/authOrchestrationService.js';
+import projectManagerUpstreamClient from '../../infrastructure/clients/projectManagerUpstreamClient.js';
+import { UpstreamError } from '../../utils/errorHandler.js';
+import { buildUsuarioSesion, toProyecto, toTarea, buildResumenTareas, extractAuthUser, extractRolesCatalog } from '../transformers/frontendResponseTransformers.js';
 async function loadUserMap(assigneeIds, req) {
     const map = new Map();
     const unique = [...new Set(assigneeIds.filter((id) => id != null && String(id).trim() !== ''))];
@@ -60,4 +59,5 @@ const proyectosOrchestrationService = {
         };
     }
 };
-module.exports = proyectosOrchestrationService;
+export default proyectosOrchestrationService;
+;

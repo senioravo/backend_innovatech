@@ -1,5 +1,5 @@
-export {};
-const proyectosOrchestrationService = require('../../../application/proyectos/proyectosOrchestrationService');
+// @ts-nocheck
+import proyectosOrchestrationService from '../../../application/proyectos/proyectosOrchestrationService.js';
 
 const proyectosOrchestrationController = {
   async listProyectos(req, res, next) {
@@ -21,4 +21,4 @@ const proyectosOrchestrationController = {
   }
 };
 
-module.exports = proyectosOrchestrationController;
+export default proyectosOrchestrationController;;

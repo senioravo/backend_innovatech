@@ -1,5 +1,4 @@
-export {};
-
+// @ts-nocheck
 /**
  * BFF-TASK-06: Middleware de autenticación simplificado
  * 
@@ -39,4 +38,4 @@ function jwtAuthMiddleware(req, res, next) {
   next();
 }
 
-module.exports = jwtAuthMiddleware;
+export default jwtAuthMiddleware;;

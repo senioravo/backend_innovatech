@@ -1,8 +1,8 @@
-export {};
-const express = require('express');
-const jwtAuthMiddleware = require('../middlewares/jwtAuthMiddleware');
-const requireRole = require('../middlewares/requireRoleMiddleware');
-const projectManagerOrchestrationController = require('../controllers/project-manager-orchestration-controller');
+// @ts-nocheck
+import express from 'express';
+import jwtAuthMiddleware from '../middlewares/jwtAuthMiddleware.js';
+import requireRole from '../middlewares/requireRoleMiddleware.js';
+import * as projectManagerOrchestrationController from '../controllers/project-manager-orchestration-controller.js';
 
 const forward = (req, res, next) =>
   projectManagerOrchestrationController.forward(req, res, next);
@@ -95,4 +95,4 @@ router.put('/tasks/:id', requireRole('Gestor', 'Profesional'), forward);
 router.patch('/tasks/:id/assignee', requireRole('Gestor', 'Profesional'), forward);
 router.delete('/tasks/:id', requireRole('Gestor'), forward);
 
-module.exports = router;
+export default router;

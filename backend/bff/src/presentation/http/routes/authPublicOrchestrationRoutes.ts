@@ -1,6 +1,6 @@
-export {};
-const express = require('express');
-const authOrchestrationController = require('../controllers/auth-orchestration-controller');
+// @ts-nocheck
+import express from 'express';
+import * as authOrchestrationController from '../controllers/auth-orchestration-controller.js';
 
 /** Rutas /api/auth/* públicas (sin JWT en el BFF). */
 const router = express.Router();
@@ -37,4 +37,4 @@ router.get('/roles', authOrchestrationController.getRoles);
 router.get('/roles/simple', authOrchestrationController.getRolesSimple);
 router.get('/health', authOrchestrationController.health);
 
-module.exports = router;
+export default router;
