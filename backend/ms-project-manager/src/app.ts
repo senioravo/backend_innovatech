@@ -5,17 +5,17 @@ const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 import dotenv from 'dotenv';
 dotenv.config();
-console.log("DATABASE_URL:", process.env.DATABASE_URL);
 import express from 'express';
 import cors from 'cors';
 import swaggerUi from 'swagger-ui-express';
 import swaggerJsdoc from 'swagger-jsdoc';
-import config from './config.js';
+import config from './config/index.js';
 import apiGateway from './gateway/apiGateway.js';
 import { getAuthDependencyStatus } from './clients/authServiceClient.js';
 import { handleNotFound, handleError } from './utils/responseUtil.js';
 import { verifyDatabase } from './db/verify.js';
 import { metricsMiddleware, metricsHandler } from './metrics/prometheus.js';
+import { buildSwaggerApiGlobs } from './utils/swaggerPaths.js';
 
 const app = express();
 
@@ -38,7 +38,7 @@ const swaggerSpec = swaggerJsdoc({
       },
     },
   },
-  apis: [`${__dirname}/routes/*.ts`, `${__dirname}/app.ts`],
+  apis: buildSwaggerApiGlobs(__dirname, ['routes']),
 });
 
 app.use(express.json());

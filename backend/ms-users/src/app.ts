@@ -9,6 +9,7 @@ import userRoutes from './routes/user.routes.js';
 import internalRoutes from './routes/internal.routes.js';
 import metricsRoutes from './routes/metrics.routes.js';
 import logger from './utils/logger.js';
+import { buildSwaggerApiGlobs } from './utils/swaggerPaths.js';
 
 dotenv.config();
 
@@ -41,12 +42,7 @@ const swaggerSpec = swaggerJsdoc({
       },
     },
   },
-  apis: [
-    `${__dirname}/routes/*.ts`,
-    `${__dirname}/routes/*.js`,
-    `${__dirname}/app.ts`,
-    `${__dirname}/app.js`,
-  ],
+  apis: buildSwaggerApiGlobs(__dirname, ['routes']),
 });
 
 app.use(express.json());

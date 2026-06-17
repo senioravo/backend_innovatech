@@ -8,6 +8,7 @@ import express from 'express';
 import cors from 'cors';
 import swaggerUi from 'swagger-ui-express';
 import swaggerJsdoc from 'swagger-jsdoc';
+import { buildSwaggerApiGlobs } from './utils/swaggerPaths.js';
 dotenv.config();
 const app = express();
 
@@ -39,7 +40,7 @@ const options = {
       },
     },
   },
-  apis: [`${__dirname}/routes/*.ts`, `${__dirname}/routes/*.js`],
+  apis: buildSwaggerApiGlobs(__dirname, ['routes']),
 };
 
 const swaggerSpec = swaggerJsdoc(options);
