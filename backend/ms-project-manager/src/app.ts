@@ -76,20 +76,18 @@ const PORT = config.PORT;
 if (process.env.NODE_ENV !== 'test') {
   verifyDatabase()
     .then(() => {
+      // Caso 1: Conexión exitosa
       app.listen(PORT, () => {
         console.log(`🚀 Project Manager ejecutándose en puerto ${PORT}`);
       });
     })
     .catch((err) => {
-      console.error('No se pudo conectar a PostgreSQL:', err.message);
-      process.exit(1);
+      // Caso 2: Error en la conexión, pero el servidor IGUAL arranca
+      console.warn('⚠️ Advertencia: Project Manager iniciará sin verificación de PostgreSQL:', err.message);
+      app.listen(PORT, () => {
+        console.log(`🚀 Project Manager ejecutándose en puerto ${PORT}`);
+      });
     });
-  })
-  .catch((err) => {
-    console.warn('Proyecto Manager iniciará sin verificación de PostgreSQL:', err.message);
-    app.listen(PORT, () => {
-      console.log(`🚀 Project Manager ejecutándose en puerto ${PORT}`);
-    });
-  });
+}
 
 module.exports = app;
