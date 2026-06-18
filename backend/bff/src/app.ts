@@ -68,7 +68,7 @@ app.get('/health', (req, res) => {
   });
 });
 
-app.use('/api', apiGateway);
+app.use(config.API_GATEWAY_PREFIX, apiGateway);
 
 app.use(handleNotFound);
 app.use(handleError);

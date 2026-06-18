@@ -142,6 +142,73 @@ const register = async (req, res) => {
 */
 
 /**
+ * POST /register - Registro delegado en ms-users
+ */
+const register = async (req, res) => {
+  const startTime = Date.now();
+
+  try {
+    const userData = createRegisterDto(req.body);
+
+    if (!userData.rol) {
+      userData.rol = userService.getDefaultRole();
+    }
+
+    if (!userData.nombre || !userData.email || !userData.password) {
+      return res.status(400).json(
+        errorResponseDto('Campos obligatorios faltantes: nombre, email, password')
+      );
+    }
+
+    const validation = validateUserData(userData);
+    if (!validation.valid) {
+      return res.status(400).json(
+        errorResponseDto('Datos de usuario inválidos', { errors: validation.errors })
+      );
+    }
+
+    const newUser = await usersClient.createUser(userData);
+    const responseTime = Date.now() - startTime;
+
+    logger.logCriticalOperation('REGISTER', {
+      success: true,
+      userId: newUser.id,
+      email: newUser.email,
+      ip: req.ip,
+      detail: `Usuario registrado - Rol: ${newUser.rol}`,
+      responseTime,
+      taskId: 'AS-TASK-13'
+    });
+
+    recordCriticalOperation('REGISTER', true);
+    res.status(201).json(registerResponseDto(newUser));
+  } catch (error) {
+    const responseTime = Date.now() - startTime;
+
+    logger.logCriticalOperation('REGISTER', {
+      success: false,
+      userId: null,
+      email: req.body.email || 'N/A',
+      ip: req.ip,
+      detail: 'Error en registro',
+      error: error.message,
+      responseTime,
+      taskId: 'AS-TASK-13'
+    });
+
+    recordCriticalOperation('REGISTER', false);
+
+    if (String(error.message).includes('ya está registrado')) {
+      return res.status(400).json(errorResponseDto('El email ya está registrado'));
+    }
+
+    res.status(500).json(
+      errorResponseDto('Error interno del servidor al registrar usuario', { error: error.message })
+    );
+  }
+};
+
+/**
  * POST /login - Inicio de sesión
  * AS-TASK-06: Validación de credenciales y generación de JWT con helper
  * DTO: Usa DTOs para validación y formateo de respuestas
@@ -173,8 +240,8 @@ const login = async (req, res) => {
       );
     }
 
-    // 3. Buscar usuario por email en la base de datos local
-    const user = await userService.findByEmail(email);
+    // 3. Buscar usuario por email en ms-users (Database per Service)
+    const user = await usersClient.findByEmailWithPassword(email);
     
     if (!user) {
       // Log de auditoría: Usuario no encontrado
@@ -601,7 +668,7 @@ const health = async (req, res) => {
 // - updateUserRole → ms-users: PUT /api/users/:id/role
 // El código original se mantiene comentado al final del archivo por referencia histórica
 
-export { login, logout, getRoles, getRolesSimple, health };
+export { register, login, logout, getRoles, getRolesSimple, health };
 /* ============================================================
  * FUNCIONES DEPRECADAS - MOVIDAS A MS-USERS
  * ============================================================

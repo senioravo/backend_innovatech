@@ -14,9 +14,14 @@ if (!hasDatabaseUrl && !hasLocalDbConfig) {
   });
 }
 
-const sslConfig = process.env.DATABASE_URL
-  ? { rejectUnauthorized: false }
-  : false;
+const resolveSsl = (connectionString?: string) => {
+  if (!connectionString) return false;
+  if (/sslmode=disable/i.test(connectionString)) return false;
+  if (/@(users-db|localhost|127\.0\.0\.1)/.test(connectionString)) return false;
+  return { rejectUnauthorized: false };
+};
+
+const sslConfig = resolveSsl(process.env.DATABASE_URL);
 
 const poolConfig = process.env.DATABASE_URL
   ? {

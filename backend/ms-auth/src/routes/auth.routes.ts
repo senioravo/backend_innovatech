@@ -57,6 +57,35 @@ router.use((req, res, next) => {
  *       401:
  *         description: Credenciales inválidas
  */
+// Registro: ms-auth orquesta creación en ms-users
+/**
+ * @openapi
+ * /api/auth/register:
+ *   post:
+ *     tags: [Auth]
+ *     summary: Registrar usuario
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             required: [nombre, email, password]
+ *             properties:
+ *               nombre:
+ *                 type: string
+ *               email:
+ *                 type: string
+ *               password:
+ *                 type: string
+ *               rol:
+ *                 type: string
+ *     responses:
+ *       201:
+ *         description: Usuario registrado
+ */
+router.post('/register', auditCriticalOperation('REGISTER'), authController.register);
+
 router.post('/login', auditCriticalOperation('LOGIN'), authController.login);
 
 /**

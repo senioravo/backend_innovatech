@@ -15,7 +15,7 @@ const getUserByEmailWithPassword = async (req, res) => {
       );
     }
 
-    const user = await userService.findByEmail(email);
+    const user = await userService.findByEmailWithPassword(email);
 
     if (!user) {
       logger.info(`[INTERNAL-CONTROLLER] Usuario no encontrado - Email: ${email}`);

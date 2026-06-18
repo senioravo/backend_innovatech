@@ -27,10 +27,25 @@ function loadPublicKey() {
 }
 
 /**
- * Middleware de autenticación para Project Manager
- * Verifica tokens JWT usando clave pública RSA (RS256)
+ * Middleware de autenticación para Project Manager.
+ * - Bearer JWT (acceso directo / pruebas)
+ * - Headers X-User-* reenviados por el BFF tras validación en KrakenD
  */
 function authMiddleware(req, res, next) {
+  const userId = req.headers['x-user-id'];
+  const userEmail = req.headers['x-user-email'];
+  const userRole = req.headers['x-user-role'];
+
+  if (userId && userEmail && userRole) {
+    req.user = {
+      id: parseInt(String(userId), 10),
+      email: String(userEmail),
+      role: String(userRole)
+    };
+    console.log(`[PM-AUTH-MIDDLEWARE] Usuario autenticado vía gateway - UserID: ${req.user.id}`);
+    return next();
+  }
+
   const authHeader = req.headers.authorization;
 
   if (!authHeader || !authHeader.startsWith('Bearer ')) {

@@ -63,6 +63,16 @@ app.use('/api/users', userRoutes);
 app.use('/api/users/internal', internalRoutes);
 app.use('/metrics', metricsRoutes);
 
+/**
+ * @openapi
+ * /health:
+ *   get:
+ *     tags: [Health]
+ *     summary: Health check del microservicio
+ *     responses:
+ *       200:
+ *         description: Servicio operativo
+ */
 app.get('/health', (req, res) => {
   res.status(200).json({
     status: 'ok',

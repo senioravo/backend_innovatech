@@ -11,6 +11,26 @@ import { useAuth } from '../auth/AuthContext';
 
 const ESTADOS = ['PENDING', 'IN_PROGRESS', 'IN_REVIEW', 'DONE'];
 
+const ESTADO_LABELS = {
+  PENDING: 'Pendiente',
+  IN_PROGRESS: 'En progreso',
+  IN_REVIEW: 'En revisión',
+  DONE: 'Hecho'
+};
+
+function estadoLabel(codigo) {
+  return ESTADO_LABELS[codigo] ?? codigo;
+}
+
+/** Solo el estado actual y el siguiente paso (pipeline lineal del backend). */
+function estadosPermitidos(estadoActual) {
+  const i = ESTADOS.indexOf(estadoActual);
+  if (i === -1) return ESTADOS;
+  return ESTADOS.slice(i, Math.min(i + 2, ESTADOS.length));
+}
+
+const SELECTED_PROJECT_KEY = 'innovatech_selected_project';
+
 export default function DashboardPage() {
   const { user, logout } = useAuth();
   const navigate = useNavigate();
@@ -31,6 +51,21 @@ export default function DashboardPage() {
 
   const rol = (sessionUser?.rol || user?.rol || '').toLowerCase();
   const canCreateProject = rol === 'gestor';
+
+  const loadTareas = useCallback(async (proyectoId) => {
+    setSelectedId(proyectoId);
+    sessionStorage.setItem(SELECTED_PROJECT_KEY, proyectoId);
+    setTareasLoading(true);
+    setTareasData(null);
+    try {
+      const data = await fetchTareas(proyectoId);
+      setTareasData(data);
+    } catch (err) {
+      setError(err.message);
+    } finally {
+      setTareasLoading(false);
+    }
+  }, []);
 
   const loadProyectos = useCallback(async () => {
     setLoading(true);
@@ -54,21 +89,16 @@ export default function DashboardPage() {
     loadProyectos();
   }, [loadProyectos]);
 
-  async function loadTareas(proyectoId) {
-    setSelectedId(proyectoId);
-    setTareasLoading(true);
-    setTareasData(null);
-    try {
-      const data = await fetchTareas(proyectoId);
-      setTareasData(data);
-    } catch (err) {
-      setError(err.message);
-    } finally {
-      setTareasLoading(false);
+  useEffect(() => {
+    if (loading || selectedId || proyectos.length === 0) return;
+    const savedId = sessionStorage.getItem(SELECTED_PROJECT_KEY);
+    if (savedId && proyectos.some((p) => p.id === savedId)) {
+      loadTareas(savedId);
     }
-  }
+  }, [loading, proyectos, selectedId, loadTareas]);
 
   async function handleLogout() {
+    sessionStorage.removeItem(SELECTED_PROJECT_KEY);
     await logout();
     navigate('/login', { replace: true });
   }
@@ -108,7 +138,15 @@ export default function DashboardPage() {
       await patchTaskStatus(selectedId, taskId, status);
       await loadTareas(selectedId);
     } catch (err) {
-      setError(err.message);
+      const msg = String(err.message || '');
+      if (msg.includes('Invalid status transition')) {
+        setError(
+          'Solo puedes avanzar un paso: Pendiente → En progreso → En revisión → Hecho.'
+        );
+      } else {
+        setError(msg);
+      }
+      await loadTareas(selectedId);
     }
   }
 
@@ -196,7 +234,7 @@ export default function DashboardPage() {
             <p>
               Total: {tareasData.resumen.total} —{' '}
               {Object.entries(tareasData.resumen.porEstado || {})
-                .map(([k, v]) => `${k}: ${v}`)
+                .map(([k, v]) => `${estadoLabel(k)}: ${v}`)
                 .join(', ')}
             </p>
           )}
@@ -236,16 +274,20 @@ export default function DashboardPage() {
               {(tareasData?.tareas ?? []).map((t) => (
                 <tr key={t.id}>
                   <td>{t.titulo}</td>
-                  <td>{t.estado}</td>
+                  <td>{estadoLabel(t.estado)}</td>
                   <td>{t.completada ? 'Sí' : 'No'}</td>
                   <td>
                     <select
-                      defaultValue={t.estado}
-                      onChange={(e) => handleStatusChange(t.id, e.target.value)}
+                      value={t.estado}
+                      onChange={(e) => {
+                        if (e.target.value !== t.estado) {
+                          handleStatusChange(t.id, e.target.value);
+                        }
+                      }}
                     >
-                      {ESTADOS.map((s) => (
+                      {estadosPermitidos(t.estado).map((s) => (
                         <option key={s} value={s}>
-                          {s}
+                          {estadoLabel(s)}
                         </option>
                       ))}
                     </select>

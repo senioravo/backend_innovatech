@@ -4,21 +4,24 @@ import { joinUrl, upstreamJson } from '../http/httpUpstream.js';
 
 function pickForwardHeaders(req) {
   const out: Record<string, string> = {};
-  // Reenviar token JWT al microservicio
-  if (req.headers.authorization) {
-    out.Authorization = req.headers.authorization;
-  }
-  // Reenviar headers X-User-* para que PM los pueda usar
-  if (req.headers['x-user-id']) {
-    out['X-User-Id'] = req.headers['x-user-id'];
-  }
-  if (req.headers['x-user-email']) {
-    out['X-User-Email'] = req.headers['x-user-email'];
-  }
-  if (req.headers['x-user-role']) {
-    out['X-User-Role'] = req.headers['x-user-role'];
-  }
-  const ct = req.headers['content-type'];
+  const pick = (name: string) => {
+    const v = req.headers[name];
+    if (v == null) return undefined;
+    return Array.isArray(v) ? String(v[0]) : String(v);
+  };
+
+  const auth = pick('authorization');
+  if (auth) out.Authorization = auth;
+
+  const userId = pick('x-user-id') ?? pick('id') ?? (req.user?.id != null ? String(req.user.id) : undefined);
+  const userEmail = pick('x-user-email') ?? pick('email') ?? req.user?.email;
+  const userRole = pick('x-user-role') ?? pick('rol') ?? req.user?.role;
+
+  if (userId) out['X-User-Id'] = userId;
+  if (userEmail) out['X-User-Email'] = userEmail;
+  if (userRole) out['X-User-Role'] = userRole;
+
+  const ct = pick('content-type');
   if (ct) out['Content-Type'] = ct;
   return out;
 }

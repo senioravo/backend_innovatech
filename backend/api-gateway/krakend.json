@@ -8,6 +8,9 @@
   "port": 8080,
   
   "extra_config": {
+    "router": {
+      "return_error_msg": true
+    },
     "telemetry/logging": {
       "level": "INFO",
       "prefix": "[KRAKEND]",
@@ -31,10 +34,15 @@
       "output_encoding": "json",
       "backend": [
         {
-          "url_pattern": "/api/auth/login",
+          "url_pattern": "/api/v1/auth/login",
           "encoding": "json",
           "method": "POST",
-          "host": ["http://bff:3010"]
+          "host": ["http://bff:3010"],
+          "extra_config": {
+            "backend/http": {
+              "return_error_code": true
+            }
+          }
         }
       ]
     },
@@ -45,10 +53,15 @@
       "output_encoding": "json",
       "backend": [
         {
-          "url_pattern": "/api/auth/register",
+          "url_pattern": "/api/v1/auth/register",
           "encoding": "json",
           "method": "POST",
-          "host": ["http://bff:3010"]
+          "host": ["http://bff:3010"],
+          "extra_config": {
+            "backend/http": {
+              "return_error_code": true
+            }
+          }
         }
       ]
     },
@@ -57,13 +70,16 @@
       "endpoint": "/api/v1/projects",
       "method": "GET",
       "output_encoding": "json",
+      "input_headers": ["Authorization", "Content-Type"],
       "extra_config": {
         "auth/validator": {
           "alg": "RS256",
-          "jwk_url": "http://krakend:8080/.well-known/jwks.json",
+          "jwk_url": "http://auth:3001/.well-known/jwks.json",
           "cache": true,
           "cache_duration": 300,
           "disable_jwk_security": true,
+          "issuer": "innovatech-auth",
+          "key_identify_strategy": "kid",
           "propagate_claims": [
             ["id", "x-user-id"],
             ["email", "x-user-email"],
@@ -85,13 +101,16 @@
       "endpoint": "/api/v1/projects",
       "method": "POST",
       "output_encoding": "json",
+      "input_headers": ["Authorization", "Content-Type"],
       "extra_config": {
         "auth/validator": {
           "alg": "RS256",
-          "jwk_url": "http://krakend:8080/.well-known/jwks.json",
+          "jwk_url": "http://auth:3001/.well-known/jwks.json",
           "cache": true,
           "cache_duration": 300,
           "disable_jwk_security": true,
+          "issuer": "innovatech-auth",
+          "key_identify_strategy": "kid",
           "propagate_claims": [
             ["id", "x-user-id"],
             ["email", "x-user-email"],
@@ -115,13 +134,16 @@
       "endpoint": "/api/v1/projects/{id}",
       "method": "GET",
       "output_encoding": "json",
+      "input_headers": ["Authorization", "Content-Type"],
       "extra_config": {
         "auth/validator": {
           "alg": "RS256",
-          "jwk_url": "http://krakend:8080/.well-known/jwks.json",
+          "jwk_url": "http://auth:3001/.well-known/jwks.json",
           "cache": true,
           "cache_duration": 300,
           "disable_jwk_security": true,
+          "issuer": "innovatech-auth",
+          "key_identify_strategy": "kid",
           "propagate_claims": [
             ["id", "x-user-id"],
             ["email", "x-user-email"],
@@ -143,13 +165,16 @@
       "endpoint": "/api/v1/projects/{id}",
       "method": "PUT",
       "output_encoding": "json",
+      "input_headers": ["Authorization", "Content-Type"],
       "extra_config": {
         "auth/validator": {
           "alg": "RS256",
-          "jwk_url": "http://krakend:8080/.well-known/jwks.json",
+          "jwk_url": "http://auth:3001/.well-known/jwks.json",
           "cache": true,
           "cache_duration": 300,
           "disable_jwk_security": true,
+          "issuer": "innovatech-auth",
+          "key_identify_strategy": "kid",
           "propagate_claims": [
             ["id", "x-user-id"],
             ["email", "x-user-email"],
@@ -173,13 +198,16 @@
       "endpoint": "/api/v1/projects/{id}",
       "method": "DELETE",
       "output_encoding": "json",
+      "input_headers": ["Authorization", "Content-Type"],
       "extra_config": {
         "auth/validator": {
           "alg": "RS256",
-          "jwk_url": "http://krakend:8080/.well-known/jwks.json",
+          "jwk_url": "http://auth:3001/.well-known/jwks.json",
           "cache": true,
           "cache_duration": 300,
           "disable_jwk_security": true,
+          "issuer": "innovatech-auth",
+          "key_identify_strategy": "kid",
           "propagate_claims": [
             ["id", "x-user-id"],
             ["email", "x-user-email"],
@@ -203,13 +231,16 @@
       "endpoint": "/api/v1/projects/{id}/tasks",
       "method": "GET",
       "output_encoding": "json",
+      "input_headers": ["Authorization", "Content-Type"],
       "extra_config": {
         "auth/validator": {
           "alg": "RS256",
-          "jwk_url": "http://krakend:8080/.well-known/jwks.json",
+          "jwk_url": "http://auth:3001/.well-known/jwks.json",
           "cache": true,
           "cache_duration": 300,
           "disable_jwk_security": true,
+          "issuer": "innovatech-auth",
+          "key_identify_strategy": "kid",
           "propagate_claims": [
             ["id", "x-user-id"],
             ["email", "x-user-email"],
@@ -231,13 +262,16 @@
       "endpoint": "/api/v1/projects/{id}/tasks",
       "method": "POST",
       "output_encoding": "json",
+      "input_headers": ["Authorization", "Content-Type"],
       "extra_config": {
         "auth/validator": {
           "alg": "RS256",
-          "jwk_url": "http://krakend:8080/.well-known/jwks.json",
+          "jwk_url": "http://auth:3001/.well-known/jwks.json",
           "cache": true,
           "cache_duration": 300,
           "disable_jwk_security": true,
+          "issuer": "innovatech-auth",
+          "key_identify_strategy": "kid",
           "propagate_claims": [
             ["id", "x-user-id"],
             ["email", "x-user-email"],
@@ -251,6 +285,135 @@
           "encoding": "json",
           "method": "POST",
           "host": ["http://bff:3010"]
+        }
+      ]
+    },
+    {
+      "@comment": "Auth: Logout (requiere JWT)",
+      "endpoint": "/api/v1/auth/logout",
+      "method": "POST",
+      "output_encoding": "json",
+      "input_headers": ["Authorization", "Content-Type"],
+      "extra_config": {
+        "auth/validator": {
+          "alg": "RS256",
+          "jwk_url": "http://auth:3001/.well-known/jwks.json",
+          "cache": true,
+          "cache_duration": 300,
+          "disable_jwk_security": true,
+          "issuer": "innovatech-auth",
+          "key_identify_strategy": "kid",
+          "propagate_claims": [
+            ["id", "x-user-id"],
+            ["email", "x-user-email"],
+            ["rol", "x-user-role"]
+          ]
+        }
+      },
+      "backend": [
+        {
+          "url_pattern": "/api/v1/auth/logout",
+          "encoding": "json",
+          "method": "POST",
+          "host": ["http://bff:3010"]
+        }
+      ]
+    },
+    {
+      "@comment": "Frontend: listar proyectos agregados (requiere JWT)",
+      "endpoint": "/api/v1/proyectos",
+      "method": "GET",
+      "output_encoding": "json",
+      "input_headers": ["Authorization", "Content-Type"],
+      "extra_config": {
+        "auth/validator": {
+          "alg": "RS256",
+          "jwk_url": "http://auth:3001/.well-known/jwks.json",
+          "cache": true,
+          "cache_duration": 300,
+          "disable_jwk_security": true,
+          "issuer": "innovatech-auth",
+          "key_identify_strategy": "kid",
+          "propagate_claims": [
+            ["id", "x-user-id"],
+            ["email", "x-user-email"],
+            ["rol", "x-user-role"]
+          ]
+        }
+      },
+      "backend": [
+        {
+          "url_pattern": "/api/v1/proyectos",
+          "encoding": "json",
+          "method": "GET",
+          "host": ["http://bff:3010"]
+        }
+      ]
+    },
+    {
+      "@comment": "Frontend: tareas de un proyecto (requiere JWT)",
+      "endpoint": "/api/v1/proyectos/{id}/tareas",
+      "method": "GET",
+      "output_encoding": "json",
+      "input_headers": ["Authorization", "Content-Type"],
+      "extra_config": {
+        "auth/validator": {
+          "alg": "RS256",
+          "jwk_url": "http://auth:3001/.well-known/jwks.json",
+          "cache": true,
+          "cache_duration": 300,
+          "disable_jwk_security": true,
+          "issuer": "innovatech-auth",
+          "key_identify_strategy": "kid",
+          "propagate_claims": [
+            ["id", "x-user-id"],
+            ["email", "x-user-email"],
+            ["rol", "x-user-role"]
+          ]
+        }
+      },
+      "backend": [
+        {
+          "url_pattern": "/api/v1/proyectos/{id}/tareas",
+          "encoding": "json",
+          "method": "GET",
+          "host": ["http://bff:3010"]
+        }
+      ]
+    },
+    {
+      "@comment": "Tareas: actualizar estado (requiere JWT)",
+      "endpoint": "/api/v1/projects/{id}/tasks/{taskId}/status",
+      "method": "PATCH",
+      "output_encoding": "json",
+      "input_headers": ["Authorization", "Content-Type"],
+      "extra_config": {
+        "auth/validator": {
+          "alg": "RS256",
+          "jwk_url": "http://auth:3001/.well-known/jwks.json",
+          "cache": true,
+          "cache_duration": 300,
+          "disable_jwk_security": true,
+          "issuer": "innovatech-auth",
+          "key_identify_strategy": "kid",
+          "propagate_claims": [
+            ["id", "x-user-id"],
+            ["email", "x-user-email"],
+            ["rol", "x-user-role"]
+          ]
+        }
+      },
+      "backend": [
+        {
+          "url_pattern": "/api/v1/projects/{id}/tasks/{taskId}/status",
+          "encoding": "json",
+          "method": "PATCH",
+          "host": ["http://bff:3010"],
+          "extra_config": {
+            "backend/http": {
+              "return_error_code": true
+            }
+          }
         }
       ]
     },
@@ -278,7 +441,7 @@
           "url_pattern": "/.well-known/jwks.json",
           "encoding": "json",
           "method": "GET",
-          "host": ["http://ms-auth:3001"]
+          "host": ["http://auth:3001"]
         }
       ]
     }

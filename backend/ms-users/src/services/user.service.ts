@@ -93,6 +93,24 @@ class UserService {
     }
   }
 
+  /** Solo para ms-auth (login interno): incluye hash de password */
+  async findByEmailWithPassword(email: string) {
+    try {
+      const result = await query(
+        'SELECT id, nombre, email, password, rol, created_at, updated_at FROM usuarios WHERE email = $1',
+        [email.toLowerCase()]
+      );
+
+      return result.rows.length > 0 ? result.rows[0] : null;
+    } catch (error) {
+      const err = error as Error;
+      logger.error('[UserService] Error al buscar usuario por email (interno)', {
+        error: err.message
+      });
+      throw new Error('Error al buscar usuario en base de datos');
+    }
+  }
+
   async findAll(options: Record<string, unknown> = {}) {
     const {
       page = 1,

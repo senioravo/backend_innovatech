@@ -80,7 +80,8 @@ class JWTHelper {
       const options = {
         expiresIn: this.expiresIn,
         issuer: this.issuer,
-        algorithm: this.algorithm // RS256
+        algorithm: this.algorithm,
+        keyid: 'innovatech-auth-key-1'
       };
 
       // Generar y firmar token con CLAVE PRIVADA

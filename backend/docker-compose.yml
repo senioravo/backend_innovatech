@@ -23,6 +23,21 @@ services:
     volumes:
       - users_db_data:/var/lib/postgresql/data
       - ./ms-users/database/schema.sql:/docker-entrypoint-initdb.d/01-schema.sql:ro
+      - ./ms-users/database/seed-users.sql:/docker-entrypoint-initdb.d/02-seed-users.sql:ro
+
+  pm-db:
+    image: postgres:16-alpine
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+      POSTGRES_DB: innovatech_pm
+    ports:
+      - "5434:5432"
+    volumes:
+      - pm_db_data:/var/lib/postgresql/data
+      - ./ms-project-manager/db/migrations/001_schema.sql:/docker-entrypoint-initdb.d/01-schema.sql:ro
+      - ./ms-project-manager/db/migrations/002_task_status.sql:/docker-entrypoint-initdb.d/02-task-status.sql:ro
+      - ./ms-project-manager/db/migrations/003_project_status.sql:/docker-entrypoint-initdb.d/03-project-status.sql:ro
 
   api-gateway:
     image: devopsfaith/krakend:2.7
@@ -41,11 +56,14 @@ services:
     environment:
       PORT: "3010"
       API_GATEWAY_PREFIX: /api/v1
+      JWT_ISSUER: innovatech-auth
       # Ya NO valida JWT - confía en headers de KrakenD (X-User-*)
       AUTH_SERVICE_BASE_URL: http://auth:3001
       AUTH_API_PREFIX: /api/auth
       PROJECT_MANAGER_BASE_URL: http://project-manager:3002
       PROJECT_MANAGER_API_PREFIX: /api/v1
+    volumes:
+      - ./ms-auth/keys/public.key:/app/keys/public.key:ro
     expose:
       - "3010"
     depends_on:
@@ -80,22 +98,24 @@ services:
       context: ./ms-project-manager
     environment:
       PORT: "3002"
-      DATABASE_URL: ${DATABASE_URL_PM:-}
+      DATABASE_URL: postgresql://postgres:postgres@pm-db:5432/innovatech_pm?sslmode=disable
       # Ya NO necesita JWT_SECRET - usa clave pública RSA
       API_GATEWAY_PREFIX: /api/v1
     volumes:
       # Clave PÚBLICA RSA para verificar tokens (solo lectura)
-      - ./ms-project-manager/keys/public.key:/app/keys/public.key:ro
+      - ./ms-auth/keys/public.key:/app/keys/public.key:ro
     expose:
       - "3002"
+    depends_on:
+      - pm-db
 
   users:
     build:
       context: ./ms-users
     environment:
       PORT: "3003"
-      # Database per Service: ms-users tiene su PROPIA base de datos
-      DATABASE_URL: ${DATABASE_URL_USERS:-}
+      # Docker local: Postgres del servicio users-db (ignora Neon del .env.docker)
+      DATABASE_URL: postgresql://postgres:postgres@users-db:5432/innovatech_users?sslmode=disable
       # Verifica tokens JWT con clave pública RSA
       JWT_PUBLIC_KEY_PATH: /app/keys/jwt_public.pem
       JWT_ISSUER: "innovatech-auth"
@@ -112,3 +132,4 @@ services:
 
 volumes:
   users_db_data:
+  pm_db_data:
