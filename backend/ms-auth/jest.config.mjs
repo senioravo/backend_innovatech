@@ -24,9 +24,11 @@ export default {
     global: { branches: 50, functions: 50, lines: 50, statements: 50 }
   },
   testTimeout: 5000,
-  setupFiles: ['<rootDir>/tests/setup.js'],
+  setupFiles: ['<rootDir>/tests/setup.env.js'],
+  setupFilesAfterEnv: ['<rootDir>/tests/setup.mocks.js'],
   extensionsToTreatAsEsm: ['.ts'],
   moduleNameMapper: {
+    '^(.*/clients/usersClient)\\.js$': '<rootDir>/tests/mocks/usersClient.js',
     '^(\\.{1,2}/.*)\\.js$': '$1'
   },
   transform: {

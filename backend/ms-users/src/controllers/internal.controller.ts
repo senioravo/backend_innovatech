@@ -1,6 +1,28 @@
 import userService from '../services/user.service.js';
 import logger from '../utils/logger.js';
+import { ValidationError, NotFoundError } from '../utils/errorHandler.js';
 import { errorResponseDto } from '../dtos/userDto.js';
+
+function mapServiceError(error) {
+  if (error instanceof ValidationError) {
+    const message = error.errors.length === 1
+      ? error.errors[0]
+      : 'Datos inválidos';
+    return {
+      status: 400,
+      body: errorResponseDto(message, { errors: error.errors })
+    };
+  }
+
+  if (error instanceof NotFoundError) {
+    return {
+      status: 404,
+      body: errorResponseDto(error.message)
+    };
+  }
+
+  return null;
+}
 
 const getUserByEmailWithPassword = async (req, res) => {
   try {
@@ -10,21 +32,14 @@ const getUserByEmailWithPassword = async (req, res) => {
     logger.info(`[INTERNAL-CONTROLLER] Solicitud interna de usuario por email - Email: ${email} - Servicio: ${serviceId}`);
 
     if (!email) {
-      return res.status(400).json(
-        errorResponseDto('Email es requerido')
-      );
+      return res.status(400).json(errorResponseDto('Email es requerido'));
     }
 
     const user = await userService.findByEmailWithPassword(email);
 
     if (!user) {
-      logger.info(`[INTERNAL-CONTROLLER] Usuario no encontrado - Email: ${email}`);
-      return res.status(404).json(
-        errorResponseDto('Usuario no encontrado')
-      );
+      return res.status(404).json(errorResponseDto('Usuario no encontrado'));
     }
-
-    logger.info(`[INTERNAL-CONTROLLER] Usuario encontrado - ID: ${user.id} - Email: ${email}`);
 
     return res.status(200).json({
       success: true,
@@ -39,41 +54,19 @@ const getUserByEmailWithPassword = async (req, res) => {
       }
     });
   } catch (error) {
-    const err = error as Error;
     logger.error('[INTERNAL-CONTROLLER] Error al buscar usuario por email', {
-      error: err.message,
-      stack: err.stack
+      error: error.message
     });
-
-    return res.status(500).json(
-      errorResponseDto('Error al buscar usuario')
-    );
+    return res.status(500).json(errorResponseDto('Error al buscar usuario'));
   }
 };
 
 const createUserInternal = async (req, res) => {
   try {
-    const userData = req.body;
     const serviceId = req.internalService?.id || 'unknown';
+    logger.info(`[INTERNAL-CONTROLLER] Solicitud interna de creación - Email: ${req.body?.email} - Servicio: ${serviceId}`);
 
-    logger.info(`[INTERNAL-CONTROLLER] Solicitud interna de creación de usuario - Email: ${userData.email} - Servicio: ${serviceId}`);
-
-    if (!userData.nombre || !userData.email || !userData.password) {
-      return res.status(400).json(
-        errorResponseDto('Campos obligatorios faltantes: nombre, email, password')
-      );
-    }
-
-    const emailExists = await userService.emailExists(userData.email);
-    if (emailExists) {
-      return res.status(400).json(
-        errorResponseDto('El email ya está registrado')
-      );
-    }
-
-    const newUser = await userService.createUser(userData);
-
-    logger.info(`[INTERNAL-CONTROLLER] Usuario creado exitosamente desde servicio interno - ID: ${newUser.id}`);
+    const newUser = await userService.createUser(req.body);
 
     return res.status(201).json({
       success: true,
@@ -87,14 +80,14 @@ const createUserInternal = async (req, res) => {
       }
     });
   } catch (error) {
-    const err = error as Error;
-    logger.error('[INTERNAL-CONTROLLER] Error al crear usuario desde servicio interno', {
-      error: err.message
-    });
+    const mapped = mapServiceError(error);
+    logger.error('[INTERNAL-CONTROLLER] Error al crear usuario', { error: error.message });
 
-    return res.status(500).json(
-      errorResponseDto('Error al crear usuario')
-    );
+    if (mapped) {
+      return res.status(mapped.status).json(mapped.body);
+    }
+
+    return res.status(500).json(errorResponseDto('Error al crear usuario'));
   }
 };
 

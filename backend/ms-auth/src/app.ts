@@ -67,8 +67,10 @@ app.use('/api/example', exampleRoutes);
 app.use('/', jwksRoutes);
 
 const PORT = process.env.PORT || 3001;
-app.listen(PORT, () => {
-  console.log(`🚀 Microservicio Auth ejecutándose en puerto ${PORT}`);
-});
+if (process.env.NODE_ENV !== 'test') {
+  app.listen(PORT, () => {
+    console.log(`🚀 Microservicio Auth ejecutándose en puerto ${PORT}`);
+  });
+}
 
-export default app;;
+export default app;

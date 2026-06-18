@@ -1,10 +1,6 @@
 // @ts-nocheck
 import projectService from '../services/projectService.js';
-import ValidationService from '../services/validationService.js';
-import { createProjectDto,
-  projectToDto,
-  pickProjectScheduleFields } from '../dtos/projectDto.js';
-import { ValidationError } from '../utils/errorHandler.js';
+import { projectToDto } from '../dtos/projectDto.js';
 import { auditFromRequest } from '../utils/auditLog.js';
 
 const projectController = {
@@ -28,19 +24,7 @@ const projectController = {
 
   async createProject(req, res, next) {
     try {
-      const validation = ValidationService.validateProjectInput(req.body);
-      if (!validation.isValid) {
-        throw new ValidationError(validation.errors);
-      }
-
-      const data = createProjectDto(req.body);
-      const schedule = pickProjectScheduleFields(req.body);
-
-      const project = await projectService.createProject({
-        ...data,
-        ...schedule,
-        userId: req.user.id
-      });
+      const project = await projectService.createProjectFromRequest(req.body, req.user.id);
 
       auditFromRequest(req, {
         action: 'PROJECT_CREATE',
@@ -56,27 +40,17 @@ const projectController = {
 
   async updateProject(req, res, next) {
     try {
-      const validation = ValidationService.validateUpdateInput(req.body);
-      if (!validation.isValid) {
-        throw new ValidationError(validation.errors);
-      }
-
-      const updates = {};
-      if (Object.prototype.hasOwnProperty.call(req.body, 'name')) {
-        updates.name = String(req.body.name).trim();
-      }
-      if (Object.prototype.hasOwnProperty.call(req.body, 'description')) {
-        updates.description = String(req.body.description).trim();
-      }
-      Object.assign(updates, pickProjectScheduleFields(req.body));
-
-      const project = await projectService.updateProject(req.params.id, req.user.id, updates);
+      const project = await projectService.updateProjectFromRequest(
+        req.params.id,
+        req.user.id,
+        req.body
+      );
 
       auditFromRequest(req, {
         action: 'PROJECT_UPDATE',
         resource: 'project',
         resourceId: req.params.id,
-        meta: { fields: Object.keys(updates) }
+        meta: { fields: Object.keys(req.body) }
       });
 
       res.json(projectToDto(project));
@@ -87,21 +61,17 @@ const projectController = {
 
   async patchProjectStatus(req, res, next) {
     try {
-      const validation = ValidationService.validateProjectStatusInput(req.body);
-      if (!validation.isValid) {
-        throw new ValidationError(validation.errors);
-      }
-      const project = await projectService.updateProjectStatus(
+      const project = await projectService.updateProjectStatusFromRequest(
         req.params.id,
         req.user.id,
-        validation.normalized
+        req.body
       );
 
       auditFromRequest(req, {
         action: 'PROJECT_STATUS_UPDATE',
         resource: 'project',
         resourceId: req.params.id,
-        meta: { status: validation.normalized }
+        meta: { status: req.body.status }
       });
 
       res.json(projectToDto(project));
@@ -112,18 +82,17 @@ const projectController = {
 
   async assignAssignee(req, res, next) {
     try {
-      const validation = ValidationService.validateAssigneeInput(req.body);
-      if (!validation.isValid) {
-        throw new ValidationError(validation.errors);
-      }
-      const assigneeId = String(req.body.assigneeId).trim();
-      const project = await projectService.assignAssignee(req.params.id, req.user.id, assigneeId);
+      const project = await projectService.assignAssigneeFromRequest(
+        req.params.id,
+        req.user.id,
+        req.body
+      );
 
       auditFromRequest(req, {
         action: 'PROJECT_ASSIGNEE',
         resource: 'project',
         resourceId: req.params.id,
-        meta: { assigneeId }
+        meta: { assigneeId: req.body.assigneeId }
       });
 
       res.json(projectToDto(project));
@@ -149,4 +118,4 @@ const projectController = {
   }
 };
 
-export default projectController;;
+export default projectController;

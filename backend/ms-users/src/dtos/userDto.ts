@@ -1,4 +1,19 @@
-function userToDto(user) {
+const EMAIL_REGEX = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+const VALID_ROLES = ['gestor', 'profesional', 'directivo'];
+
+type UserInput = {
+  nombre?: string | null;
+  email?: string | null;
+  password?: string | null;
+  rol?: string | null;
+};
+
+type ValidateOptions = {
+  requirePassword?: boolean;
+  partial?: boolean;
+};
+
+function userToDto(user: Record<string, unknown> | null) {
   if (!user) return null;
 
   return {
@@ -27,7 +42,7 @@ function createUserDto(body) {
   };
 }
 
-function updateUserDto(body) {
+function updateUserDto(body: Record<string, unknown>) {
   const updates: Record<string, string | null> = {};
 
   if (body.nombre !== undefined) {
@@ -62,27 +77,33 @@ function errorResponseDto(message, details = null) {
   };
 }
 
-function validateUserData(userData) {
-  const errors: string[] = [];
+function validateUserData(userData: UserInput, options: ValidateOptions = {}) {
+  const { requirePassword = false, partial = false } = options;
+  const errors = [];
   const { nombre, email, password, rol } = userData;
 
-  if (!nombre || typeof nombre !== 'string' || nombre.trim().length < 2) {
-    errors.push('El nombre debe tener al menos 2 caracteres');
+  if (!partial || nombre !== undefined) {
+    if (!nombre || typeof nombre !== 'string' || nombre.trim().length < 2) {
+      errors.push('El nombre debe tener al menos 2 caracteres');
+    }
   }
 
-  const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-  if (!email || !emailRegex.test(email)) {
-    errors.push('Email inválido');
+  if (!partial || email !== undefined) {
+    if (!email || !EMAIL_REGEX.test(email)) {
+      errors.push('Email inválido');
+    }
   }
 
-  if (password !== undefined && password !== null) {
-    if (typeof password !== 'string' || password.length < 6) {
+  if (requirePassword || (partial && password !== undefined)) {
+    if (!password || typeof password !== 'string' || password.length < 6) {
       errors.push('La contraseña debe tener al menos 6 caracteres');
     }
   }
 
-  if (rol && !['gestor', 'profesional', 'directivo'].includes(rol)) {
-    errors.push('Rol inválido. Valores permitidos: gestor, profesional, directivo');
+  if (rol !== undefined && rol !== null && rol !== '') {
+    if (!VALID_ROLES.includes(rol as string)) {
+      errors.push('Rol inválido. Valores permitidos: gestor, profesional, directivo');
+    }
   }
 
   return {
