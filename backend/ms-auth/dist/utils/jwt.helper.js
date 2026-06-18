@@ -1,12 +1,14 @@
-"use strict";
-Object.defineProperty(exports, "__esModule", { value: true });
+// @ts-nocheck
+import path from 'path';
+import { fileURLToPath } from 'url';
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
 // AS-TASK-06: Helper para gestión de JWT con RSA (RS256)
 // Responsabilidad: Generación, verificación y validación de tokens JWT
 // Principio SOLID: Single Responsibility - Solo maneja operaciones JWT
 // SEGURIDAD: Usa criptografía asimétrica (clave privada para firmar, pública para verificar)
-const jwt = require('jsonwebtoken');
-const fs = require('fs');
-const path = require('path');
+import jwt from 'jsonwebtoken';
+import fs from 'fs';
 /**
  * Clase JWTHelper - Gestión centralizada de tokens JWT con RSA
  * Usa RS256 (RSA + SHA256) en lugar de HS256 (HMAC)
@@ -18,26 +20,32 @@ const path = require('path');
  */
 class JWTHelper {
     constructor() {
-        // Configuración desde variables de entorno
         this.expiresIn = process.env.JWT_EXPIRES_IN || '1h';
         this.issuer = process.env.JWT_ISSUER || 'innovatech-auth';
-        this.algorithm = 'RS256'; // Algoritmo asimétrico con RSA
-        // Cargar claves RSA
+        this.algorithm = 'RS256';
+        this.privateKey = null;
+        this.publicKey = null;
+        this._keysLoaded = false;
         const keysDir = path.join(__dirname, '..', '..', 'keys');
-        const privateKeyPath = path.join(keysDir, 'private.key');
-        const publicKeyPath = path.join(keysDir, 'public.key');
+        this._privateKeyPath = path.join(keysDir, 'private.key');
+        this._publicKeyPath = path.join(keysDir, 'public.key');
+        if (!fs.existsSync(this._privateKeyPath) || !fs.existsSync(this._publicKeyPath)) {
+            console.warn('[JWT-HELPER] ⚠️ Claves RSA no encontradas. Swagger y /health funcionan; login/register requieren: node scripts/generate-keys.js');
+        }
+    }
+    _ensureKeys() {
+        if (this._keysLoaded) {
+            return;
+        }
         try {
-            // Clave PRIVADA: solo para este servicio, para FIRMAR tokens
-            this.privateKey = fs.readFileSync(privateKeyPath, 'utf8');
-            console.log('[JWT-HELPER] ✅ Clave privada RSA cargada correctamente');
-            // Clave PÚBLICA: para verificar tokens localmente (opcional)
-            this.publicKey = fs.readFileSync(publicKeyPath, 'utf8');
-            console.log('[JWT-HELPER] ✅ Clave pública RSA cargada correctamente');
+            this.privateKey = fs.readFileSync(this._privateKeyPath, 'utf8');
+            this.publicKey = fs.readFileSync(this._publicKeyPath, 'utf8');
+            this._keysLoaded = true;
+            console.log('[JWT-HELPER] ✅ Claves RSA cargadas');
         }
         catch (error) {
             console.error('[JWT-HELPER] ❌ Error al cargar claves RSA:', error.message);
-            console.error('[JWT-HELPER] Ejecuta: node scripts/generate-keys.js');
-            throw new Error('No se pudieron cargar las claves RSA. Genera las claves primero.');
+            throw new Error('No se pudieron cargar las claves RSA. Ejecuta: node scripts/generate-keys.js');
         }
     }
     /**
@@ -46,6 +54,7 @@ class JWTHelper {
      * @returns {string} - Token JWT firmado con clave privada RSA
      */
     generateToken(user) {
+        this._ensureKeys();
         try {
             // Validar datos requeridos
             if (!user.id || !user.email || !user.rol) {
@@ -79,6 +88,7 @@ class JWTHelper {
      * @returns {Object} - Payload decodificado
      */
     verifyToken(token) {
+        this._ensureKeys();
         try {
             if (!token) {
                 throw new Error('Token no proporcionado');
@@ -181,4 +191,5 @@ class JWTHelper {
     }
 }
 // Exportar instancia única (Singleton pattern)
-module.exports = new JWTHelper();
+export default new JWTHelper();
+;

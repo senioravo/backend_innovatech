@@ -1,5 +1,4 @@
-"use strict";
-Object.defineProperty(exports, "__esModule", { value: true });
+// @ts-nocheck
 function formatDate(v) {
     if (v == null)
         return null;
@@ -51,4 +50,4 @@ function pickTaskScheduleFields(body) {
     }
     return out;
 }
-module.exports = { createTaskDto, taskToDto, pickTaskScheduleFields };
+export { createTaskDto, taskToDto, pickTaskScheduleFields };

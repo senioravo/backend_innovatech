@@ -1,5 +1,4 @@
-"use strict";
-Object.defineProperty(exports, "__esModule", { value: true });
+// @ts-nocheck
 class CircuitBreakerOpenError extends Error {
     constructor(serviceName) {
         super(`Circuit breaker abierto: ${serviceName}`);
@@ -79,4 +78,4 @@ class CircuitBreaker {
         }
     }
 }
-module.exports = { CircuitBreaker, CircuitBreakerOpenError };
+export { CircuitBreaker, CircuitBreakerOpenError };

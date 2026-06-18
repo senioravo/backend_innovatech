@@ -1,5 +1,4 @@
-"use strict";
-Object.defineProperty(exports, "__esModule", { value: true });
+// @ts-nocheck
 class ProjectModel {
     constructor({ id, userId, name, description, createdAt, updatedAt, assigneeId, startDate, endDate, status }) {
         this.id = id;
@@ -14,4 +13,5 @@ class ProjectModel {
         this.status = status ?? 'active';
     }
 }
-module.exports = ProjectModel;
+export default ProjectModel;
+;

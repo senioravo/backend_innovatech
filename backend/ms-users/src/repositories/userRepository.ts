@@ -25,7 +25,9 @@ class UserRepository {
 
   async findById(id: number) {
     const result = await query(
-      'SELECT id, nombre, email, rol, created_at, updated_at FROM usuarios WHERE id = $1',
+      `SELECT id, nombre, email, rol, habilidades, disponibilidad,
+              horas_semanales_disponibles, created_at, updated_at
+       FROM usuarios WHERE id = $1`,
       [id]
     );
     return result.rows.length > 0 ? result.rows[0] : null;
@@ -55,7 +57,9 @@ class UserRepository {
   } = {}) {
     const { page = 1, limit = 10, rol = null, search = null } = options;
     const offset = (Number(page) - 1) * Number(limit);
-    let queryText = 'SELECT id, nombre, email, rol, created_at, updated_at FROM usuarios';
+    let queryText = `SELECT id, nombre, email, rol, habilidades, disponibilidad,
+                            horas_semanales_disponibles, created_at, updated_at
+                     FROM usuarios`;
     let countQueryText = 'SELECT COUNT(*) FROM usuarios';
     const params: unknown[] = [];
     const whereClauses: string[] = [];
@@ -130,8 +134,52 @@ class UserRepository {
       `UPDATE usuarios
        SET rol = $1, updated_at = NOW()
        WHERE id = $2
-       RETURNING id, nombre, email, rol, created_at, updated_at`,
+       RETURNING id, nombre, email, rol, habilidades, disponibilidad,
+                 horas_semanales_disponibles, created_at, updated_at`,
       [newRol, id]
+    );
+    return result.rows.length > 0 ? result.rows[0] : null;
+  }
+
+  async findProfessionals() {
+    const result = await query(
+      `SELECT id, nombre, email, rol, habilidades, disponibilidad,
+              horas_semanales_disponibles
+       FROM usuarios
+       WHERE rol IN ('profesional', 'gestor')
+       ORDER BY nombre ASC`
+    );
+    return result.rows;
+  }
+
+  async updateProfile(id: number, profile: Record<string, unknown>) {
+    const fields: string[] = [];
+    const params: unknown[] = [];
+    let n = 1;
+
+    if (profile.habilidades !== undefined) {
+      fields.push(`habilidades = $${n++}`);
+      params.push(profile.habilidades);
+    }
+    if (profile.disponibilidad !== undefined) {
+      fields.push(`disponibilidad = $${n++}`);
+      params.push(profile.disponibilidad);
+    }
+    if (profile.horas_semanales_disponibles !== undefined) {
+      fields.push(`horas_semanales_disponibles = $${n++}`);
+      params.push(profile.horas_semanales_disponibles);
+    }
+
+    if (fields.length === 0) return this.findById(id);
+
+    fields.push('updated_at = NOW()');
+    params.push(id);
+
+    const result = await query(
+      `UPDATE usuarios SET ${fields.join(', ')} WHERE id = $${n}
+       RETURNING id, nombre, email, rol, habilidades, disponibilidad,
+                 horas_semanales_disponibles, created_at, updated_at`,
+      params
     );
     return result.rows.length > 0 ? result.rows[0] : null;
   }

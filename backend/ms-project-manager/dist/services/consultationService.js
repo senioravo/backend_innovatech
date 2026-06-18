@@ -1,8 +1,7 @@
-"use strict";
-Object.defineProperty(exports, "__esModule", { value: true });
-const taskRepository = require('../repositories/taskRepository');
-const { TASK_STATUSES } = require('../constants/taskStatuses');
-const { taskToDto } = require('../dtos/taskDto');
+// @ts-nocheck
+import taskRepository from '../repositories/taskRepository.js';
+import { TASK_STATUSES } from '../constants/taskStatuses.js';
+import { taskToDto } from '../dtos/taskDto.js';
 function countByStatus(tasks) {
     const counts = Object.fromEntries(TASK_STATUSES.map((s) => [s, 0]));
     for (const t of tasks) {
@@ -29,4 +28,5 @@ const consultationService = {
         };
     }
 };
-module.exports = consultationService;
+export default consultationService;
+;

@@ -1,5 +1,4 @@
-"use strict";
-Object.defineProperty(exports, "__esModule", { value: true });
+// @ts-nocheck
 class TaskModel {
     constructor({ id, projectId, title, description, completed, status, createdAt, updatedAt, assigneeId, startDate, endDate }) {
         this.id = id;
@@ -15,4 +14,5 @@ class TaskModel {
         this.endDate = endDate ?? null;
     }
 }
-module.exports = TaskModel;
+export default TaskModel;
+;

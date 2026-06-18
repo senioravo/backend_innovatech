@@ -1,5 +1,4 @@
-"use strict";
-Object.defineProperty(exports, "__esModule", { value: true });
+// @ts-nocheck
 const PROJECT_STATUSES = Object.freeze(['active', 'terminated']);
 const PROJECT_STATUS_SET = new Set(PROJECT_STATUSES);
 function isValidProjectStatus(value) {
@@ -10,9 +9,4 @@ function isValidProjectStatus(value) {
 function normalizeProjectStatus(value) {
     return String(value).trim().toLowerCase();
 }
-module.exports = {
-    PROJECT_STATUSES,
-    PROJECT_STATUS_SET,
-    isValidProjectStatus,
-    normalizeProjectStatus
-};
+export { PROJECT_STATUSES, PROJECT_STATUS_SET, isValidProjectStatus, normalizeProjectStatus };

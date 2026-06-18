@@ -1,6 +1,5 @@
-"use strict";
-Object.defineProperty(exports, "__esModule", { value: true });
-const { ApplicationError, ValidationError } = require('./errorHandler');
+// @ts-nocheck
+import { ApplicationError, ValidationError } from './errorHandler.js';
 function handleNotFound(req, res) {
     res.status(404).json({ error: 'Route not found' });
 }
@@ -24,4 +23,4 @@ function handleError(err, req, res, next) {
         error: 'Internal server error'
     });
 }
-module.exports = { handleNotFound, handleError };
+export { handleNotFound, handleError };

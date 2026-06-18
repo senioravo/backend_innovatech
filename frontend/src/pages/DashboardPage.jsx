@@ -1,9 +1,18 @@
 import { useCallback, useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import {
+  addTaskAttachment,
+  addTaskComment,
   createProject,
   createTask,
+  deleteProject,
+  deleteTask,
+  downloadReport,
+  fetchKpis,
+  fetchNotifications,
   fetchProyectos,
+  fetchTaskAttachments,
+  fetchTaskComments,
   fetchTareas,
   patchTaskStatus
 } from '../api/bffClient';
@@ -22,14 +31,135 @@ function estadoLabel(codigo) {
   return ESTADO_LABELS[codigo] ?? codigo;
 }
 
-/** Solo el estado actual y el siguiente paso (pipeline lineal del backend). */
 function estadosPermitidos(estadoActual) {
   const i = ESTADOS.indexOf(estadoActual);
   if (i === -1) return ESTADOS;
   return ESTADOS.slice(i, Math.min(i + 2, ESTADOS.length));
 }
 
+function calcularAvance(resumen) {
+  if (!resumen?.total) return 0;
+  const done = resumen.porEstado?.DONE || 0;
+  return Math.round((done / resumen.total) * 100);
+}
+
 const SELECTED_PROJECT_KEY = 'innovatech_selected_project';
+
+function TaskRow({ t, proyectoId, onStatusChange, onRefresh }) {
+  const [open, setOpen] = useState(false);
+  const [comments, setComments] = useState([]);
+  const [attachments, setAttachments] = useState([]);
+  const [commentText, setCommentText] = useState('');
+  const [docName, setDocName] = useState('');
+  const [docUrl, setDocUrl] = useState('');
+
+  async function loadDetails() {
+    const [c, a] = await Promise.all([
+      fetchTaskComments(proyectoId, t.id),
+      fetchTaskAttachments(proyectoId, t.id)
+    ]);
+    setComments(c?.comments ?? []);
+    setAttachments(a?.attachments ?? []);
+  }
+
+  async function toggleOpen() {
+    if (!open) await loadDetails();
+    setOpen(!open);
+  }
+
+  async function submitComment(e) {
+    e.preventDefault();
+    await addTaskComment(proyectoId, t.id, commentText);
+    setCommentText('');
+    await loadDetails();
+    onRefresh();
+  }
+
+  async function submitAttachment(e) {
+    e.preventDefault();
+    await addTaskAttachment(proyectoId, t.id, docName, docUrl);
+    setDocName('');
+    setDocUrl('');
+    await loadDetails();
+  }
+
+  return (
+    <>
+      <tr>
+        <td>{t.titulo}</td>
+        <td>{estadoLabel(t.estado)}</td>
+        <td>{t.completada ? 'Sí' : 'No'}</td>
+        <td>
+          <select
+            value={t.estado}
+            onChange={(e) => {
+              if (e.target.value !== t.estado) onStatusChange(t.id, e.target.value);
+            }}
+          >
+            {estadosPermitidos(t.estado).map((s) => (
+              <option key={s} value={s}>
+                {estadoLabel(s)}
+              </option>
+            ))}
+          </select>
+        </td>
+        <td>
+          <button type="button" onClick={toggleOpen}>
+            {open ? 'Ocultar' : 'Colaboración'}
+          </button>
+        </td>
+      </tr>
+      {open && (
+        <tr>
+          <td colSpan={5} style={{ background: '#f9f9f9', padding: 12 }}>
+            <strong>Comentarios</strong>
+            <ul>
+              {comments.map((c) => (
+                <li key={c.id}>
+                  <small>{c.userId}</small>: {c.content}
+                </li>
+              ))}
+            </ul>
+            <form onSubmit={submitComment} style={{ marginBottom: 12 }}>
+              <input
+                value={commentText}
+                onChange={(e) => setCommentText(e.target.value)}
+                placeholder="Nuevo comentario"
+                style={{ width: '70%', marginRight: 8 }}
+              />
+              <button type="submit">Comentar</button>
+            </form>
+            <strong>Documentación adjunta</strong>
+            <ul>
+              {attachments.map((a) => (
+                <li key={a.id}>
+                  <a href={a.documentUrl} target="_blank" rel="noreferrer">
+                    {a.documentName}
+                  </a>
+                </li>
+              ))}
+            </ul>
+            <form onSubmit={submitAttachment}>
+              <input
+                value={docName}
+                onChange={(e) => setDocName(e.target.value)}
+                placeholder="Nombre documento"
+                style={{ marginRight: 8 }}
+              />
+              <input
+                value={docUrl}
+                onChange={(e) => setDocUrl(e.target.value)}
+                placeholder="URL del documento"
+                style={{ width: '40%', marginRight: 8 }}
+              />
+              <button type="submit">Adjuntar</button>
+            </form>
+          </td>
+        </tr>
+      )}
+    </>
+  );
+}
 
 export default function DashboardPage() {
   const { user, logout } = useAuth();
@@ -42,15 +172,20 @@ export default function DashboardPage() {
   const [selectedId, setSelectedId] = useState(null);
   const [tareasData, setTareasData] = useState(null);
   const [tareasLoading, setTareasLoading] = useState(false);
+  const [kpis, setKpis] = useState(null);
+  const [notifications, setNotifications] = useState([]);
 
   const [newProject, setNewProject] = useState({
     name: '',
-    description: ''
+    description: '',
+    startDate: '',
+    endDate: ''
   });
-  const [newTask, setNewTask] = useState({ title: '', description: '' });
+  const [newTask, setNewTask] = useState({ title: '', description: '', startDate: '', endDate: '' });
 
   const rol = (sessionUser?.rol || user?.rol || '').toLowerCase();
   const canCreateProject = rol === 'gestor';
+  const canSeeAnalytics = rol === 'directivo' || rol === 'gestor';
 
   const loadTareas = useCallback(async (proyectoId) => {
     setSelectedId(proyectoId);
@@ -85,9 +220,21 @@ export default function DashboardPage() {
     }
   }, [logout, navigate]);
 
+  const loadAnalytics = useCallback(async () => {
+    if (!canSeeAnalytics) return;
+    try {
+      const [k, n] = await Promise.all([fetchKpis(), fetchNotifications()]);
+      setKpis(k);
+      setNotifications(n?.notifications ?? []);
+    } catch {
+      // KPIs opcionales si KrakenD aún no expone la ruta
+    }
+  }, [canSeeAnalytics]);
+
   useEffect(() => {
     loadProyectos();
-  }, [loadProyectos]);
+    loadAnalytics();
+  }, [loadProyectos, loadAnalytics]);
 
   useEffect(() => {
     if (loading || selectedId || proyectos.length === 0) return;
@@ -107,11 +254,8 @@ export default function DashboardPage() {
     e.preventDefault();
     setError('');
     try {
-      await createProject({
-        name: newProject.name,
-        description: newProject.description
-      });
-      setNewProject({ name: '', description: '' });
+      await createProject(newProject);
+      setNewProject({ name: '', description: '', startDate: '', endDate: '' });
       await loadProyectos();
     } catch (err) {
       setError(err.message);
@@ -124,8 +268,9 @@ export default function DashboardPage() {
     setError('');
     try {
       await createTask(selectedId, newTask);
-      setNewTask({ title: '', description: '' });
+      setNewTask({ title: '', description: '', startDate: '', endDate: '' });
       await loadTareas(selectedId);
+      await loadAnalytics();
     } catch (err) {
       setError(err.message);
     }
@@ -137,25 +282,46 @@ export default function DashboardPage() {
     try {
       await patchTaskStatus(selectedId, taskId, status);
       await loadTareas(selectedId);
+      await loadAnalytics();
     } catch (err) {
       const msg = String(err.message || '');
-      if (msg.includes('Invalid status transition')) {
-        setError(
-          'Solo puedes avanzar un paso: Pendiente → En progreso → En revisión → Hecho.'
-        );
-      } else {
-        setError(msg);
-      }
+      setError(
+        msg.includes('Invalid status transition')
+          ? 'Solo puedes avanzar un paso: Pendiente → En progreso → En revisión → Hecho.'
+          : msg
+      );
       await loadTareas(selectedId);
     }
   }
 
+  async function handleDeleteProject(id) {
+    if (!window.confirm('¿Eliminar proyecto?')) return;
+    try {
+      await deleteProject(id);
+      if (selectedId === id) setSelectedId(null);
+      await loadProyectos();
+    } catch (err) {
+      setError(err.message);
+    }
+  }
+
+  async function handleDeleteTask(taskId) {
+    if (!window.confirm('¿Eliminar tarea?')) return;
+    try {
+      await deleteTask(taskId);
+      await loadTareas(selectedId);
+    } catch (err) {
+      setError(err.message);
+    }
+  }
+
   const selectedProyecto = proyectos.find((p) => p.id === selectedId);
+  const avancePct = calcularAvance(tareasData?.resumen);
 
   return (
-    <div style={{ fontFamily: 'sans-serif', margin: 16, maxWidth: 960 }}>
+    <div style={{ fontFamily: 'sans-serif', margin: 16, maxWidth: 1000 }}>
       <header style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-        <h1>Dashboard — Project Manager (vía BFF)</h1>
+        <h1>Dashboard InnovaTech</h1>
         <button type="button" onClick={handleLogout}>
           Cerrar sesión
         </button>
@@ -171,6 +337,36 @@ export default function DashboardPage() {
         <p style={{ color: 'crimson', padding: 8, border: '1px solid crimson' }}>{error}</p>
       )}
 
+      {canSeeAnalytics && kpis && (
+        <section style={{ marginTop: 16, padding: 12, border: '1px solid #4a90d9', background: '#f0f7ff' }}>
+          <h2>KPIs y analítica</h2>
+          <p>
+            Avance global: <strong>{kpis.avanceProyectosPct}%</strong> — Tareas completadas:{' '}
+            {kpis.tareasCompletadas}/{kpis.tareasTotales} — Utilización recursos:{' '}
+            {kpis.utilizacionRecursos?.utilizacionPct}%
+          </p>
+          <button type="button" onClick={() => downloadReport('csv')}>
+            Exportar reporte CSV (Excel)
+          </button>{' '}
+          <button type="button" onClick={() => downloadReport('json')}>
+            Exportar métricas JSON
+          </button>
+        </section>
+      )}
+
+      {notifications.length > 0 && (
+        <section style={{ marginTop: 16, padding: 12, border: '1px solid #e6a700', background: '#fffbea' }}>
+          <h3>Notificaciones ({notifications.length})</h3>
+          <ul>
+            {notifications.slice(0, 5).map((n) => (
+              <li key={n.id}>
+                <strong>{n.title}</strong>: {n.message}
+              </li>
+            ))}
+          </ul>
+        </section>
+      )}
+
       {loading && <p>Cargando proyectos…</p>}
 
       <section style={{ marginTop: 24 }}>
@@ -178,27 +374,41 @@ export default function DashboardPage() {
 
         {canCreateProject && (
           <form onSubmit={handleCreateProject} style={{ marginBottom: 16, padding: 12, border: '1px solid #ccc' }}>
-            <h3>Nuevo proyecto (solo Gestor)</h3>
-            <p>
+            <h3>Nuevo proyecto</h3>
+            <input
+              placeholder="Nombre"
+              value={newProject.name}
+              onChange={(e) => setNewProject((s) => ({ ...s, name: e.target.value }))}
+              required
+              style={{ width: '100%', padding: 6, marginBottom: 8 }}
+            />
+            <textarea
+              placeholder="Descripción"
+              value={newProject.description}
+              onChange={(e) => setNewProject((s) => ({ ...s, description: e.target.value }))}
+              required
+              rows={2}
+              style={{ width: '100%', marginBottom: 8 }}
+            />
+            <label>
+              Inicio:{' '}
               <input
-                placeholder="Nombre (mín. 3)"
-                value={newProject.name}
-                onChange={(e) => setNewProject((s) => ({ ...s, name: e.target.value }))}
-                required
-                style={{ width: '100%', padding: 6 }}
+                type="date"
+                value={newProject.startDate}
+                onChange={(e) => setNewProject((s) => ({ ...s, startDate: e.target.value }))}
               />
-            </p>
-            <p>
-              <textarea
-                placeholder="Descripción (mín. 10)"
-                value={newProject.description}
-                onChange={(e) => setNewProject((s) => ({ ...s, description: e.target.value }))}
-                required
-                rows={2}
-                style={{ width: '100%' }}
+            </label>{' '}
+            <label>
+              Término:{' '}
+              <input
+                type="date"
+                value={newProject.endDate}
+                onChange={(e) => setNewProject((s) => ({ ...s, endDate: e.target.value }))}
               />
-            </p>
-            <button type="submit">Crear proyecto</button>
+            </label>
+            <button type="submit" style={{ marginLeft: 8 }}>
+              Crear
+            </button>
           </form>
         )}
 
@@ -208,13 +418,20 @@ export default function DashboardPage() {
               <button type="button" onClick={() => loadTareas(p.id)}>
                 Ver tareas
               </button>{' '}
+              {canCreateProject && (
+                <button type="button" onClick={() => handleDeleteProject(p.id)}>
+                  Eliminar
+                </button>
+              )}{' '}
               <strong>{p.nombre}</strong>
               <br />
               <small>{p.descripcion}</small>
-              {p.responsable?.nombre && (
+              {(p.fechaInicio || p.fechaFin) && (
                 <>
                   <br />
-                  <small>Responsable: {p.responsable.nombre}</small>
+                  <small>
+                    {p.fechaInicio || '—'} → {p.fechaFin || '—'}
+                  </small>
                 </>
               )}
             </li>
@@ -224,40 +441,56 @@ export default function DashboardPage() {
 
       {selectedId && (
         <section style={{ marginTop: 24, padding: 12, border: '2px solid #333' }}>
-          <h2>
-            Tareas — {selectedProyecto?.nombre || selectedId}
-          </h2>
+          <h2>Tareas — {selectedProyecto?.nombre || selectedId}</h2>
 
           {tareasLoading && <p>Cargando tareas…</p>}
 
           {tareasData?.resumen && (
-            <p>
-              Total: {tareasData.resumen.total} —{' '}
-              {Object.entries(tareasData.resumen.porEstado || {})
-                .map(([k, v]) => `${estadoLabel(k)}: ${v}`)
-                .join(', ')}
-            </p>
+            <div style={{ marginBottom: 16 }}>
+              <p>
+                Progreso del proyecto: <strong>{avancePct}%</strong> ({tareasData.resumen.total} tareas)
+              </p>
+              <div
+                style={{
+                  height: 16,
+                  background: '#eee',
+                  borderRadius: 4,
+                  overflow: 'hidden',
+                  maxWidth: 400
+                }}
+              >
+                <div
+                  style={{
+                    width: `${avancePct}%`,
+                    height: '100%',
+                    background: '#4caf50',
+                    transition: 'width 0.3s'
+                  }}
+                />
+              </div>
+              <p style={{ fontSize: 14, marginTop: 8 }}>
+                {Object.entries(tareasData.resumen.porEstado || {})
+                  .map(([k, v]) => `${estadoLabel(k)}: ${v}`)
+                  .join(' · ')}
+              </p>
+            </div>
           )}
 
           <form onSubmit={handleCreateTask} style={{ marginBottom: 16 }}>
             <h3>Nueva tarea</h3>
-            <p>
-              <input
-                placeholder="Título (mín. 3)"
-                value={newTask.title}
-                onChange={(e) => setNewTask((s) => ({ ...s, title: e.target.value }))}
-                required
-                style={{ width: '100%', padding: 6 }}
-              />
-            </p>
-            <p>
-              <input
-                placeholder="Descripción (opcional, mín. 10 si se envía)"
-                value={newTask.description}
-                onChange={(e) => setNewTask((s) => ({ ...s, description: e.target.value }))}
-                style={{ width: '100%', padding: 6 }}
-              />
-            </p>
+            <input
+              placeholder="Título"
+              value={newTask.title}
+              onChange={(e) => setNewTask((s) => ({ ...s, title: e.target.value }))}
+              required
+              style={{ width: '100%', padding: 6, marginBottom: 8 }}
+            />
+            <input
+              placeholder="Descripción"
+              value={newTask.description}
+              onChange={(e) => setNewTask((s) => ({ ...s, description: e.target.value }))}
+              style={{ width: '100%', padding: 6, marginBottom: 8 }}
+            />
             <button type="submit">Crear tarea</button>
           </form>
 
@@ -266,40 +499,31 @@ export default function DashboardPage() {
               <tr>
                 <th>Título</th>
                 <th>Estado</th>
-                <th>Completada</th>
-                <th>Cambiar estado</th>
+                <th>Hecho</th>
+                <th>Avance</th>
+                <th>Colaboración</th>
               </tr>
             </thead>
             <tbody>
               {(tareasData?.tareas ?? []).map((t) => (
-                <tr key={t.id}>
-                  <td>{t.titulo}</td>
-                  <td>{estadoLabel(t.estado)}</td>
-                  <td>{t.completada ? 'Sí' : 'No'}</td>
-                  <td>
-                    <select
-                      value={t.estado}
-                      onChange={(e) => {
-                        if (e.target.value !== t.estado) {
-                          handleStatusChange(t.id, e.target.value);
-                        }
-                      }}
-                    >
-                      {estadosPermitidos(t.estado).map((s) => (
-                        <option key={s} value={s}>
-                          {estadoLabel(s)}
-                        </option>
-                      ))}
-                    </select>
-                  </td>
-                </tr>
+                <TaskRow
+                  key={t.id}
+                  t={t}
+                  proyectoId={selectedId}
+                  onStatusChange={handleStatusChange}
+                  onRefresh={() => loadTareas(selectedId)}
+                />
               ))}
             </tbody>
           </table>
 
-          {!tareasLoading && (tareasData?.tareas ?? []).length === 0 && (
-            <p>Sin tareas en este proyecto.</p>
-          )}
+          {(tareasData?.tareas ?? []).map((t) => (
+            <p key={`del-${t.id}`}>
+              <button type="button" onClick={() => handleDeleteTask(t.id)}>
+                Eliminar tarea: {t.titulo}
+              </button>
+            </p>
+          ))}
         </section>
       )}
     </div>

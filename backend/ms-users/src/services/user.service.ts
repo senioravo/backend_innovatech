@@ -181,6 +181,37 @@ class UserService {
     logger.info('[UserService] Rol de usuario actualizado', { userId: id, newRol });
     return updatedUser;
   }
+
+  async listProfessionals() {
+    return userRepository.findProfessionals();
+  }
+
+  async updateProfile(id: number, body: Record<string, unknown>) {
+    if (isNaN(id)) {
+      throw new ValidationError(['ID de usuario inválido']);
+    }
+
+    const profile: Record<string, unknown> = {};
+    if (body.habilidades !== undefined) profile.habilidades = String(body.habilidades).trim();
+    if (body.disponibilidad !== undefined) {
+      const d = String(body.disponibilidad);
+      if (!['disponible', 'ocupado', 'parcial'].includes(d)) {
+        throw new ValidationError(['disponibilidad debe ser: disponible, ocupado o parcial']);
+      }
+      profile.disponibilidad = d;
+    }
+    if (body.horasSemanalesDisponibles !== undefined) {
+      profile.horas_semanales_disponibles = Number(body.horasSemanalesDisponibles);
+    }
+
+    if (Object.keys(profile).length === 0) {
+      throw new ValidationError(['No hay campos de perfil para actualizar']);
+    }
+
+    const updated = await userRepository.updateProfile(id, profile);
+    if (!updated) throw new NotFoundError();
+    return updated;
+  }
 }
 
 export default new UserService();

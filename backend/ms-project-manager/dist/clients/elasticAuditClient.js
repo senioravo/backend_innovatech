@@ -1,7 +1,6 @@
-"use strict";
-Object.defineProperty(exports, "__esModule", { value: true });
-const { Client } = require('@elastic/elasticsearch');
-const config = require('../config');
+// @ts-nocheck
+import { Client } from '@elastic/elasticsearch';
+import config from '../config/index.js';
 let esClient;
 let initAttempted;
 function buildClientOptions() {
@@ -52,6 +51,4 @@ async function sendAuditToElasticsearch(doc) {
     };
     await client.index({ index, document });
 }
-module.exports = {
-    sendAuditToElasticsearch
-};
+export { sendAuditToElasticsearch };

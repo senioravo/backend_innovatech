@@ -1,5 +1,4 @@
-"use strict";
-Object.defineProperty(exports, "__esModule", { value: true });
+// @ts-nocheck
 /**
  * userDto.ts - Data Transfer Objects para Usuario
  *
@@ -140,13 +139,4 @@ function validateUserData(userData) {
         errors
     };
 }
-module.exports = {
-    createRegisterDto,
-    createLoginDto,
-    userToDto,
-    usersToDto,
-    authResponseDto,
-    registerResponseDto,
-    errorResponseDto,
-    validateUserData
-};
+export { createRegisterDto, createLoginDto, userToDto, usersToDto, authResponseDto, registerResponseDto, errorResponseDto, validateUserData };

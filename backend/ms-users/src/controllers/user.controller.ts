@@ -172,6 +172,36 @@ const getUserByEmail = async (req, res) => {
   }
 };
 
+const listProfessionals = async (req, res) => {
+  try {
+    const professionals = await userService.listProfessionals();
+    recordCrudOperation('read', 'success');
+    return res.status(200).json(
+      successResponseDto('Profesionales obtenidos', {
+        professionals: usersToDto(professionals)
+      })
+    );
+  } catch (error) {
+    recordCrudOperation('read', 'error');
+    return res.status(500).json(errorResponseDto('Error al listar profesionales'));
+  }
+};
+
+const updateProfile = async (req, res) => {
+  try {
+    const updatedUser = await userService.updateProfile(parseInt(req.params.id), req.body);
+    recordCrudOperation('update', 'success');
+    return res.status(200).json(
+      successResponseDto('Perfil actualizado', { user: userToDto(updatedUser) })
+    );
+  } catch (error) {
+    const mapped = mapServiceError(error);
+    recordCrudOperation('update', 'error');
+    if (mapped) return res.status(mapped.status).json(mapped.body);
+    return res.status(500).json(errorResponseDto(error.message || 'Error al actualizar perfil'));
+  }
+};
+
 export {
   createUser,
   getUserById,
@@ -179,5 +209,7 @@ export {
   updateUser,
   deleteUser,
   changeUserRole,
-  getUserByEmail
+  getUserByEmail,
+  listProfessionals,
+  updateProfile
 };

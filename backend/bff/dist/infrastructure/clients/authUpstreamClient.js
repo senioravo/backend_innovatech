@@ -1,5 +1,5 @@
 // @ts-nocheck
-import config from '../../config.js';
+import config from '../../config/index.js';
 import { joinUrl, upstreamJson } from '../http/httpUpstream.js';
 function pickForwardHeaders(req) {
     const out = {};

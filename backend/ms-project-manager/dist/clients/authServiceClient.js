@@ -1,7 +1,6 @@
-"use strict";
-Object.defineProperty(exports, "__esModule", { value: true });
-const config = require('../config');
-const { createInternalHttpClient } = require('../lib/internalHttpClient');
+// @ts-nocheck
+import config from '../config/index.js';
+import { createInternalHttpClient } from '../lib/internalHttpClient.js';
 let httpClient;
 function getAuthHttpClient() {
     if (!httpClient) {
@@ -44,7 +43,4 @@ async function getAuthDependencyStatus() {
         };
     }
 }
-module.exports = {
-    getAuthDependencyStatus,
-    getAuthHttpClient
-};
+export { getAuthDependencyStatus, getAuthHttpClient };

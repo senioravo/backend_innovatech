@@ -1,8 +1,7 @@
-"use strict";
-Object.defineProperty(exports, "__esModule", { value: true });
+// @ts-nocheck
 // AS-TASK-03: Configurar Circuit Breaker para llamadas internas
 // Implementaci�n del patr�n Circuit Breaker usando Opossum
-const CircuitBreaker = require('opossum');
+import CircuitBreaker from 'opossum';
 /**
  * Configuraci�n del Circuit Breaker seg�n requisitos AS-TASK-03
  * - Timeout: 3000ms
@@ -79,8 +78,4 @@ function getBreakerStats(breaker) {
         taskId: 'AS-TASK-03'
     };
 }
-module.exports = {
-    createCircuitBreaker,
-    getBreakerStats,
-    circuitBreakerOptions
-};
+export { createCircuitBreaker, getBreakerStats, circuitBreakerOptions };

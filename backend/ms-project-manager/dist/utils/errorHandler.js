@@ -1,5 +1,4 @@
-"use strict";
-Object.defineProperty(exports, "__esModule", { value: true });
+// @ts-nocheck
 class ApplicationError extends Error {
     constructor(message, status = 500) {
         super(message);
@@ -28,10 +27,4 @@ class ForbiddenError extends ApplicationError {
         super(message, 403);
     }
 }
-module.exports = {
-    ApplicationError,
-    ValidationError,
-    NotFoundError,
-    UnauthorizedError,
-    ForbiddenError
-};
+export { ApplicationError, ValidationError, NotFoundError, UnauthorizedError, ForbiddenError };

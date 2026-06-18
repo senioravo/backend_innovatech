@@ -1,6 +1,5 @@
-"use strict";
-Object.defineProperty(exports, "__esModule", { value: true });
-const { CircuitBreaker } = require('./circuitBreaker');
+// @ts-nocheck
+import { CircuitBreaker } from './circuitBreaker.js';
 /**
  * Internal HTTP client with a per-dependency circuit breaker.
  * Use for calls to other microservices (same pattern for new clients).
@@ -70,4 +69,4 @@ function createInternalHttpClient({ serviceName, failureThreshold, resetTimeoutM
         getBreakerState: () => breaker.getState()
     };
 }
-module.exports = { createInternalHttpClient };
+export { createInternalHttpClient };

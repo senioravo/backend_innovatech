@@ -43,6 +43,26 @@ router.get(
   requireRole('Gestor', 'Profesional', 'Directivo'),
   forward
 );
+router.get(
+  '/consultations/kpis',
+  requireRole('Gestor', 'Profesional', 'Directivo'),
+  forward
+);
+router.get(
+  '/consultations/reports/export',
+  requireRole('Gestor', 'Directivo'),
+  forward
+);
+router.get(
+  '/notifications',
+  requireRole('Gestor', 'Profesional', 'Directivo'),
+  forward
+);
+router.patch(
+  '/notifications/:id/read',
+  requireRole('Gestor', 'Profesional', 'Directivo'),
+  forward
+);
 
 router.get(
   '/projects/:projectId/tasks/:taskId/availability',
@@ -56,6 +76,26 @@ router.get(
 );
 router.patch(
   '/projects/:projectId/tasks/:taskId/status',
+  requireRole('Gestor', 'Profesional', 'Directivo'),
+  forward
+);
+router.get(
+  '/projects/:projectId/tasks/:taskId/comments',
+  requireRole('Gestor', 'Profesional', 'Directivo'),
+  forward
+);
+router.post(
+  '/projects/:projectId/tasks/:taskId/comments',
+  requireRole('Gestor', 'Profesional', 'Directivo'),
+  forward
+);
+router.get(
+  '/projects/:projectId/tasks/:taskId/attachments',
+  requireRole('Gestor', 'Profesional', 'Directivo'),
+  forward
+);
+router.post(
+  '/projects/:projectId/tasks/:taskId/attachments',
   requireRole('Gestor', 'Profesional', 'Directivo'),
   forward
 );
@@ -83,6 +123,7 @@ router.get(
 router.get('/projects', requireRole('Gestor', 'Profesional', 'Directivo'), forward);
 router.post('/projects', requireRole('Gestor'), forward);
 router.put('/projects/:id', requireRole('Gestor', 'Profesional'), forward);
+router.patch('/projects/:id/status', requireRole('Gestor', 'Profesional'), forward);
 router.patch('/projects/:id/assignee', requireRole('Gestor', 'Profesional'), forward);
 router.delete('/projects/:id', requireRole('Gestor'), forward);
 

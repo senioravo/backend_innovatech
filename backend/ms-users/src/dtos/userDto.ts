@@ -21,6 +21,9 @@ function userToDto(user: Record<string, unknown> | null) {
     nombre: user.nombre,
     email: user.email,
     rol: user.rol,
+    habilidades: user.habilidades ?? '',
+    disponibilidad: user.disponibilidad ?? 'disponible',
+    horasSemanalesDisponibles: user.horas_semanales_disponibles ?? 40,
     createdAt: user.created_at || user.createdAt,
     updatedAt: user.updated_at || user.updatedAt
   };

@@ -1,8 +1,7 @@
-"use strict";
-Object.defineProperty(exports, "__esModule", { value: true });
-const projectRepository = require('../repositories/projectRepository');
-const taskRepository = require('../repositories/taskRepository');
-const { NotFoundError, ForbiddenError } = require('../utils/errorHandler');
+// @ts-nocheck
+import projectRepository from '../repositories/projectRepository.js';
+import taskRepository from '../repositories/taskRepository.js';
+import { NotFoundError, ForbiddenError } from '../utils/errorHandler.js';
 const resourceAvailabilityService = {
     async assertProjectAvailable(projectId, userId) {
         if (!projectId || !userId)
@@ -41,4 +40,5 @@ const resourceAvailabilityService = {
         return task;
     }
 };
-module.exports = resourceAvailabilityService;
+export default resourceAvailabilityService;
+;

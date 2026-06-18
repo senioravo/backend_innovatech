@@ -83,6 +83,8 @@ router.post('/', verifyToken, userController.createUser);
  */
 router.get('/', verifyToken, userController.listUsers);
 
+router.get('/professionals', verifyToken, userController.listProfessionals);
+
 /**
  * @openapi
  * /api/users/{id}:
@@ -207,6 +209,8 @@ router.delete('/:id', verifyToken, requireRole(['gestor', 'directivo']), userCon
  *         description: Usuario no encontrado
  */
 router.put('/:id/role', verifyToken, requireRole(['gestor', 'directivo']), userController.changeUserRole);
+
+router.put('/:id/profile', verifyToken, userController.updateProfile);
 
 /**
  * @openapi

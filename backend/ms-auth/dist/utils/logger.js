@@ -1,12 +1,14 @@
-"use strict";
-Object.defineProperty(exports, "__esModule", { value: true });
+// @ts-nocheck
+import path from 'path';
+import { fileURLToPath } from 'url';
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
 // Logger Helper con Winston para logs centralizados
 // Responsabilidad: Gestión centralizada de logs con Winston + Elasticsearch
 // Principio SOLID: Single Responsibility - Solo maneja logging y persistencia
-const winston = require('winston');
-const DailyRotateFile = require('winston-daily-rotate-file');
-const path = require('path');
-const { sendAuditToElasticsearch } = require('../clients/elasticAuditClient');
+import winston from 'winston';
+import DailyRotateFile from 'winston-daily-rotate-file';
+import { sendAuditToElasticsearch } from '../clients/elasticAuditClient.js';
 /**
  * Clase Logger - Sistema de logging centralizado con Winston + Elasticsearch
  * Características:
@@ -248,4 +250,5 @@ class Logger {
 }
 // Exportar instancia singleton
 const logger = new Logger();
-module.exports = logger;
+export default logger;
+;

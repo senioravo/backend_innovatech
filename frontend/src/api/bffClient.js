@@ -131,7 +131,9 @@ export function createTask(proyectoId, payload) {
     method: 'POST',
     body: {
       title: payload.title,
-      description: payload.description || undefined
+      description: payload.description || undefined,
+      startDate: payload.startDate || undefined,
+      endDate: payload.endDate || undefined
     }
   });
 }
@@ -141,5 +143,66 @@ export function patchTaskStatus(proyectoId, taskId, status) {
   return request(
     `/projects/${encodeURIComponent(proyectoId)}/tasks/${encodeURIComponent(taskId)}/status`,
     { method: 'PATCH', body: { status } }
+  );
+}
+
+export function deleteProject(projectId) {
+  return request(`/projects/${encodeURIComponent(projectId)}`, { method: 'DELETE' });
+}
+
+export function deleteTask(taskId) {
+  return request(`/tasks/${encodeURIComponent(taskId)}`, { method: 'DELETE' });
+}
+
+export function fetchKpis() {
+  return request('/consultations/kpis');
+}
+
+export function exportReport(format = 'csv') {
+  return `${API_BASE}/consultations/reports/export?format=${format}`;
+}
+
+export async function downloadReport(format = 'csv') {
+  const token = getToken();
+  const res = await fetch(`${API_BASE}/consultations/reports/export?format=${format}`, {
+    headers: { Authorization: `Bearer ${token}` }
+  });
+  if (!res.ok) throw new Error(`Error al exportar (${res.status})`);
+  const blob = await res.blob();
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = `reporte-innovatech.${format === 'json' ? 'json' : 'csv'}`;
+  a.click();
+  URL.revokeObjectURL(url);
+}
+
+export function fetchNotifications() {
+  return request('/notifications');
+}
+
+export function fetchTaskComments(proyectoId, taskId) {
+  return request(
+    `/projects/${encodeURIComponent(proyectoId)}/tasks/${encodeURIComponent(taskId)}/comments`
+  );
+}
+
+export function addTaskComment(proyectoId, taskId, content) {
+  return request(
+    `/projects/${encodeURIComponent(proyectoId)}/tasks/${encodeURIComponent(taskId)}/comments`,
+    { method: 'POST', body: { content } }
+  );
+}
+
+export function addTaskAttachment(proyectoId, taskId, documentName, documentUrl) {
+  return request(
+    `/projects/${encodeURIComponent(proyectoId)}/tasks/${encodeURIComponent(taskId)}/attachments`,
+    { method: 'POST', body: { documentName, documentUrl } }
+  );
+}
+
+export function fetchTaskAttachments(proyectoId, taskId) {
+  return request(
+    `/projects/${encodeURIComponent(proyectoId)}/tasks/${encodeURIComponent(taskId)}/attachments`
   );
 }

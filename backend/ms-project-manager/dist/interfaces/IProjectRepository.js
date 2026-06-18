@@ -1,5 +1,4 @@
-"use strict";
-Object.defineProperty(exports, "__esModule", { value: true });
+// @ts-nocheck
 /**
  * Contract for project repository implementations.
  */
@@ -26,4 +25,5 @@ class IProjectRepository {
         throw new Error('Método delete no implementado');
     }
 }
-module.exports = IProjectRepository;
+export default IProjectRepository;
+;

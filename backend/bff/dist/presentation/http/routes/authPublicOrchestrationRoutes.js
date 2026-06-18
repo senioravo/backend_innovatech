@@ -1,6 +1,6 @@
 // @ts-nocheck
 import express from 'express';
-import * as authOrchestrationController from '../controllers/auth-orchestration-controller.js';
+import authOrchestrationController from '../controllers/auth-orchestration-controller.js';
 /** Rutas /api/auth/* públicas (sin JWT en el BFF). */
 const router = express.Router();
 /**

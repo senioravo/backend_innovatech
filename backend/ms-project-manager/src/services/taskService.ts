@@ -1,6 +1,7 @@
 // @ts-nocheck
 import taskRepository from '../repositories/taskRepository.js';
 import resourceAvailabilityService from './resourceAvailabilityService.js';
+import collaborationService from './collaborationService.js';
 import ValidationService from './validationService.js';
 import { createTaskDto, pickTaskScheduleFields } from '../dtos/taskDto.js';
 import { isAllowedTaskStatusTransition,
@@ -108,6 +109,18 @@ class TaskService {
     const completed = status === 'DONE';
     const task = await taskRepository.update(taskId, userId, { status, completed });
     if (!task) throw new NotFoundError('Task not found');
+
+    try {
+      await collaborationService.notifyUser(
+        userId,
+        status === 'DONE' ? 'milestone' : 'alert',
+        status === 'DONE' ? 'Tarea completada' : 'Cambio de estado en tarea',
+        `La tarea pasó de ${from} a ${status}.`
+      );
+    } catch {
+      // Notificación best-effort si la tabla aún no existe
+    }
+
     return task;
   }
 

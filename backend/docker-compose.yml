@@ -24,6 +24,7 @@ services:
       - users_db_data:/var/lib/postgresql/data
       - ./ms-users/database/schema.sql:/docker-entrypoint-initdb.d/01-schema.sql:ro
       - ./ms-users/database/seed-users.sql:/docker-entrypoint-initdb.d/02-seed-users.sql:ro
+      - ./ms-users/database/002_user_profiles.sql:/docker-entrypoint-initdb.d/03-profiles.sql:ro
 
   pm-db:
     image: postgres:16-alpine
@@ -38,6 +39,7 @@ services:
       - ./ms-project-manager/db/migrations/001_schema.sql:/docker-entrypoint-initdb.d/01-schema.sql:ro
       - ./ms-project-manager/db/migrations/002_task_status.sql:/docker-entrypoint-initdb.d/02-task-status.sql:ro
       - ./ms-project-manager/db/migrations/003_project_status.sql:/docker-entrypoint-initdb.d/03-project-status.sql:ro
+      - ./ms-project-manager/db/migrations/004_collaboration_analytics.sql:/docker-entrypoint-initdb.d/04-collaboration.sql:ro
 
   api-gateway:
     image: devopsfaith/krakend:2.7
@@ -130,6 +132,19 @@ services:
     depends_on:
       - users-db
 
+  prometheus:
+    image: prom/prometheus:v2.54.1
+    ports:
+      - "9090:9090"
+    volumes:
+      - ./observability/prometheus.yml:/etc/prometheus/prometheus.yml:ro
+      - prometheus_data:/prometheus
+    depends_on:
+      - auth
+      - users
+      - project-manager
+
 volumes:
   users_db_data:
   pm_db_data:
+  prometheus_data:

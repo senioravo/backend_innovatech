@@ -1,8 +1,7 @@
-"use strict";
-Object.defineProperty(exports, "__esModule", { value: true });
-const ProjectModel = require('../models/projectModel');
-const IProjectRepository = require('../interfaces/IProjectRepository');
-const { getPool } = require('../db/pool');
+// @ts-nocheck
+import ProjectModel from '../models/projectModel.js';
+import IProjectRepository from '../interfaces/IProjectRepository.js';
+import { getPool } from '../db/pool.js';
 function mapProjectRow(row) {
     if (!row)
         return null;
@@ -115,4 +114,5 @@ class ProjectRepository extends IProjectRepository {
         return rowCount > 0;
     }
 }
-module.exports = new ProjectRepository();
+export default new ProjectRepository();
+;

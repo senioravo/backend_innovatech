@@ -50,6 +50,7 @@ app.get('/api-docs.json', (req, res) => res.json(swaggerSpec));
 
 // AS-TASK-02: Importar rutas de autenticación para API Gateway
 import authRoutes from './routes/auth.routes.js';
+import metricsRoutes from './routes/metrics.routes.js';
 
 // AS-TASK-03: Importar rutas de Circuit Breaker
 import circuitBreakerRoutes from './routes/circuitBreaker.routes.js';
@@ -62,6 +63,7 @@ import jwksRoutes from './routes/jwks.routes.js';
 
 // Configurar rutas
 app.use('/api/auth', authRoutes);
+app.use('/api/metrics', metricsRoutes);
 app.use('/api/circuit-breaker', circuitBreakerRoutes);
 app.use('/api/example', exampleRoutes);
 app.use('/', jwksRoutes);

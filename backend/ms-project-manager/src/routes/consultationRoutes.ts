@@ -23,4 +23,16 @@ router.get(
   consultationController.getTaskDashboard
 );
 
+router.get(
+  '/kpis',
+  requireRole('Gestor', 'Profesional', 'Directivo'),
+  consultationController.getKpis
+);
+
+router.get(
+  '/reports/export',
+  requireRole('Gestor', 'Directivo'),
+  consultationController.exportReport
+);
+
 export default router;
