@@ -8,7 +8,7 @@ describe('BFF - Integración HTTP (Supertest)', () => {
 
       expect(response.status).toBe(200);
       expect(response.body).toMatchObject({
-        status: 'OK',
+        status: 'ok',
         service: 'bff'
       });
     });

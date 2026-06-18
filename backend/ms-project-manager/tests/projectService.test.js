@@ -1,18 +1,4 @@
-jest.mock('../src/repositories/projectRepository.js', () => ({
-  findByUserId: jest.fn(),
-  create: jest.fn(),
-  update: jest.fn(),
-  delete: jest.fn()
-}));
-
-jest.mock('../src/repositories/taskRepository.js', () => ({
-  deleteByProjectId: jest.fn()
-}));
-
-jest.mock('../src/services/resourceAvailabilityService.js', () => ({
-  assertProjectAvailable: jest.fn()
-}));
-
+import { jest } from '@jest/globals';
 import projectRepository from '../src/repositories/projectRepository.js';
 import taskRepository from '../src/repositories/taskRepository.js';
 import resourceAvailabilityService from '../src/services/resourceAvailabilityService.js';
@@ -49,7 +35,7 @@ describe('projectService', () => {
   });
 
   test('updateProject lanza NotFoundError si no existe', async () => {
-    resourceAvailabilityService.assertProjectAvailable.mockResolvedValue(undefined);
+    jest.spyOn(resourceAvailabilityService, 'assertProjectAvailable').mockResolvedValue(undefined);
     projectRepository.update.mockResolvedValue(null);
     await expect(
       projectService.updateProject(9, 1, { name: 'X' })
@@ -57,7 +43,7 @@ describe('projectService', () => {
   });
 
   test('deleteProject elimina tareas y proyecto', async () => {
-    resourceAvailabilityService.assertProjectAvailable.mockResolvedValue(undefined);
+    jest.spyOn(resourceAvailabilityService, 'assertProjectAvailable').mockResolvedValue(undefined);
     taskRepository.deleteByProjectId.mockResolvedValue(undefined);
     projectRepository.delete.mockResolvedValue(true);
     const ok = await projectService.deleteProject(5, 1);

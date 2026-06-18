@@ -1,3 +1,4 @@
+import { jest } from '@jest/globals';
 import { upstreamJson } from '../src/infrastructure/http/httpUpstream.js';
 import { UpstreamError } from '../src/utils/errorHandler.js';
 

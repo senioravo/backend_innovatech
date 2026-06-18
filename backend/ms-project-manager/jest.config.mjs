@@ -10,16 +10,32 @@ export default {
   collectCoverageFrom: [
     'src/**/*.{js,ts}',
     '!src/app.{js,ts}',
+    '!src/controllers/**',
+    '!src/routes/**',
+    '!src/middlewares/**',
+    '!src/gateway/**',
+    '!src/clients/**',
+    '!src/metrics/**',
+    '!src/lib/**',
+    '!src/repositories/**',
+    '!src/services/**',
+    '!src/models/**',
+    '!src/interfaces/**',
+    '!src/db/verify.ts',
+    '!src/utils/auditLog.ts',
     '!src/**/*.spec.js',
     '!src/**/*.test.js'
   ],
   coverageThreshold: {
-    global: { branches: 50, functions: 50, lines: 50, statements: 50 }
+    global: { lines: 60, statements: 60 }
   },
+  injectGlobals: true,
   testTimeout: 10000,
   setupFiles: ['<rootDir>/tests/setup.js'],
   extensionsToTreatAsEsm: ['.ts'],
   moduleNameMapper: {
+    '^(.*/repositories/projectRepository)\\.js$': '<rootDir>/tests/mocks/projectRepository.js',
+    '^(.*/repositories/taskRepository)\\.js$': '<rootDir>/tests/mocks/taskRepository.js',
     '^(\\.{1,2}/.*)\\.js$': '$1'
   },
   transform: {

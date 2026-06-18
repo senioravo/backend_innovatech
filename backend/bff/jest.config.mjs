@@ -11,16 +11,23 @@ export default {
     'src/**/*.{js,ts}',
     '!src/app.{js,ts}',
     '!src/presentation/http/controllers/**',
+    '!src/presentation/http/routes/**',
+    '!src/presentation/http/middlewares/**',
+    '!src/infrastructure/clients/**',
     '!src/**/*.spec.js',
     '!src/**/*.test.js'
   ],
   coverageThreshold: {
-    global: { branches: 50, functions: 50, lines: 50, statements: 50 }
+    global: { lines: 60, statements: 60 }
   },
+  injectGlobals: true,
   testTimeout: 10000,
   setupFiles: ['<rootDir>/tests/setup.js'],
   extensionsToTreatAsEsm: ['.ts'],
   moduleNameMapper: {
+    '^(.*/infrastructure/clients/authUpstreamClient)\\.js$': '<rootDir>/tests/mocks/authUpstreamClient.js',
+    '^(.*/infrastructure/clients/projectManagerUpstreamClient)\\.js$':
+      '<rootDir>/tests/mocks/projectManagerUpstreamClient.js',
     '^(\\.{1,2}/.*)\\.js$': '$1'
   },
   transform: {

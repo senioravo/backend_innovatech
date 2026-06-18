@@ -1,7 +1,4 @@
-jest.mock('../src/repositories/taskRepository.js', () => ({
-  findForUserDashboard: jest.fn()
-}));
-
+import { jest } from '@jest/globals';
 import taskRepository from '../src/repositories/taskRepository.js';
 import consultationService from '../src/services/consultationService.js';
 
