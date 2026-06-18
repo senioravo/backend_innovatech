@@ -71,24 +71,32 @@ async function request(path, { method = 'GET', body, auth = true } = {}) {
   return data;
 }
 
-/** POST /login → Auth vía BFF */
+/** POST /auth/login → Auth vía BFF */
 export async function login(email, password) {
-  const data = await request('/login', {
+  const data = await request('/auth/login', {
     method: 'POST',
     body: { email, password },
     auth: false
   });
-  if (!data?.data?.token) {
+  const payload = data?.data;
+  const token = payload?.token;
+  const usuario = payload?.usuario ?? payload?.user;
+  if (!token) {
     throw new Error(data?.message || 'Respuesta de login inválida');
   }
-  setSession(data.data.token, data.data.usuario);
-  return data.data;
+  setSession(token, usuario);
+  return { token, usuario };
 }
 
-/** POST /logout */
+/** POST /auth/logout — siempre limpia sesión local aunque falle el API */
 export async function logout() {
+  const token = getToken();
   try {
-    await request('/logout', { method: 'POST' });
+    if (token) {
+      await request('/auth/logout', { method: 'POST' });
+    }
+  } catch {
+    // Ignorar errores de red o 401; la sesión local se limpia igual
   } finally {
     clearSession();
   }
@@ -123,7 +131,9 @@ export function createTask(proyectoId, payload) {
     method: 'POST',
     body: {
       title: payload.title,
-      description: payload.description || undefined
+      description: payload.description || undefined,
+      startDate: payload.startDate || undefined,
+      endDate: payload.endDate || undefined
     }
   });
 }
@@ -133,5 +143,66 @@ export function patchTaskStatus(proyectoId, taskId, status) {
   return request(
     `/projects/${encodeURIComponent(proyectoId)}/tasks/${encodeURIComponent(taskId)}/status`,
     { method: 'PATCH', body: { status } }
+  );
+}
+
+export function deleteProject(projectId) {
+  return request(`/projects/${encodeURIComponent(projectId)}`, { method: 'DELETE' });
+}
+
+export function deleteTask(taskId) {
+  return request(`/tasks/${encodeURIComponent(taskId)}`, { method: 'DELETE' });
+}
+
+export function fetchKpis() {
+  return request('/consultations/kpis');
+}
+
+export function exportReport(format = 'csv') {
+  return `${API_BASE}/consultations/reports/export?format=${format}`;
+}
+
+export async function downloadReport(format = 'csv') {
+  const token = getToken();
+  const res = await fetch(`${API_BASE}/consultations/reports/export?format=${format}`, {
+    headers: { Authorization: `Bearer ${token}` }
+  });
+  if (!res.ok) throw new Error(`Error al exportar (${res.status})`);
+  const blob = await res.blob();
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = `reporte-innovatech.${format === 'json' ? 'json' : 'csv'}`;
+  a.click();
+  URL.revokeObjectURL(url);
+}
+
+export function fetchNotifications() {
+  return request('/notifications');
+}
+
+export function fetchTaskComments(proyectoId, taskId) {
+  return request(
+    `/projects/${encodeURIComponent(proyectoId)}/tasks/${encodeURIComponent(taskId)}/comments`
+  );
+}
+
+export function addTaskComment(proyectoId, taskId, content) {
+  return request(
+    `/projects/${encodeURIComponent(proyectoId)}/tasks/${encodeURIComponent(taskId)}/comments`,
+    { method: 'POST', body: { content } }
+  );
+}
+
+export function addTaskAttachment(proyectoId, taskId, documentName, documentUrl) {
+  return request(
+    `/projects/${encodeURIComponent(proyectoId)}/tasks/${encodeURIComponent(taskId)}/attachments`,
+    { method: 'POST', body: { documentName, documentUrl } }
+  );
+}
+
+export function fetchTaskAttachments(proyectoId, taskId) {
+  return request(
+    `/projects/${encodeURIComponent(proyectoId)}/tasks/${encodeURIComponent(taskId)}/attachments`
   );
 }

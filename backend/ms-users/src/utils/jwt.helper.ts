@@ -1,70 +1,80 @@
-// @ts-nocheck
-export {};
-// Helper para verificación de JWT con clave pública
-const jwt = require('jsonwebtoken');
-const fs = require('fs');
-const path = require('path');
+import jwt from 'jsonwebtoken';
+import fs from 'fs';
+import path from 'path';
+import { __dirname } from './esm-path.js';
 
 class JWTHelper {
+  issuer: string;
+  algorithm: string;
+  publicKey: string | null;
+  private _publicKeyPath: string;
+  private _keysLoaded = false;
+
   constructor() {
     this.issuer = process.env.JWT_ISSUER || 'innovatech-auth';
     this.algorithm = 'RS256';
-    
-    // Cargar solo clave pública para VERIFICAR tokens generados por ms-auth
-    const publicKeyPath = process.env.JWT_PUBLIC_KEY_PATH || path.join(__dirname, '../../keys/jwt_public.pem');
-    
-    try {
-      this.publicKey = fs.readFileSync(publicKeyPath, 'utf8');
-      console.log('[JWT-HELPER] ✅ Clave pública RSA cargada correctamente');
-    } catch (error) {
-      console.error('[JWT-HELPER] ❌ Error al cargar clave pública RSA:', error.message);
-      throw new Error('No se pudo cargar la clave pública RSA. Verifica la configuración.');
+    this.publicKey = null;
+    this._publicKeyPath =
+      process.env.JWT_PUBLIC_KEY_PATH || path.join(__dirname, '../../keys/jwt_public.pem');
+
+    if (!fs.existsSync(this._publicKeyPath)) {
+      console.warn(
+        '[JWT-HELPER] ⚠️ Clave pública RSA no encontrada. Swagger y /health funcionan; endpoints protegidos requieren setup-keys.bat'
+      );
     }
   }
 
-  /**
-   * Verificar y decodificar un token JWT
-   * @param {string} token - Token a verificar
-   * @returns {Object} - Payload decodificado
-   */
-  verifyToken(token) {
+  private _ensureKeys() {
+    if (this._keysLoaded) {
+      return;
+    }
+
+    try {
+      this.publicKey = fs.readFileSync(this._publicKeyPath, 'utf8');
+      this._keysLoaded = true;
+      console.log('[JWT-HELPER] ✅ Clave pública RSA cargada');
+    } catch (error) {
+      const err = error as Error;
+      throw new Error(`No se pudo cargar la clave pública RSA: ${err.message}`);
+    }
+  }
+
+  verifyToken(token: string) {
+    this._ensureKeys();
+
     try {
       if (!token) {
         throw new Error('Token no proporcionado');
       }
 
-      // Verificar firma y validez del token con CLAVE PÚBLICA
       const decoded = jwt.verify(token, this.publicKey, {
         issuer: this.issuer,
-        algorithms: [this.algorithm]
+        algorithms: [this.algorithm as jwt.Algorithm]
       });
 
       return decoded;
     } catch (error) {
-      if (error.name === 'TokenExpiredError') {
+      const err = error as Error & { name?: string };
+      if (err.name === 'TokenExpiredError') {
         throw new Error('Token expirado');
       }
-      if (error.name === 'JsonWebTokenError') {
+      if (err.name === 'JsonWebTokenError') {
         throw new Error('Token inválido');
       }
       throw error;
     }
   }
 
-  /**
-   * Decodificar token sin verificar (solo para debugging)
-   * @param {string} token - Token a decodificar
-   * @returns {Object} - Payload decodificado
-   */
-  decodeToken(token) {
+  decodeToken(token: string) {
     try {
       return jwt.decode(token);
     } catch (error) {
-      console.error('[JWT-HELPER] Error al decodificar token:', error.message);
+      const err = error as Error;
+      console.error('[JWT-HELPER] Error al decodificar token:', err.message);
       return null;
     }
   }
 }
 
 const jwtHelper = new JWTHelper();
-module.exports = jwtHelper;
+export default jwtHelper;

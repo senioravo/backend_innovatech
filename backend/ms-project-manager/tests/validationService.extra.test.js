@@ -1,4 +1,4 @@
-const ValidationService = require('../src/services/validationService');
+import ValidationService from '../src/services/validationService.js';
 
 describe('validationService - casos adicionales', () => {
   test('validateTaskStatusInput rechaza status vacío', () => {

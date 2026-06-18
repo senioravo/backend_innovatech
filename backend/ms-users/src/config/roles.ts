@@ -1,8 +1,3 @@
-// @ts-nocheck
-export {};
-// Configuración de roles del sistema
-// Definición centralizada de roles disponibles
-
 const ROLES = {
   GESTOR: 'gestor',
   PROFESIONAL: 'profesional',
@@ -29,49 +24,27 @@ const ROLES_INFO = {
   }
 };
 
-/**
- * Obtener todos los roles válidos
- * @returns {string[]} - Array de roles
- */
 function getAllRoles() {
   return Object.values(ROLES);
 }
 
-/**
- * Validar si un rol es válido
- * @param {string} rol - Rol a validar
- * @returns {boolean} - true si es válido
- */
-function isValidRole(rol) {
+function isValidRole(rol: string) {
   return getAllRoles().includes(rol);
 }
 
-/**
- * Obtener información completa de todos los roles
- * @returns {Object} - Objeto con información de roles
- */
 function getAllRolesInfo() {
   return ROLES_INFO;
 }
 
-/**
- * Obtener descripción de un rol específico
- * @param {string} rol - Rol a consultar
- * @returns {string|null} - Descripción del rol o null
- */
-function getRoleDescription(rol) {
+function getRoleDescription(rol: string) {
   return ROLES_INFO[rol]?.description || null;
 }
 
-/**
- * Obtener rol por defecto
- * @returns {string} - Rol por defecto
- */
 function getDefaultRole() {
   return DEFAULT_ROLE;
 }
 
-module.exports = {
+export {
   ROLES,
   DEFAULT_ROLE,
   ROLES_INFO,

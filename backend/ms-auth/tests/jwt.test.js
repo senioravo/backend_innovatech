@@ -1,5 +1,5 @@
 // Test básico de JWT
-const jwtHelper = require('../src/utils/jwt.helper');
+import jwtHelper from '../src/utils/jwt.helper.js';
 
 describe('JWT - Generación y verificación de tokens', () => {
   

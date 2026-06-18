@@ -1,9 +1,8 @@
-"use strict";
-Object.defineProperty(exports, "__esModule", { value: true });
-const projectRepository = require('../repositories/projectRepository');
-const taskRepository = require('../repositories/taskRepository');
-const resourceAvailabilityService = require('./resourceAvailabilityService');
-const { NotFoundError } = require('../utils/errorHandler');
+// @ts-nocheck
+import projectRepository from '../repositories/projectRepository.js';
+import taskRepository from '../repositories/taskRepository.js';
+import resourceAvailabilityService from './resourceAvailabilityService.js';
+import { NotFoundError } from '../utils/errorHandler.js';
 class ProjectService {
     constructor(repository = projectRepository) {
         this.repository = repository;
@@ -81,4 +80,5 @@ class ProjectService {
         return true;
     }
 }
-module.exports = new ProjectService();
+export default new ProjectService();
+;

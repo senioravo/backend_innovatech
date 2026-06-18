@@ -1,22 +1,12 @@
-// @ts-nocheck
-export {};
-// Middleware para validar llamadas internas entre microservicios
-// Responsabilidad: Autenticar comunicación entre ms-auth y ms-users
+import logger from '../utils/logger.js';
 
-const logger = require('../utils/logger');
-
-/**
- * Middleware para validar token de servicio interno
- * Solo permite llamadas de otros microservicios autorizados
- */
 const validateInternalToken = (req, res, next) => {
   try {
     const internalToken = req.headers['x-internal-token'];
     const serviceId = req.headers['x-internal-service'];
-    
-    // Token interno configurado en .env
+
     const expectedToken = process.env.INTERNAL_SERVICE_TOKEN || 'development-token';
-    
+
     if (!internalToken || !serviceId) {
       logger.warn('[INTERNAL-AUTH] Llamada interna sin credenciales', {
         ip: req.ip,
@@ -27,7 +17,7 @@ const validateInternalToken = (req, res, next) => {
         error: 'Autenticación de servicio interno requerida'
       });
     }
-    
+
     if (internalToken !== expectedToken) {
       logger.warn('[INTERNAL-AUTH] Token de servicio interno inválido', {
         serviceId,
@@ -38,10 +28,9 @@ const validateInternalToken = (req, res, next) => {
         error: 'Token de servicio interno inválido'
       });
     }
-    
-    // Validar que el servicio esté autorizado
-    const allowedServices = ['ms-auth', 'bff']; // Lista de servicios autorizados
-    if (!allowedServices.includes(serviceId)) {
+
+    const allowedServices = ['ms-auth', 'bff'];
+    if (!allowedServices.includes(serviceId as string)) {
       logger.warn('[INTERNAL-AUTH] Servicio no autorizado', {
         serviceId,
         ip: req.ip
@@ -51,19 +40,19 @@ const validateInternalToken = (req, res, next) => {
         error: 'Servicio no autorizado'
       });
     }
-    
+
     logger.info(`[INTERNAL-AUTH] Llamada interna autorizada - Servicio: ${serviceId}`);
-    
-    // Agregar información del servicio al request
+
     req.internalService = {
       id: serviceId,
       authenticated: true
     };
-    
+
     next();
   } catch (error) {
+    const err = error as Error;
     logger.error('[INTERNAL-AUTH] Error en validación de token interno', {
-      error: error.message
+      error: err.message
     });
     return res.status(500).json({
       success: false,
@@ -72,4 +61,4 @@ const validateInternalToken = (req, res, next) => {
   }
 };
 
-module.exports = { validateInternalToken };
+export { validateInternalToken };

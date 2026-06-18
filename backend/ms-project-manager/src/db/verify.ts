@@ -1,7 +1,6 @@
 // @ts-nocheck
-export {};
-const { getPool } = require('./pool');
-const config = require('../config');
+import { getPool } from './pool.js';
+import config from '../config/index.js';
 
 async function verifyDatabase() {
   if (!config.databaseUrl) {
@@ -19,4 +18,4 @@ async function verifyDatabase() {
   }
 }
 
-module.exports = { verifyDatabase };
+export { verifyDatabase };

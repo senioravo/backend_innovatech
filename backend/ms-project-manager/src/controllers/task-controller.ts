@@ -1,11 +1,7 @@
 // @ts-nocheck
-export {};
-const taskService = require('../services/taskService');
-const ValidationService = require('../services/validationService');
-const { createTaskDto, taskToDto, pickTaskScheduleFields } = require('../dtos/taskDto');
-const { normalizeTaskStatus } = require('../constants/taskStatuses');
-const { ValidationError } = require('../utils/errorHandler');
-const { auditFromRequest } = require('../utils/auditLog');
+import taskService from '../services/taskService.js';
+import { taskToDto } from '../dtos/taskDto.js';
+import { auditFromRequest } from '../utils/auditLog.js';
 
 const taskController = {
   async listTasksForProject(req, res, next) {
@@ -19,22 +15,11 @@ const taskController = {
 
   async createTask(req, res, next) {
     try {
-      const validation = ValidationService.validateTaskInput(req.body);
-      if (!validation.isValid) {
-        throw new ValidationError(validation.errors);
-      }
-
-      const data = createTaskDto(req.body);
-      const schedule = pickTaskScheduleFields(req.body);
-      const task = await taskService.createTask(req.params.projectId, req.user.id, {
-        title: data.title,
-        description: typeof data.description === 'string' ? data.description : '',
-        completed:
-          data.completed !== undefined && data.completed !== null
-            ? Boolean(data.completed)
-            : false,
-        ...schedule
-      });
+      const task = await taskService.createTaskFromRequest(
+        req.params.projectId,
+        req.user.id,
+        req.body
+      );
 
       auditFromRequest(req, {
         action: 'TASK_CREATE',
@@ -51,15 +36,11 @@ const taskController = {
 
   async patchTaskStatus(req, res, next) {
     try {
-      const validation = ValidationService.validateTaskStatusInput(req.body);
-      if (!validation.isValid) {
-        throw new ValidationError(validation.errors);
-      }
-      const task = await taskService.updateTaskStatus(
+      const task = await taskService.updateTaskStatusFromRequest(
         req.params.projectId,
         req.params.taskId,
         req.user.id,
-        validation.normalized
+        req.body
       );
 
       auditFromRequest(req, {
@@ -67,7 +48,7 @@ const taskController = {
         resource: 'task',
         resourceId: req.params.taskId,
         projectId: req.params.projectId,
-        meta: { status: validation.normalized }
+        meta: { status: req.body.status }
       });
 
       res.json(taskToDto(task));
@@ -91,35 +72,13 @@ const taskController = {
 
   async updateTask(req, res, next) {
     try {
-      const validation = ValidationService.validateTaskUpdateInput(req.body);
-      if (!validation.isValid) {
-        throw new ValidationError(validation.errors);
-      }
-
-      const updates = {};
-      if (Object.prototype.hasOwnProperty.call(req.body, 'title')) {
-        updates.title = String(req.body.title).trim();
-      }
-      if (Object.prototype.hasOwnProperty.call(req.body, 'description')) {
-        updates.description = String(req.body.description).trim();
-      }
-      if (Object.prototype.hasOwnProperty.call(req.body, 'completed')) {
-        updates.completed = Boolean(req.body.completed);
-      }
-      if (Object.prototype.hasOwnProperty.call(req.body, 'status')) {
-        const st = normalizeTaskStatus(req.body.status);
-        updates.status = st;
-        updates.completed = st === 'DONE';
-      }
-      Object.assign(updates, pickTaskScheduleFields(req.body));
-
-      const task = await taskService.updateTask(req.params.id, req.user.id, updates);
+      const task = await taskService.updateTaskFromRequest(req.params.id, req.user.id, req.body);
 
       auditFromRequest(req, {
         action: 'TASK_UPDATE',
         resource: 'task',
         resourceId: req.params.id,
-        meta: { fields: Object.keys(updates) }
+        meta: { fields: Object.keys(req.body) }
       });
 
       res.json(taskToDto(task));
@@ -130,18 +89,17 @@ const taskController = {
 
   async assignAssignee(req, res, next) {
     try {
-      const validation = ValidationService.validateAssigneeInput(req.body);
-      if (!validation.isValid) {
-        throw new ValidationError(validation.errors);
-      }
-      const assigneeId = String(req.body.assigneeId).trim();
-      const task = await taskService.assignAssignee(req.params.id, req.user.id, assigneeId);
+      const task = await taskService.assignAssigneeFromRequest(
+        req.params.id,
+        req.user.id,
+        req.body
+      );
 
       auditFromRequest(req, {
         action: 'TASK_ASSIGNEE',
         resource: 'task',
         resourceId: req.params.id,
-        meta: { assigneeId }
+        meta: { assigneeId: req.body.assigneeId }
       });
 
       res.json(taskToDto(task));
@@ -167,4 +125,4 @@ const taskController = {
   }
 };
 
-module.exports = taskController;
+export default taskController;

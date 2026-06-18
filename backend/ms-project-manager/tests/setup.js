@@ -1,12 +1,17 @@
+import { jest } from '@jest/globals';
+import path from 'path';
+import { fileURLToPath } from 'url';
+import fs from 'fs';
+
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
+
 process.env.NODE_ENV = 'test';
 process.env.PORT = '3003';
 process.env.API_GATEWAY_PREFIX = '/api/v1';
 process.env.DATABASE_URL = 'postgresql://test:test@localhost:5432/testdb';
 process.env.ENABLE_METRICS = '1';
 process.env.LOG_LEVEL = 'error';
-
-const fs = require('fs');
-const path = require('path');
 
 const keysDir = path.join(__dirname, '../keys');
 const authPublicKey = path.join(__dirname, '../../ms-auth/keys/public.key');
@@ -17,7 +22,7 @@ if (fs.existsSync(authPublicKey)) {
   fs.copyFileSync(authPublicKey, path.join(keysDir, 'public.key'));
 }
 
-jest.mock('../src/db/pool', () => {
+jest.mock('../src/db/pool.js', () => {
   const mockClient = {
     query: jest.fn().mockResolvedValue({ rows: [], rowCount: 0 }),
     release: jest.fn()
@@ -31,6 +36,6 @@ jest.mock('../src/db/pool', () => {
   };
 });
 
-jest.mock('../src/db/verify', () => ({
+jest.mock('../src/db/verify.js', () => ({
   verifyDatabase: jest.fn().mockResolvedValue(undefined)
 }));

@@ -1,10 +1,9 @@
 // @ts-nocheck
-export {};
 // AS-TASK-14: Middleware de métricas con Prometheus
 // Responsabilidad: Capturar métricas de performance y operaciones
 // Principio SOLID: Single Responsibility - Solo maneja captura de métricas
 
-const promClient = require('prom-client');
+import promClient from 'prom-client';
 
 /**
  * Configuración de Prometheus Client
@@ -224,10 +223,4 @@ async function getMetrics() {
   return register.metrics();
 }
 
-module.exports = {
-  metricsMiddleware,
-  recordCriticalOperation,
-  updateActiveUsers,
-  getRegister,
-  getMetrics
-};
+export { metricsMiddleware, recordCriticalOperation, updateActiveUsers, getRegister, getMetrics };

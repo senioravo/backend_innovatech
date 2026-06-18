@@ -1,5 +1,4 @@
-"use strict";
-Object.defineProperty(exports, "__esModule", { value: true });
+// @ts-nocheck
 /**
  * BFF-TASK-06: Middleware de autenticación simplificado
  *
@@ -35,4 +34,5 @@ function jwtAuthMiddleware(req, res, next) {
     console.log(`[BFF-JWT-MIDDLEWARE] ✅ Usuario autenticado por KrakenD - UserID: ${req.user.id} - Role: ${req.user.role}`);
     next();
 }
-module.exports = jwtAuthMiddleware;
+export default jwtAuthMiddleware;
+;

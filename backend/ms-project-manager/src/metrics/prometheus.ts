@@ -1,7 +1,6 @@
 // @ts-nocheck
-export {};
-const client = require('prom-client');
-const config = require('../config');
+import client from 'prom-client';
+import config from '../config/index.js';
 
 const register = new client.Registry();
 
@@ -74,8 +73,4 @@ async function metricsHandler(req, res) {
   }
 }
 
-module.exports = {
-  register,
-  metricsMiddleware,
-  metricsHandler
-};
+export { register, metricsMiddleware, metricsHandler };

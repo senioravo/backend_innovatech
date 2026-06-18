@@ -1,4 +1,4 @@
-const { getAuthDependencyStatus } = require('../src/clients/authServiceClient');
+import { getAuthDependencyStatus } from '../src/clients/authServiceClient.js';
 
 describe('authServiceClient', () => {
   test('getAuthDependencyStatus sin URL configurada', async () => {

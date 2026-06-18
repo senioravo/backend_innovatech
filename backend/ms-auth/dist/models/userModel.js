@@ -1,5 +1,4 @@
-"use strict";
-Object.defineProperty(exports, "__esModule", { value: true });
+// @ts-nocheck
 /**
  * UserModel - Entidad de Usuario
  * Representa la estructura de datos de un usuario tal como existe en la base de datos
@@ -48,4 +47,5 @@ class UserModel {
         };
     }
 }
-module.exports = UserModel;
+export default UserModel;
+;

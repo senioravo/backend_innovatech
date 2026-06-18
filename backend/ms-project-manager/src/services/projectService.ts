@@ -1,9 +1,10 @@
 // @ts-nocheck
-export {};
-const projectRepository = require('../repositories/projectRepository');
-const taskRepository = require('../repositories/taskRepository');
-const resourceAvailabilityService = require('./resourceAvailabilityService');
-const { NotFoundError } = require('../utils/errorHandler');
+import projectRepository from '../repositories/projectRepository.js';
+import taskRepository from '../repositories/taskRepository.js';
+import resourceAvailabilityService from './resourceAvailabilityService.js';
+import ValidationService from './validationService.js';
+import { createProjectDto, pickProjectScheduleFields } from '../dtos/projectDto.js';
+import { NotFoundError, ValidationError } from '../utils/errorHandler.js';
 
 class ProjectService {
   constructor(repository = projectRepository) {
@@ -33,6 +34,43 @@ class ProjectService {
       startDate: startDate ?? null,
       endDate: endDate ?? null
     });
+  }
+
+  async createProjectFromRequest(body, userId) {
+    const validation = ValidationService.validateProjectInput(body);
+    if (!validation.isValid) throw new ValidationError(validation.errors);
+
+    const data = createProjectDto(body);
+    const schedule = pickProjectScheduleFields(body);
+    return this.createProject({ ...data, ...schedule, userId });
+  }
+
+  async updateProjectFromRequest(projectId, userId, body) {
+    const validation = ValidationService.validateUpdateInput(body);
+    if (!validation.isValid) throw new ValidationError(validation.errors);
+
+    const updates = {};
+    if (Object.prototype.hasOwnProperty.call(body, 'name')) {
+      updates.name = String(body.name).trim();
+    }
+    if (Object.prototype.hasOwnProperty.call(body, 'description')) {
+      updates.description = String(body.description).trim();
+    }
+    Object.assign(updates, pickProjectScheduleFields(body));
+
+    return this.updateProject(projectId, userId, updates);
+  }
+
+  async updateProjectStatusFromRequest(projectId, userId, body) {
+    const validation = ValidationService.validateProjectStatusInput(body);
+    if (!validation.isValid) throw new ValidationError(validation.errors);
+    return this.updateProjectStatus(projectId, userId, validation.normalized);
+  }
+
+  async assignAssigneeFromRequest(projectId, userId, body) {
+    const validation = ValidationService.validateAssigneeInput(body);
+    if (!validation.isValid) throw new ValidationError(validation.errors);
+    return this.assignAssignee(projectId, userId, String(body.assigneeId).trim());
   }
 
   async updateProject(projectId, userId, updates) {
@@ -85,4 +123,4 @@ class ProjectService {
   }
 }
 
-module.exports = new ProjectService();
+export default new ProjectService();;

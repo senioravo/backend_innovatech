@@ -1,11 +1,11 @@
-"use strict";
-Object.defineProperty(exports, "__esModule", { value: true });
-const express = require('express');
-const projectRoutes = require('../routes/projectRoutes');
-const taskRoutes = require('../routes/taskRoutes');
-const consultationRoutes = require('../routes/consultationRoutes');
+// @ts-nocheck
+import express from 'express';
+import projectRoutes from '../routes/projectRoutes.js';
+import taskRoutes from '../routes/taskRoutes.js';
+import consultationRoutes from '../routes/consultationRoutes.js';
 const gatewayRouter = express.Router();
 gatewayRouter.use('/tasks', taskRoutes);
 gatewayRouter.use('/projects', projectRoutes);
 gatewayRouter.use('/consultations', consultationRoutes);
-module.exports = gatewayRouter;
+export default gatewayRouter;
+;

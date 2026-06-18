@@ -1,5 +1,5 @@
-export {};
-const authUpstreamClient = require('../../infrastructure/clients/authUpstreamClient');
+// @ts-nocheck
+import authUpstreamClient from '../../infrastructure/clients/authUpstreamClient.js';
 
 /**
  * Capa de aplicación: orquestación hacia **auth** (sin reglas de dominio del BFF).
@@ -38,4 +38,4 @@ const authOrchestrationService = {
   }
 };
 
-module.exports = authOrchestrationService;
+export default authOrchestrationService;;

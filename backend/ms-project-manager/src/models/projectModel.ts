@@ -1,5 +1,4 @@
 // @ts-nocheck
-export {};
 class ProjectModel {
   constructor({
     id,
@@ -26,4 +25,4 @@ class ProjectModel {
   }
 }
 
-module.exports = ProjectModel;
+export default ProjectModel;;

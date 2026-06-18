@@ -1,15 +1,22 @@
-"use strict";
-Object.defineProperty(exports, "__esModule", { value: true });
+// @ts-nocheck
+import dotenv from 'dotenv';
 // AS-TASK-21: Configuraci�n de base de datos production-ready
 // Mejoras: SSL seguro, graceful shutdown, retry logic, Winston logging, m�tricas Prometheus
-const { Pool } = require('pg');
-const { Gauge } = require('prom-client');
-require('dotenv').config();
+import { Pool } from 'pg';
+import { Gauge } from 'prom-client';
+dotenv.config();
 // AS-TASK-21: Importar Winston logger en vez de console.log
-const logger = require('../utils/logger');
+import logger from '../utils/logger.js';
 // AS-TASK-21: Validar variables de entorno requeridas
-if (!process.env.DATABASE_URL && !process.env.DB_PASSWORD) {
-    throw new Error('DATABASE_URL o DB_PASSWORD es requerido. Verifica tu archivo .env');
+// Acepta dos modos:
+// 1) DATABASE_URL (Neon/Cloud)
+// 2) Variables locales (DB_HOST/DB_PORT/DB_USER/DB_NAME[/DB_PASSWORD])
+const hasDatabaseUrl = Boolean(process.env.DATABASE_URL);
+const hasLocalDbConfig = Boolean(process.env.DB_HOST || process.env.DB_USER || process.env.DB_NAME || process.env.DB_PASSWORD);
+if (!hasDatabaseUrl && !hasLocalDbConfig) {
+    logger.warn('[Database] No se encontró configuración explícita de DB. Se usarán valores locales por defecto (localhost:5432/postgres).', {
+        taskId: 'AS-TASK-21'
+    });
 }
 // AS-TASK-21: SSL seguro - rejectUnauthorized: true en producci�n
 const sslConfig = process.env.DATABASE_URL
@@ -120,8 +127,5 @@ const checkConnection = async (retries = 3) => {
     logger.error('[Database] [ERROR] No se pudo conectar a PostgreSQL despu�s de todos los reintentos');
     return false;
 };
-module.exports = {
-    pool,
-    checkConnection,
-    query: (text, params) => pool.query(text, params)
-};
+const query = (text, params) => pool.query(text, params);
+export { pool, checkConnection, query };

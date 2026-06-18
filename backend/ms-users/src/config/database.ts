@@ -1,14 +1,10 @@
-// @ts-nocheck
-export {};
-// Configuración de base de datos para ms-users
-const { Pool } = require('pg');
-const { Gauge } = require('prom-client');
-require('dotenv').config();
+import { Pool } from 'pg';
+import { Gauge } from 'prom-client';
+import dotenv from 'dotenv';
+import logger from '../utils/logger.js';
 
-const logger = require('../utils/logger');
+dotenv.config();
 
-// Validar variables de entorno requeridas
-// Permite iniciar con defaults locales si no hay .env configurado
 const hasDatabaseUrl = Boolean(process.env.DATABASE_URL);
 const hasLocalDbConfig = Boolean(process.env.DB_HOST || process.env.DB_USER || process.env.DB_NAME || process.env.DB_PASSWORD);
 
@@ -18,14 +14,15 @@ if (!hasDatabaseUrl && !hasLocalDbConfig) {
   });
 }
 
-// SSL seguro para Neon u otros servicios gestionados
-const sslConfig = process.env.DATABASE_URL
-  ? {
-      rejectUnauthorized: false,
-    }
-  : false;
+const resolveSsl = (connectionString?: string) => {
+  if (!connectionString) return false;
+  if (/sslmode=disable/i.test(connectionString)) return false;
+  if (/@(users-db|localhost|127\.0\.0\.1)/.test(connectionString)) return false;
+  return { rejectUnauthorized: false };
+};
 
-// Configuración del pool
+const sslConfig = resolveSsl(process.env.DATABASE_URL);
+
 const poolConfig = process.env.DATABASE_URL
   ? {
       connectionString: process.env.DATABASE_URL,
@@ -36,7 +33,7 @@ const poolConfig = process.env.DATABASE_URL
     }
   : {
       host: process.env.DB_HOST || 'localhost',
-      port: process.env.DB_PORT || 5432,
+      port: Number(process.env.DB_PORT) || 5432,
       database: process.env.DB_NAME || 'innovatech_users',
       user: process.env.DB_USER || 'postgres',
       password: process.env.DB_PASSWORD || '',
@@ -45,10 +42,8 @@ const poolConfig = process.env.DATABASE_URL
       connectionTimeoutMillis: 2000,
     };
 
-// Pool de conexiones para PostgreSQL
 const pool = new Pool(poolConfig);
 
-// Métricas de Prometheus para monitoreo del pool
 const dbConnectionsGauge = new Gauge({
   name: 'users_db_connections_total',
   help: 'Total de conexiones activas en el pool de PostgreSQL (ms-users)'
@@ -59,13 +54,11 @@ const dbIdleConnectionsGauge = new Gauge({
   help: 'Conexiones idle disponibles en el pool de PostgreSQL (ms-users)'
 });
 
-// Actualizar métricas cada 10 segundos
 setInterval(() => {
   dbConnectionsGauge.set(pool.totalCount || 0);
   dbIdleConnectionsGauge.set(pool.idleCount || 0);
 }, 10000);
 
-// Evento de conexión exitosa
 pool.on('connect', () => {
   logger.info('[Database] Conexión establecida con PostgreSQL', {
     service: 'ms-users',
@@ -73,7 +66,6 @@ pool.on('connect', () => {
   });
 });
 
-// Evento de error
 pool.on('error', (err) => {
   logger.error('[Database] Error en el pool de conexiones', {
     error: err.message,
@@ -82,7 +74,6 @@ pool.on('error', (err) => {
   });
 });
 
-// Graceful shutdown
 process.on('SIGTERM', async () => {
   logger.info('[Database] Señal SIGTERM recibida - Cerrando pool de conexiones...');
   try {
@@ -90,7 +81,8 @@ process.on('SIGTERM', async () => {
     logger.info('[Database] Pool cerrado exitosamente');
     process.exit(0);
   } catch (error) {
-    logger.error('[Database] Error al cerrar pool', { error: error.message });
+    const err = error as Error;
+    logger.error('[Database] Error al cerrar pool', { error: err.message });
     process.exit(1);
   }
 });
@@ -102,18 +94,13 @@ process.on('SIGINT', async () => {
     logger.info('[Database] Pool cerrado exitosamente');
     process.exit(0);
   } catch (error) {
-    logger.error('[Database] Error al cerrar pool', { error: error.message });
+    const err = error as Error;
+    logger.error('[Database] Error al cerrar pool', { error: err.message });
     process.exit(1);
   }
 });
 
-/**
- * Función helper para ejecutar queries
- * @param {string} text - Query SQL
- * @param {Array} params - Parámetros de la query
- * @returns {Promise} - Resultado de la query
- */
-async function query(text, params) {
+async function query(text: string, params?: unknown[]) {
   const start = Date.now();
   try {
     const res = await pool.query(text, params);
@@ -124,15 +111,13 @@ async function query(text, params) {
     });
     return res;
   } catch (error) {
+    const err = error as Error;
     logger.error('[Database] Error en query', {
-      error: error.message,
+      error: err.message,
       query: text
     });
     throw error;
   }
 }
 
-module.exports = {
-  query,
-  pool
-};
+export { query, pool };

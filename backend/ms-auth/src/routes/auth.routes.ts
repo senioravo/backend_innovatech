@@ -1,17 +1,16 @@
 // @ts-nocheck
-export {};
 // AS-TASK-02: Integrar con API Gateway
 // Rutas de autenticación y autorización
 
-const express = require('express');
+import express from 'express';
 const router = express.Router();
-const authController = require('../controllers/auth.controller');
+import * as authController from '../controllers/auth.controller.js';
 
 // AS-TASK-07: Importar middleware de autenticación
-const { verifyToken } = require('../middleware/auth.middleware');
+import { verifyToken } from '../middleware/auth.middleware.js';
 
 // AS-TASK-12: Importar middleware de auditoría
-const { auditMiddleware, auditCriticalOperation } = require('../middleware/auditMiddleware');
+import { auditMiddleware, auditCriticalOperation } from '../middleware/auditMiddleware.js';
 
 // AS-TASK-12: Aplicar auditoría a todas las rutas (excepto health check)
 router.use((req, res, next) => {
@@ -58,6 +57,35 @@ router.use((req, res, next) => {
  *       401:
  *         description: Credenciales inválidas
  */
+// Registro: ms-auth orquesta creación en ms-users
+/**
+ * @openapi
+ * /api/auth/register:
+ *   post:
+ *     tags: [Auth]
+ *     summary: Registrar usuario
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             required: [nombre, email, password]
+ *             properties:
+ *               nombre:
+ *                 type: string
+ *               email:
+ *                 type: string
+ *               password:
+ *                 type: string
+ *               rol:
+ *                 type: string
+ *     responses:
+ *       201:
+ *         description: Usuario registrado
+ */
+router.post('/register', auditCriticalOperation('REGISTER'), authController.register);
+
 router.post('/login', auditCriticalOperation('LOGIN'), authController.login);
 
 /**
@@ -112,5 +140,4 @@ router.get('/roles/simple', authController.getRolesSimple);
  */
 router.get('/health', authController.health);
 
-module.exports = router;
-
+export default router;

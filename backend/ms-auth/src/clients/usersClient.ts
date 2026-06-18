@@ -1,9 +1,8 @@
 // @ts-nocheck
-export {};
 // Cliente HTTP para comunicación con ms-users
 // Responsabilidad: Facilitar llamadas entre microservicios
 
-const logger = require('../utils/logger');
+import logger from '../utils/logger.js';
 
 /**
  * Cliente para interactuar con el microservicio ms-users
@@ -45,11 +44,17 @@ class UsersClient {
         throw new Error(`Error al consultar ms-users: ${response.status} ${response.statusText}`);
       }
 
-      const data = await response.json();
-      
-      logger.info(`[UsersClient] Usuario encontrado - ID: ${data.id}`);
-      
-      return data;
+      const payload = await response.json();
+      const user = payload?.data ?? payload;
+
+      if (!user?.id) {
+        logger.warn('[UsersClient] Respuesta de ms-users sin usuario', { email });
+        return null;
+      }
+
+      logger.info(`[UsersClient] Usuario encontrado - ID: ${user.id}`);
+
+      return user;
     } catch (error) {
       logger.error('[UsersClient] Error al consultar ms-users', { 
         error: error.message,
@@ -88,11 +93,16 @@ class UsersClient {
         throw new Error(errorData.error || 'Error al crear usuario en ms-users');
       }
 
-      const data = await response.json();
-      
-      logger.info(`[UsersClient] Usuario creado exitosamente - ID: ${data.id}`);
-      
-      return data;
+      const payload = await response.json();
+      const user = payload?.data ?? payload;
+
+      if (!user?.id) {
+        throw new Error('Respuesta inválida de ms-users al crear usuario');
+      }
+
+      logger.info(`[UsersClient] Usuario creado exitosamente - ID: ${user.id}`);
+
+      return user;
     } catch (error) {
       logger.error('[UsersClient] Error al crear usuario en ms-users', { 
         error: error.message 
@@ -102,4 +112,4 @@ class UsersClient {
   }
 }
 
-module.exports = new UsersClient();
+export default new UsersClient();;

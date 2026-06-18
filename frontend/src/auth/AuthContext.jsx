@@ -1,11 +1,20 @@
-import { createContext, useContext, useMemo, useState } from 'react';
+import { createContext, useContext, useMemo, useState, useCallback } from 'react';
 import { getStoredUser, getToken, login as apiLogin, logout as apiLogout } from '../api/bffClient';
 
 const AuthContext = createContext(null);
 
 export function AuthProvider({ children }) {
   const [user, setUser] = useState(() => getStoredUser());
-  const token = getToken();
+  const [token, setToken] = useState(() => getToken());
+
+  const logout = useCallback(async () => {
+    try {
+      await apiLogout();
+    } finally {
+      setUser(null);
+      setToken(null);
+    }
+  }, []);
 
   const value = useMemo(
     () => ({
@@ -14,14 +23,12 @@ export function AuthProvider({ children }) {
       async login(email, password) {
         const data = await apiLogin(email, password);
         setUser(data.usuario);
+        setToken(data.token);
         return data;
       },
-      async logout() {
-        await apiLogout();
-        setUser(null);
-      }
+      logout
     }),
-    [user, token]
+    [user, token, logout]
   );
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;

@@ -1,20 +1,20 @@
-jest.mock('../src/repositories/taskRepository', () => ({
+jest.mock('../src/repositories/taskRepository.js', () => ({
   findByProjectId: jest.fn(),
   create: jest.fn(),
   update: jest.fn(),
   delete: jest.fn()
 }));
 
-jest.mock('../src/services/resourceAvailabilityService', () => ({
+jest.mock('../src/services/resourceAvailabilityService.js', () => ({
   assertProjectAvailable: jest.fn(),
   assertTaskInProject: jest.fn(),
   assertTaskAvailable: jest.fn()
 }));
 
-const taskRepository = require('../src/repositories/taskRepository');
-const resourceAvailabilityService = require('../src/services/resourceAvailabilityService');
-const taskService = require('../src/services/taskService');
-const { NotFoundError, ValidationError } = require('../src/utils/errorHandler');
+import taskRepository from '../src/repositories/taskRepository.js';
+import resourceAvailabilityService from '../src/services/resourceAvailabilityService.js';
+import taskService from '../src/services/taskService.js';
+import { NotFoundError, ValidationError } from '../src/utils/errorHandler.js';
 
 describe('taskService', () => {
   beforeEach(() => {

@@ -1,6 +1,5 @@
-"use strict";
-Object.defineProperty(exports, "__esModule", { value: true });
-const authUpstreamClient = require('../../infrastructure/clients/authUpstreamClient');
+// @ts-nocheck
+import authUpstreamClient from '../../infrastructure/clients/authUpstreamClient.js';
 /**
  * Capa de aplicación: orquestación hacia **auth** (sin reglas de dominio del BFF).
  */
@@ -30,4 +29,5 @@ const authOrchestrationService = {
         return authUpstreamClient.getUserById(userId, req);
     }
 };
-module.exports = authOrchestrationService;
+export default authOrchestrationService;
+;

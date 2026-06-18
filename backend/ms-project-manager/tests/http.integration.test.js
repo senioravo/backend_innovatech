@@ -1,13 +1,17 @@
-jest.mock('../src/repositories/projectRepository', () => ({
+import path from 'path';
+import { fileURLToPath } from 'url';
+import fs from 'fs';
+import jwt from 'jsonwebtoken';
+import request from 'supertest';
+
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
+
+jest.mock('../src/repositories/projectRepository.js', () => ({
   findByUserId: jest.fn().mockResolvedValue([])
 }));
 
-const fs = require('fs');
-const path = require('path');
-const jwt = require('jsonwebtoken');
-
 const privateKeyPath = path.join(__dirname, '../../ms-auth/keys/private.key');
-const publicKeyPath = path.join(__dirname, '../keys/public.key');
 
 function signTestToken(payload = {}) {
   const privateKey = fs.readFileSync(privateKeyPath, 'utf8');
@@ -26,12 +30,11 @@ function signTestToken(payload = {}) {
 let app;
 
 describe('Project Manager - Integración HTTP (Supertest)', () => {
-  const request = require('supertest');
-
-  beforeAll(() => {
+  beforeAll(async () => {
     jest.resetModules();
-    app = require('../src/app');
+    app = (await import('../src/app.js')).default;
   });
+
   describe('GET /health', () => {
     it('responde 200 con estado OK', async () => {
       const response = await request(app).get('/health');

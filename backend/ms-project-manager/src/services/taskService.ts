@@ -1,12 +1,12 @@
 // @ts-nocheck
-export {};
-const taskRepository = require('../repositories/taskRepository');
-const resourceAvailabilityService = require('./resourceAvailabilityService');
-const {
-  isAllowedTaskStatusTransition,
-  normalizeTaskStatus
-} = require('../constants/taskStatuses');
-const { NotFoundError, ValidationError } = require('../utils/errorHandler');
+import taskRepository from '../repositories/taskRepository.js';
+import resourceAvailabilityService from './resourceAvailabilityService.js';
+import collaborationService from './collaborationService.js';
+import ValidationService from './validationService.js';
+import { createTaskDto, pickTaskScheduleFields } from '../dtos/taskDto.js';
+import { isAllowedTaskStatusTransition,
+  normalizeTaskStatus } from '../constants/taskStatuses.js';
+import { NotFoundError, ValidationError } from '../utils/errorHandler.js';
 
 class TaskService {
   async createTask(projectId, userId, payload) {
@@ -23,6 +23,59 @@ class TaskService {
       startDate: payload.startDate ?? null,
       endDate: payload.endDate ?? null
     });
+  }
+
+  async createTaskFromRequest(projectId, userId, body) {
+    const validation = ValidationService.validateTaskInput(body);
+    if (!validation.isValid) throw new ValidationError(validation.errors);
+
+    const data = createTaskDto(body);
+    const schedule = pickTaskScheduleFields(body);
+    return this.createTask(projectId, userId, {
+      title: data.title,
+      description: typeof data.description === 'string' ? data.description : '',
+      completed:
+        data.completed !== undefined && data.completed !== null
+          ? Boolean(data.completed)
+          : false,
+      ...schedule
+    });
+  }
+
+  async updateTaskStatusFromRequest(projectId, taskId, userId, body) {
+    const validation = ValidationService.validateTaskStatusInput(body);
+    if (!validation.isValid) throw new ValidationError(validation.errors);
+    return this.updateTaskStatus(projectId, taskId, userId, validation.normalized);
+  }
+
+  async updateTaskFromRequest(taskId, userId, body) {
+    const validation = ValidationService.validateTaskUpdateInput(body);
+    if (!validation.isValid) throw new ValidationError(validation.errors);
+
+    const updates = {};
+    if (Object.prototype.hasOwnProperty.call(body, 'title')) {
+      updates.title = String(body.title).trim();
+    }
+    if (Object.prototype.hasOwnProperty.call(body, 'description')) {
+      updates.description = String(body.description).trim();
+    }
+    if (Object.prototype.hasOwnProperty.call(body, 'completed')) {
+      updates.completed = Boolean(body.completed);
+    }
+    if (Object.prototype.hasOwnProperty.call(body, 'status')) {
+      const st = normalizeTaskStatus(body.status);
+      updates.status = st;
+      updates.completed = st === 'DONE';
+    }
+    Object.assign(updates, pickTaskScheduleFields(body));
+
+    return this.updateTask(taskId, userId, updates);
+  }
+
+  async assignAssigneeFromRequest(taskId, userId, body) {
+    const validation = ValidationService.validateAssigneeInput(body);
+    if (!validation.isValid) throw new ValidationError(validation.errors);
+    return this.assignAssignee(taskId, userId, String(body.assigneeId).trim());
   }
 
   async listTasksByProject(projectId, userId) {
@@ -56,6 +109,18 @@ class TaskService {
     const completed = status === 'DONE';
     const task = await taskRepository.update(taskId, userId, { status, completed });
     if (!task) throw new NotFoundError('Task not found');
+
+    try {
+      await collaborationService.notifyUser(
+        userId,
+        status === 'DONE' ? 'milestone' : 'alert',
+        status === 'DONE' ? 'Tarea completada' : 'Cambio de estado en tarea',
+        `La tarea pasó de ${from} a ${status}.`
+      );
+    } catch {
+      // Notificación best-effort si la tabla aún no existe
+    }
+
     return task;
   }
 
@@ -96,4 +161,4 @@ class TaskService {
   }
 }
 
-module.exports = new TaskService();
+export default new TaskService();;

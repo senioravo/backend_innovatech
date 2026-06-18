@@ -1,12 +1,8 @@
-const {
-  handleNotFound,
-  handleError
-} = require('../src/utils/responseUtil');
-const {
-  ValidationError,
+import { handleNotFound,
+  handleError } from '../src/utils/responseUtil.js';
+import { ValidationError,
   ApplicationError,
-  UpstreamError
-} = require('../src/utils/errorHandler');
+  UpstreamError } from '../src/utils/errorHandler.js';
 
 function mockRes() {
   const res = { statusCode: 200, body: null };

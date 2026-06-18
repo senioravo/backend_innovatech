@@ -1,7 +1,7 @@
-export {};
-const express = require('express');
-const jwtAuthMiddleware = require('../middlewares/jwtAuthMiddleware');
-const authOrchestrationController = require('../controllers/auth-orchestration-controller');
+// @ts-nocheck
+import express from 'express';
+import jwtAuthMiddleware from '../middlewares/jwtAuthMiddleware.js';
+import authOrchestrationController from '../controllers/auth-orchestration-controller.js';
 
 /**
  * BFF-TASK-04 / BFF-TASK-05: sesión en raíz del prefijo API (front-friendly).
@@ -24,4 +24,4 @@ const router = express.Router();
 router.post('/login', authOrchestrationController.login);
 router.post('/logout', jwtAuthMiddleware, authOrchestrationController.logout);
 
-module.exports = router;
+export default router;

@@ -1,4 +1,4 @@
-const jwtHelper = require('../src/utils/jwt.helper');
+import jwtHelper from '../src/utils/jwt.helper.js';
 
 describe('jwt.helper - utilidades', () => {
   test('validateEmail valida formato', () => {

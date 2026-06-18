@@ -1,15 +1,13 @@
-export {};
-const authOrchestrationService = require('../auth/authOrchestrationService');
-const projectManagerUpstreamClient = require('../../infrastructure/clients/projectManagerUpstreamClient');
-const { UpstreamError } = require('../../utils/errorHandler');
-const {
-  buildUsuarioSesion,
+// @ts-nocheck
+import authOrchestrationService from '../auth/authOrchestrationService.js';
+import projectManagerUpstreamClient from '../../infrastructure/clients/projectManagerUpstreamClient.js';
+import { UpstreamError } from '../../utils/errorHandler.js';
+import { buildUsuarioSesion,
   toProyecto,
   toTarea,
   buildResumenTareas,
   extractAuthUser,
-  extractRolesCatalog
-} = require('../transformers/frontendResponseTransformers');
+  extractRolesCatalog } from '../transformers/frontendResponseTransformers.js';
 
 async function loadUserMap(assigneeIds, req) {
   const map = new Map();
@@ -77,4 +75,4 @@ const proyectosOrchestrationService = {
   }
 };
 
-module.exports = proyectosOrchestrationService;
+export default proyectosOrchestrationService;;

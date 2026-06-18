@@ -1,11 +1,11 @@
 // @ts-nocheck
-export {};
-const express = require('express');
-const authMiddleware = require('../middlewares/authMiddleware');
-const requireRole = require('../middlewares/roleMiddleware');
-const projectController = require('../controllers/project-controller');
-const resourceAvailabilityController = require('../controllers/resource-availability-controller');
-const taskController = require('../controllers/task-controller');
+import express from 'express';
+import authMiddleware from '../middlewares/authMiddleware.js';
+import requireRole from '../middlewares/roleMiddleware.js';
+import projectController from '../controllers/project-controller.js';
+import resourceAvailabilityController from '../controllers/resource-availability-controller.js';
+import taskController from '../controllers/task-controller.js';
+import collaborationController from '../controllers/collaboration-controller.js';
 
 const router = express.Router();
 
@@ -132,6 +132,28 @@ router.patch(
   requireRole('Gestor', 'Profesional', 'Directivo'),
   taskController.patchTaskStatus
 );
+
+router.get(
+  '/:projectId/tasks/:taskId/comments',
+  requireRole('Gestor', 'Profesional', 'Directivo'),
+  collaborationController.listComments
+);
+router.post(
+  '/:projectId/tasks/:taskId/comments',
+  requireRole('Gestor', 'Profesional', 'Directivo'),
+  collaborationController.addComment
+);
+router.get(
+  '/:projectId/tasks/:taskId/attachments',
+  requireRole('Gestor', 'Profesional', 'Directivo'),
+  collaborationController.listAttachments
+);
+router.post(
+  '/:projectId/tasks/:taskId/attachments',
+  requireRole('Gestor', 'Profesional', 'Directivo'),
+  collaborationController.addAttachment
+);
+
 /**
  * @openapi
  * /api/v1/projects/{projectId}/tasks:
@@ -407,4 +429,4 @@ router.patch(
  */
 router.delete('/:id', requireRole('Gestor'), projectController.deleteProject);
 
-module.exports = router;
+export default router;

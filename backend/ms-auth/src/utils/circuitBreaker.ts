@@ -1,12 +1,11 @@
 // @ts-nocheck
-export {};
 // AS-TASK-03: Configurar Circuit Breaker para llamadas internas
-// Implementación del patrón Circuit Breaker usando Opossum
+// Implementaciï¿½n del patrï¿½n Circuit Breaker usando Opossum
 
-const CircuitBreaker = require('opossum');
+import CircuitBreaker from 'opossum';
 
 /**
- * Configuración del Circuit Breaker según requisitos AS-TASK-03
+ * Configuraciï¿½n del Circuit Breaker segï¿½n requisitos AS-TASK-03
  * - Timeout: 3000ms
  * - Error Threshold: 50% (threshold: 0.5)
  * - Fallback: "Servicio no disponible"
@@ -16,13 +15,13 @@ const circuitBreakerOptions = {
   errorThresholdPercentage: parseInt(process.env.CIRCUIT_BREAKER_ERROR_THRESHOLD) || 50, // 50%
   resetTimeout: parseInt(process.env.CIRCUIT_BREAKER_RESET_TIMEOUT) || 30000, // 30 segundos para intentar cerrar
   rollingCountTimeout: 10000, // Ventana de tiempo para calcular errores
-  rollingCountBuckets: 10, // Número de buckets en la ventana
+  rollingCountBuckets: 10, // Nï¿½mero de buckets en la ventana
   name: 'InnovatechCircuitBreaker'
 };
 
 /**
  * Crear Circuit Breaker para envolver llamadas a servicios internos
- * @param {Function} asyncFunction - Función asíncrona a proteger
+ * @param {Function} asyncFunction - Funciï¿½n asï¿½ncrona a proteger
  * @param {String} serviceName - Nombre del servicio para logs
  * @returns {CircuitBreaker} Instancia del Circuit Breaker configurado
  */
@@ -46,7 +45,7 @@ function createCircuitBreaker(asyncFunction, serviceName = 'Unknown Service') {
   });
 
   breaker.on('halfOpen', () => {
-    console.warn(`[Circuit Breaker - ${serviceName}] ?? SEMI-ABIERTO: Intentando recuperación`);
+    console.warn(`[Circuit Breaker - ${serviceName}] ?? SEMI-ABIERTO: Intentando recuperaciï¿½n`);
   });
 
   breaker.on('close', () => {
@@ -73,9 +72,9 @@ function createCircuitBreaker(asyncFunction, serviceName = 'Unknown Service') {
 }
 
 /**
- * Obtener estadísticas del Circuit Breaker
+ * Obtener estadï¿½sticas del Circuit Breaker
  * @param {CircuitBreaker} breaker - Instancia del Circuit Breaker
- * @returns {Object} Estadísticas del breaker
+ * @returns {Object} Estadï¿½sticas del breaker
  */
 function getBreakerStats(breaker) {
   const stats = breaker.stats;
@@ -93,10 +92,4 @@ function getBreakerStats(breaker) {
   };
 }
 
-module.exports = {
-  createCircuitBreaker,
-  getBreakerStats,
-  circuitBreakerOptions
-};
-
-
+export { createCircuitBreaker, getBreakerStats, circuitBreakerOptions };

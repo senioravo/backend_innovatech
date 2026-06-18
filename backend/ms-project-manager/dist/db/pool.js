@@ -1,7 +1,6 @@
-"use strict";
-Object.defineProperty(exports, "__esModule", { value: true });
-const { Pool } = require('pg');
-const config = require('../config');
+// @ts-nocheck
+import { Pool } from 'pg';
+import config from '../config/index.js';
 let pool;
 function getPool() {
     if (!pool) {
@@ -23,4 +22,4 @@ async function endPool() {
         pool = null;
     }
 }
-module.exports = { getPool, endPool };
+export { getPool, endPool };

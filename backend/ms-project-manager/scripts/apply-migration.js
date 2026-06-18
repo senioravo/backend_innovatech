@@ -1,11 +1,15 @@
+import path from 'path';
+import { fileURLToPath } from 'url';
+import { readFileSync, readdirSync } from 'fs';
+import { getPool, endPool } from '../dist/db/pool.js';
+
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
+
 /**
  * Aplica todos los archivos .sql en db/migrations/ en orden lexicográfico.
  * Uso: npm run db:migrate
  */
-const { readFileSync, readdirSync } = require('fs');
-const path = require('path');
-const { getPool, endPool } = require('../dist/db/pool');
-
 async function main() {
   const migrationsDir = path.join(__dirname, '..', 'db', 'migrations');
   const files = readdirSync(migrationsDir)

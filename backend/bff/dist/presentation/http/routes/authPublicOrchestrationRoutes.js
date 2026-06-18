@@ -1,7 +1,6 @@
-"use strict";
-Object.defineProperty(exports, "__esModule", { value: true });
-const express = require('express');
-const authOrchestrationController = require('../controllers/auth-orchestration-controller');
+// @ts-nocheck
+import express from 'express';
+import authOrchestrationController from '../controllers/auth-orchestration-controller.js';
 /** Rutas /api/auth/* públicas (sin JWT en el BFF). */
 const router = express.Router();
 /**
@@ -35,4 +34,4 @@ router.post('/login', authOrchestrationController.login);
 router.get('/roles', authOrchestrationController.getRoles);
 router.get('/roles/simple', authOrchestrationController.getRolesSimple);
 router.get('/health', authOrchestrationController.health);
-module.exports = router;
+export default router;

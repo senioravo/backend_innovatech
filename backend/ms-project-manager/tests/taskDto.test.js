@@ -1,4 +1,4 @@
-const { createTaskDto, taskToDto, pickTaskScheduleFields } = require('../src/dtos/taskDto');
+import { createTaskDto, taskToDto, pickTaskScheduleFields } from '../src/dtos/taskDto.js';
 
 describe('taskDto', () => {
   test('createTaskDto normaliza título y descripción', () => {

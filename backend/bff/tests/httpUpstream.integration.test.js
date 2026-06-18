@@ -1,5 +1,5 @@
-const { upstreamJson } = require('../src/infrastructure/http/httpUpstream');
-const { UpstreamError } = require('../src/utils/errorHandler');
+import { upstreamJson } from '../src/infrastructure/http/httpUpstream.js';
+import { UpstreamError } from '../src/utils/errorHandler.js';
 
 describe('httpUpstream.upstreamJson', () => {
   afterEach(() => {

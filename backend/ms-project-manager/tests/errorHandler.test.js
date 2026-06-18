@@ -1,9 +1,7 @@
-const {
-  ValidationError,
+import { ValidationError,
   NotFoundError,
   ApplicationError,
-  UnauthorizedError
-} = require('../src/utils/errorHandler');
+  UnauthorizedError } from '../src/utils/errorHandler.js';
 
 describe('errorHandler', () => {
   test('ValidationError tiene status 400 y errors', () => {

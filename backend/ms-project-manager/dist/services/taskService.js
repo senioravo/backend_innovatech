@@ -1,9 +1,8 @@
-"use strict";
-Object.defineProperty(exports, "__esModule", { value: true });
-const taskRepository = require('../repositories/taskRepository');
-const resourceAvailabilityService = require('./resourceAvailabilityService');
-const { isAllowedTaskStatusTransition, normalizeTaskStatus } = require('../constants/taskStatuses');
-const { NotFoundError, ValidationError } = require('../utils/errorHandler');
+// @ts-nocheck
+import taskRepository from '../repositories/taskRepository.js';
+import resourceAvailabilityService from './resourceAvailabilityService.js';
+import { isAllowedTaskStatusTransition, normalizeTaskStatus } from '../constants/taskStatuses.js';
+import { NotFoundError, ValidationError } from '../utils/errorHandler.js';
 class TaskService {
     async createTask(projectId, userId, payload) {
         if (!projectId || !userId)
@@ -88,4 +87,5 @@ class TaskService {
         return true;
     }
 }
-module.exports = new TaskService();
+export default new TaskService();
+;

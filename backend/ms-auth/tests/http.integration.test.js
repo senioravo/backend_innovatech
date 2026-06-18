@@ -1,5 +1,5 @@
-const request = require('supertest');
-const app = require('../src/app');
+import request from 'supertest';
+import app from '../src/app.js';
 
 describe('Auth - Integración HTTP (Supertest)', () => {
   describe('GET /.well-known/jwks.json', () => {

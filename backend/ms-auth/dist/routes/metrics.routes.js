@@ -1,11 +1,10 @@
-"use strict";
-Object.defineProperty(exports, "__esModule", { value: true });
+// @ts-nocheck
 // AS-TASK-14: Rutas de métricas de Prometheus
 // Responsabilidad: Exponer endpoint /metrics para scraping de Prometheus
 // Principio SOLID: Single Responsibility - Solo maneja endpoints de métricas
-const express = require('express');
+import express from 'express';
 const router = express.Router();
-const { getMetrics } = require('../middleware/metricsMiddleware');
+import { getMetrics } from '../middleware/metricsMiddleware.js';
 /**
  * GET /metrics - Endpoint de métricas de Prometheus
  *
@@ -61,8 +60,8 @@ router.get('/metrics/health', (req, res) => {
             status: 'UP',
             timestamp: new Date().toISOString(),
             promClient: 'prom-client',
-            version: require('prom-client/package.json').version
+            version: 'unknown'
         }
     });
 });
-module.exports = router;
+export default router;

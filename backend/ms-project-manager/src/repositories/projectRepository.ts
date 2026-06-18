@@ -1,8 +1,7 @@
 // @ts-nocheck
-export {};
-const ProjectModel = require('../models/projectModel');
-const IProjectRepository = require('../interfaces/IProjectRepository');
-const { getPool } = require('../db/pool');
+import ProjectModel from '../models/projectModel.js';
+import IProjectRepository from '../interfaces/IProjectRepository.js';
+import { getPool } from '../db/pool.js';
 
 function mapProjectRow(row) {
   if (!row) return null;
@@ -132,4 +131,4 @@ class ProjectRepository extends IProjectRepository {
   }
 }
 
-module.exports = new ProjectRepository();
+export default new ProjectRepository();;

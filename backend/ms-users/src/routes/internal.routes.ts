@@ -1,14 +1,9 @@
-// @ts-nocheck
-export {};
-// Rutas internas - Solo para comunicación entre microservicios
-// Responsabilidad: Definir endpoints internos protegidos
+import express from 'express';
+import * as internalController from '../controllers/internal.controller.js';
+import { validateInternalToken } from '../middleware/internal.middleware.js';
 
-const express = require('express');
 const router = express.Router();
-const internalController = require('../controllers/internal.controller');
-const { validateInternalToken } = require('../middleware/internal.middleware');
 
-// ⚠️ IMPORTANTE: Todas las rutas internas requieren autenticación de servicio
 router.use(validateInternalToken);
 
 /**
@@ -16,17 +11,25 @@ router.use(validateInternalToken);
  * /api/users/internal/by-email/{email}:
  *   get:
  *     tags: [Internal]
- *     summary: Buscar usuario por email (incluye password hash)
- *     description: Endpoint interno para comunicación entre microservicios.
+ *     summary: Obtener usuario con password (solo servicios internos)
+ *     description: Requiere token interno de servicio (ms-auth)
  *     parameters:
  *       - in: path
  *         name: email
  *         required: true
  *         schema:
  *           type: string
+ *           format: email
+ *       - in: header
+ *         name: x-internal-token
+ *         required: true
+ *         schema:
+ *           type: string
  *     responses:
  *       200:
- *         description: Usuario encontrado
+ *         description: Usuario con hash de password
+ *       401:
+ *         description: Token interno inválido
  *       404:
  *         description: Usuario no encontrado
  */
@@ -37,14 +40,38 @@ router.get('/by-email/:email', internalController.getUserByEmailWithPassword);
  * /api/users/internal:
  *   post:
  *     tags: [Internal]
- *     summary: Crear usuario desde otro microservicio
- *     description: Endpoint interno para comunicación entre microservicios.
+ *     summary: Crear usuario (solo servicios internos)
+ *     description: Requiere token interno de servicio (ms-auth)
+ *     parameters:
+ *       - in: header
+ *         name: x-internal-token
+ *         required: true
+ *         schema:
+ *           type: string
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             required: [nombre, email, password]
+ *             properties:
+ *               nombre:
+ *                 type: string
+ *               email:
+ *                 type: string
+ *                 format: email
+ *               password:
+ *                 type: string
+ *               rol:
+ *                 type: string
+ *                 enum: [gestor, profesional, directivo]
  *     responses:
  *       201:
  *         description: Usuario creado
- *       400:
- *         description: Solicitud inválida
+ *       401:
+ *         description: Token interno inválido
  */
 router.post('/', internalController.createUserInternal);
 
-module.exports = router;
+export default router;

@@ -1,7 +1,6 @@
-"use strict";
-Object.defineProperty(exports, "__esModule", { value: true });
-const client = require('prom-client');
-const config = require('../config');
+// @ts-nocheck
+import client from 'prom-client';
+import config from '../config/index.js';
 const register = new client.Registry();
 client.collectDefaultMetrics({
     register,
@@ -67,8 +66,4 @@ async function metricsHandler(req, res) {
         res.status(500).type('text/plain').send(err.message);
     }
 }
-module.exports = {
-    register,
-    metricsMiddleware,
-    metricsHandler
-};
+export { register, metricsMiddleware, metricsHandler };

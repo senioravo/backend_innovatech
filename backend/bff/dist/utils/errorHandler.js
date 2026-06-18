@@ -1,6 +1,6 @@
-"use strict";
-Object.defineProperty(exports, "__esModule", { value: true });
+// @ts-nocheck
 class ApplicationError extends Error {
+    status;
     constructor(message, status = 500) {
         super(message);
         this.status = status;
@@ -8,6 +8,7 @@ class ApplicationError extends Error {
     }
 }
 class ValidationError extends ApplicationError {
+    errors;
     constructor(errors) {
         super('Validation failed', 400);
         this.errors = errors;
@@ -15,6 +16,8 @@ class ValidationError extends ApplicationError {
 }
 /** Error propagado desde auth o project-manager (respuesta reenviada al cliente). */
 class UpstreamError extends Error {
+    status;
+    data;
     constructor(status, data) {
         super(`Upstream HTTP ${status}`);
         this.status = status;
@@ -22,8 +25,4 @@ class UpstreamError extends Error {
         this.name = 'UpstreamError';
     }
 }
-module.exports = {
-    ApplicationError,
-    ValidationError,
-    UpstreamError
-};
+export { ApplicationError, ValidationError, UpstreamError };

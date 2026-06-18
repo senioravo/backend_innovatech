@@ -1,29 +1,33 @@
-export {};
-require('dotenv').config();
-/**
- * Arquitectura en capas (dependencias hacia abajo):
- * - presentation/http → application → infrastructure
- * - config / utils: transversales
- */
-const express = require('express');
-const cors = require('cors');
-const swaggerUi = require('swagger-ui-express');
-const swaggerJsdoc = require('swagger-jsdoc');
-const config = require('./config');
-const apiGateway = require('./presentation/http/gateway/apiGateway');
-const { handleNotFound, handleError } = require('./utils/responseUtil');
+// @ts-nocheck
+import express from 'express';
+import cors from 'cors';
+import path from 'path';
+import { fileURLToPath } from 'url';
+import dotenv from 'dotenv';
+import swaggerUi from 'swagger-ui-express';
+import swaggerJsdoc from 'swagger-jsdoc';
+import config from './config/index.js';
+import apiGateway from './presentation/http/gateway/apiGateway.js';
+import { handleNotFound, handleError } from './utils/responseUtil.js';
+import { buildSwaggerApiGlobs } from './utils/swaggerPaths.js';
+
+dotenv.config();
+
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
 
 const app = express();
+const PORT = config.PORT || 3010;
 
 const swaggerSpec = swaggerJsdoc({
   definition: {
     openapi: '3.0.0',
     info: {
-      title: 'BFF API',
+      title: 'BFF API (Backend for Frontend)',
       version: '1.0.0',
-      description: 'Documentación del Backend For Frontend de Innovatech',
+      description: 'Orquestador que agrega auth, usuarios y project-manager para el frontend',
     },
-    servers: [{ url: `http://localhost:${config.PORT}` }],
+    servers: [{ url: `http://localhost:${PORT}` }],
     components: {
       securitySchemes: {
         bearerAuth: {
@@ -34,14 +38,17 @@ const swaggerSpec = swaggerJsdoc({
       },
     },
   },
-  apis: [`${__dirname}/presentation/http/routes/*.ts`, `${__dirname}/app.ts`],
+  apis: buildSwaggerApiGlobs(__dirname, ['presentation/http/routes']),
 });
 
 app.use(express.json());
 app.use(cors());
 
 app.use('/api-docs', swaggerUi.serve, swaggerUi.setup(swaggerSpec));
-app.get('/api-docs.json', (req, res) => res.json(swaggerSpec));
+app.get('/api-docs.json', (req, res) => {
+  res.setHeader('Content-Type', 'application/json');
+  res.json(swaggerSpec);
+});
 
 /**
  * @openapi
@@ -54,9 +61,10 @@ app.get('/api-docs.json', (req, res) => res.json(swaggerSpec));
  *         description: Servicio operativo
  */
 app.get('/health', (req, res) => {
-  res.json({
-    status: 'OK',
-    service: 'bff'
+  res.status(200).json({
+    status: 'ok',
+    service: 'bff',
+    timestamp: new Date().toISOString(),
   });
 });
 
@@ -65,25 +73,9 @@ app.use(config.API_GATEWAY_PREFIX, apiGateway);
 app.use(handleNotFound);
 app.use(handleError);
 
-const PORT = config.PORT;
-
-// Capturar errores no manejados para diagnóstico
-process.on('unhandledRejection', (reason, promise) => {
-  console.error('❌ Unhandled Rejection detectado en BFF:');
-  console.error('Razón:', reason);
-  console.error('Promise:', promise);
-  // No salir inmediatamente para poder ver el error
-});
-
-process.on('uncaughtException', (error) => {
-  console.error('❌ Uncaught Exception detectado en BFF:');
-  console.error(error);
-  // Dar tiempo para ver el error antes de salir
-  setTimeout(() => process.exit(1), 1000);
-});
-
 app.listen(PORT, () => {
-  console.log(`BFF escuchando en puerto ${PORT}`);
+  console.log(`🚀 BFF (Orquestador) escuchando en puerto ${PORT}`);
+  console.log(`📚 Swagger: http://localhost:${PORT}/api-docs`);
 });
 
-module.exports = app;
+export default app;

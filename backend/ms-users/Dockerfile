@@ -2,9 +2,10 @@ FROM node:20-alpine
 WORKDIR /app
 
 COPY package*.json ./
-RUN npm ci
+RUN npm install
 
 COPY src ./src
+COPY scripts ./scripts
 COPY tsconfig.json ./
 RUN npm run build
 RUN npm prune --omit=dev

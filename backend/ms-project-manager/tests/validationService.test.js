@@ -1,4 +1,4 @@
-const ValidationService = require('../src/services/validationService');
+import ValidationService from '../src/services/validationService.js';
 
 describe('ValidationService', () => {
   test('validateProjectInput rechaza nombre corto', () => {

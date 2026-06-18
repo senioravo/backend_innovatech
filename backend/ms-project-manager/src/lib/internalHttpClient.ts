@@ -1,6 +1,5 @@
 // @ts-nocheck
-export {};
-const { CircuitBreaker } = require('./circuitBreaker');
+import { CircuitBreaker } from './circuitBreaker.js';
 
 /**
  * Internal HTTP client with a per-dependency circuit breaker.
@@ -83,4 +82,4 @@ function createInternalHttpClient({
   };
 }
 
-module.exports = { createInternalHttpClient };
+export { createInternalHttpClient };

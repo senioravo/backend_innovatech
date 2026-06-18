@@ -2,16 +2,18 @@
   "name": "users-microservice",
   "version": "1.0.0",
   "description": "Microservicio de gestión de usuarios para Innovatech",
+  "type": "module",
   "main": "dist/app.js",
   "scripts": {
     "build": "tsc",
     "typecheck": "tsc --noEmit",
     "start": "node dist/app.js",
-    "dev": "ts-node-dev --respawn --transpile-only src/app.ts",
-    "test": "jest --verbose --coverage",
-    "test:watch": "jest --watch",
-    "test:coverage": "jest --coverage --coverageReporters=text-lcov --coverageReporters=html",
-    "test:ci": "jest --ci --coverage --maxWorkers=2"
+    "dev": "tsx watch src/app.ts",
+    "db:seed": "node scripts/seed-users.js",
+    "test": "node --experimental-vm-modules ./node_modules/jest/bin/jest.js --verbose --coverage",
+    "test:watch": "node --experimental-vm-modules ./node_modules/jest/bin/jest.js --watch",
+    "test:coverage": "node --experimental-vm-modules ./node_modules/jest/bin/jest.js --coverage --coverageReporters=text-lcov --coverageReporters=html",
+    "test:ci": "node --experimental-vm-modules ./node_modules/jest/bin/jest.js --ci --coverage --maxWorkers=2"
   },
   "keywords": [
     "users",
@@ -49,6 +51,7 @@
     "supertest": "^7.2.2",
     "ts-jest": "^29.4.11",
     "ts-node-dev": "^2.0.0",
+    "tsx": "^4.22.4",
     "typescript": "^6.0.3"
   }
 }

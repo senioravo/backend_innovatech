@@ -1,8 +1,7 @@
-"use strict";
-Object.defineProperty(exports, "__esModule", { value: true });
-const TaskModel = require('../models/taskModel');
-const projectRepository = require('./projectRepository');
-const { getPool } = require('../db/pool');
+// @ts-nocheck
+import TaskModel from '../models/taskModel.js';
+import projectRepository from './projectRepository.js';
+import { getPool } from '../db/pool.js';
 function mapTaskRow(row) {
     if (!row)
         return null;
@@ -153,4 +152,5 @@ class TaskRepository {
         await pool.query(`DELETE FROM "TASK" WHERE project_id = $1`, [projectId]);
     }
 }
-module.exports = new TaskRepository();
+export default new TaskRepository();
+;

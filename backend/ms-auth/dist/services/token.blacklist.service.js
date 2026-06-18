@@ -1,11 +1,10 @@
-"use strict";
-Object.defineProperty(exports, "__esModule", { value: true });
+// @ts-nocheck
 // AS-TASK-07: Servicio de Blacklist de Tokens JWT
 // Responsabilidad: Gestionar tokens invalidados (logout)
 // Principio SOLID: Single Responsibility - Solo gestiona blacklist
-const jwtHelper = require('../utils/jwt.helper');
+import jwtHelper from '../utils/jwt.helper.js';
 // AS-TASK-21: Importar Winston logger
-const logger = require('../utils/logger');
+import logger from '../utils/logger.js';
 /**
  * Servicio de Blacklist de Tokens
  * Almacena tokens JWT invalidados en memoria
@@ -159,4 +158,5 @@ class TokenBlacklistService {
     }
 }
 // Exportar instancia única (Singleton pattern)
-module.exports = new TokenBlacklistService();
+export default new TokenBlacklistService();
+;

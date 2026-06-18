@@ -1,5 +1,5 @@
-export {};
-const projectManagerOrchestrationService = require('../../../application/projectManager/projectManagerOrchestrationService');
+// @ts-nocheck
+import projectManagerOrchestrationService from '../../../application/projectManager/projectManagerOrchestrationService.js';
 
 const projectManagerOrchestrationController = {
   async forward(req, res, next) {
@@ -18,4 +18,4 @@ const projectManagerOrchestrationController = {
   }
 };
 
-module.exports = projectManagerOrchestrationController;
+export default projectManagerOrchestrationController;;

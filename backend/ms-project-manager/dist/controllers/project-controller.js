@@ -1,10 +1,9 @@
-"use strict";
-Object.defineProperty(exports, "__esModule", { value: true });
-const projectService = require('../services/projectService');
-const ValidationService = require('../services/validationService');
-const { createProjectDto, projectToDto, pickProjectScheduleFields } = require('../dtos/projectDto');
-const { ValidationError } = require('../utils/errorHandler');
-const { auditFromRequest } = require('../utils/auditLog');
+// @ts-nocheck
+import projectService from '../services/projectService.js';
+import ValidationService from '../services/validationService.js';
+import { createProjectDto, projectToDto, pickProjectScheduleFields } from '../dtos/projectDto.js';
+import { ValidationError } from '../utils/errorHandler.js';
+import { auditFromRequest } from '../utils/auditLog.js';
 const projectController = {
     async listProjects(req, res, next) {
         try {
@@ -129,4 +128,5 @@ const projectController = {
         }
     }
 };
-module.exports = projectController;
+export default projectController;
+;

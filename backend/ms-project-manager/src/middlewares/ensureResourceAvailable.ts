@@ -1,6 +1,5 @@
 // @ts-nocheck
-export {};
-const resourceAvailabilityService = require('../services/resourceAvailabilityService');
+import resourceAvailabilityService from '../services/resourceAvailabilityService.js';
 
 /**
  * Loads project if it exists and belongs to the user; sets req.availableProject.
@@ -56,8 +55,4 @@ function ensureTaskInProject(projectParam = 'projectId', taskParam = 'taskId') {
   };
 }
 
-module.exports = {
-  ensureProjectAvailable,
-  ensureTaskAvailable,
-  ensureTaskInProject
-};
+export { ensureProjectAvailable, ensureTaskAvailable, ensureTaskInProject };

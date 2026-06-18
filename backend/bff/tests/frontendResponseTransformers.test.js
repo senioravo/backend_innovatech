@@ -1,10 +1,8 @@
-const {
-  toProyecto,
+import { toProyecto,
   toTarea,
   buildResumenTareas,
   buildUsuarioSesion,
-  extractRolesCatalog
-} = require('../src/application/transformers/frontendResponseTransformers');
+  extractRolesCatalog } from '../src/application/transformers/frontendResponseTransformers.js';
 
 describe('frontendResponseTransformers', () => {
   const userMap = new Map([

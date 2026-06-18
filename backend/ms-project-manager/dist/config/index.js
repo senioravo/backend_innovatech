@@ -1,12 +1,11 @@
-"use strict";
-Object.defineProperty(exports, "__esModule", { value: true });
-const dotenv = require('dotenv');
+// @ts-nocheck
+import dotenv from 'dotenv';
 dotenv.config();
 const int = (v, fallback) => {
     const n = parseInt(v, 10);
     return Number.isFinite(n) ? n : fallback;
 };
-module.exports = {
+export default {
     PORT: process.env.PORT || 3002,
     JWT_SECRET: process.env.JWT_SECRET || 'cambiar_en_produccion',
     API_GATEWAY_PREFIX: process.env.API_GATEWAY_PREFIX || '/api/v1',

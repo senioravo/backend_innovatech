@@ -1,7 +1,5 @@
-const {
-  isValidProjectStatus,
-  normalizeProjectStatus
-} = require('../src/constants/projectStatuses');
+import { isValidProjectStatus,
+  normalizeProjectStatus } from '../src/constants/projectStatuses.js';
 
 describe('projectStatuses', () => {
   test('normalizeProjectStatus convierte a minúsculas', () => {

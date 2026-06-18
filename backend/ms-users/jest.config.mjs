@@ -1,5 +1,6 @@
-module.exports = {
-  preset: 'ts-jest',
+/** @type {import('jest').Config} */
+export default {
+  preset: 'ts-jest/presets/default-esm',
   testEnvironment: 'node',
   roots: ['<rootDir>/tests'],
   testMatch: ['**/__tests__/**/*.js', '**/?(*.)+(spec|test).js'],
@@ -9,32 +10,31 @@ module.exports = {
   collectCoverageFrom: [
     'src/**/*.{js,ts}',
     '!src/app.{js,ts}',
-    '!src/presentation/http/controllers/**',
     '!src/**/*.spec.js',
     '!src/**/*.test.js'
   ],
   coverageThreshold: {
-    global: {
-      branches: 50,
-      functions: 50,
-      lines: 50,
-      statements: 50
-    }
+    global: { branches: 70, functions: 70, lines: 70, statements: 70 }
   },
-  testTimeout: 10000,
+  testTimeout: 5000,
   setupFiles: ['<rootDir>/tests/setup.js'],
+  extensionsToTreatAsEsm: ['.ts'],
+  moduleNameMapper: {
+    '^(\\.{1,2}/.*)\\.js$': '$1'
+  },
+  transform: {
+    '^.+\\.tsx?$': ['ts-jest', { useESM: true }]
+  },
   moduleFileExtensions: ['ts', 'js', 'json'],
   verbose: true,
   clearMocks: true,
-  resetMocks: true,
-  restoreMocks: true,
   testPathIgnorePatterns: ['/node_modules/', '/coverage/'],
   reporters: [
     'default',
     [
       'jest-html-reporter',
       {
-        pageTitle: 'BFF Service - Test Report',
+        pageTitle: 'Users Service - Test Report',
         outputPath: 'coverage/test-report.html',
         includeFailureMsg: true,
         includeConsoleLog: true,

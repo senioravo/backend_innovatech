@@ -1,4 +1,4 @@
-export {};
+// @ts-nocheck
 const TASK_STATUSES = ['PENDING', 'IN_PROGRESS', 'IN_REVIEW', 'DONE'];
 
 function normalizeRoleKey(role) {
@@ -94,12 +94,4 @@ function extractRolesCatalog(payload) {
   return Array.isArray(payload.data) ? payload.data : [];
 }
 
-module.exports = {
-  normalizeRoleKey,
-  buildUsuarioSesion,
-  toProyecto,
-  toTarea,
-  buildResumenTareas,
-  extractAuthUser,
-  extractRolesCatalog
-};
+export { normalizeRoleKey, buildUsuarioSesion, toProyecto, toTarea, buildResumenTareas, extractAuthUser, extractRolesCatalog };

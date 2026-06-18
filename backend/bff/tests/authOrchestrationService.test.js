@@ -1,12 +1,12 @@
-jest.mock('../src/infrastructure/clients/authUpstreamClient', () => ({
+jest.mock('../src/infrastructure/clients/authUpstreamClient.js', () => ({
   register: jest.fn(),
   login: jest.fn(),
   getRoles: jest.fn(),
   health: jest.fn()
 }));
 
-const authUpstreamClient = require('../src/infrastructure/clients/authUpstreamClient');
-const authOrchestrationService = require('../src/application/auth/authOrchestrationService');
+import authUpstreamClient from '../src/infrastructure/clients/authUpstreamClient.js';
+import authOrchestrationService from '../src/application/auth/authOrchestrationService.js';
 
 describe('authOrchestrationService', () => {
   beforeEach(() => {

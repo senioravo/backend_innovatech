@@ -1,5 +1,4 @@
 // @ts-nocheck
-export {};
 /**
  * Contract for project repository implementations.
  */
@@ -33,4 +32,4 @@ class IProjectRepository {
   }
 }
 
-module.exports = IProjectRepository;
+export default IProjectRepository;;

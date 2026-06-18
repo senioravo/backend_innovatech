@@ -1,17 +1,21 @@
 // @ts-nocheck
-export {};
-require('dotenv').config();
-console.log("DATABASE_URL:", process.env.DATABASE_URL);
-const express = require('express');
-const cors = require('cors');
-const swaggerUi = require('swagger-ui-express');
-const swaggerJsdoc = require('swagger-jsdoc');
-const config = require('./config');
-const apiGateway = require('./gateway/apiGateway');
-const { getAuthDependencyStatus } = require('./clients/authServiceClient');
-const { handleNotFound, handleError } = require('./utils/responseUtil');
-const { verifyDatabase } = require('./db/verify');
-const { metricsMiddleware, metricsHandler } = require('./metrics/prometheus');
+import path from 'path';
+import { fileURLToPath } from 'url';
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
+import dotenv from 'dotenv';
+dotenv.config();
+import express from 'express';
+import cors from 'cors';
+import swaggerUi from 'swagger-ui-express';
+import swaggerJsdoc from 'swagger-jsdoc';
+import config from './config/index.js';
+import apiGateway from './gateway/apiGateway.js';
+import { getAuthDependencyStatus } from './clients/authServiceClient.js';
+import { handleNotFound, handleError } from './utils/responseUtil.js';
+import { verifyDatabase } from './db/verify.js';
+import { metricsMiddleware, metricsHandler } from './metrics/prometheus.js';
+import { buildSwaggerApiGlobs } from './utils/swaggerPaths.js';
 
 const app = express();
 
@@ -34,7 +38,7 @@ const swaggerSpec = swaggerJsdoc({
       },
     },
   },
-  apis: [`${__dirname}/routes/*.ts`, `${__dirname}/app.ts`],
+  apis: buildSwaggerApiGlobs(__dirname, ['routes']),
 });
 
 app.use(express.json());
@@ -76,20 +80,18 @@ const PORT = config.PORT;
 if (process.env.NODE_ENV !== 'test') {
   verifyDatabase()
     .then(() => {
+      // Caso 1: Conexión exitosa
       app.listen(PORT, () => {
         console.log(`🚀 Project Manager ejecutándose en puerto ${PORT}`);
       });
     })
     .catch((err) => {
-      console.error('No se pudo conectar a PostgreSQL:', err.message);
-      process.exit(1);
+      // Caso 2: Error en la conexión, pero el servidor IGUAL arranca
+      console.warn('⚠️ Advertencia: Project Manager iniciará sin verificación de PostgreSQL:', err.message);
+      app.listen(PORT, () => {
+        console.log(`🚀 Project Manager ejecutándose en puerto ${PORT}`);
+      });
     });
-  })
-  .catch((err) => {
-    console.warn('Proyecto Manager iniciará sin verificación de PostgreSQL:', err.message);
-    app.listen(PORT, () => {
-      console.log(`🚀 Project Manager ejecutándose en puerto ${PORT}`);
-    });
-  });
+}
 
-module.exports = app;
+export default app;;

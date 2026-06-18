@@ -1,8 +1,7 @@
 // @ts-nocheck
-export {};
-const TaskModel = require('../models/taskModel');
-const projectRepository = require('./projectRepository');
-const { getPool } = require('../db/pool');
+import TaskModel from '../models/taskModel.js';
+import projectRepository from './projectRepository.js';
+import { getPool } from '../db/pool.js';
 
 function mapTaskRow(row) {
   if (!row) return null;
@@ -174,4 +173,4 @@ class TaskRepository {
   }
 }
 
-module.exports = new TaskRepository();
+export default new TaskRepository();;

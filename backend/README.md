@@ -1,21 +1,24 @@
 # InnovaTech — Backend
 
-Plataforma backend basada en **microservicios** para gestión de proyectos, tareas y autenticación. El cliente (frontend) se comunica **únicamente** con el **API Gateway (KrakenD)**, que valida JWT y enruta al **BFF**.
+Plataforma backend basada en **microservicios** para autenticación, gestión de usuarios y administración de proyectos/tareas. El frontend se comunica **únicamente** con el **API Gateway (KrakenD)** en `/api/v1`. KrakenD valida JWT, aplica roles y reenvía al **BFF**, que orquesta las llamadas internas.
+
+> **Rama de trabajo actual:** `refactor/rosales` — integración dashboard, JWT RS256 + KrakenD, Docker local completo y refactor de capas (controllers delgados, repository pattern, validación centralizada).
 
 ---
 
 ## Tabla de contenidos
 
 1. [Visión general](#visión-general)
-2. [Arquitectura](#arquitectura)
+2. [Arquitectura y flujo de peticiones](#arquitectura-y-flujo-de-peticiones)
 3. [Microservicios](#microservicios)
-4. [Patrones y justificación](#patrones-y-justificación)
-5. [Estrategia de branching (Git)](#estrategia-de-branching-git)
-6. [Testing](#testing)
-7. [Inicio rápido](#inicio-rápido)
-8. [Despliegue Kubernetes](#despliegue-kubernetes)
+4. [Seguridad (JWT RS256)](#seguridad-jwt-rs256)
+5. [Patrones de diseño](#patrones-de-diseño)
+6. [Inicio rápido (Docker Compose)](#inicio-rápido-docker-compose)
+7. [Despliegue Kubernetes e Ingress](#despliegue-kubernetes-e-ingress)
+8. [Testing](#testing)
 9. [Estructura del repositorio](#estructura-del-repositorio)
-10. [Documentación de estudio](#documentación-de-estudio)
+10. [Documentación adicional](#documentación-adicional)
+11. [Matriz de requerimientos (evaluación)](#matriz-de-requerimientos-evaluación)
 
 ---
 
@@ -23,206 +26,319 @@ Plataforma backend basada en **microservicios** para gestión de proyectos, tare
 
 | Aspecto | Detalle |
 |--------|---------|
-| **Entrada HTTP** | `http://localhost:8010/api/v1/...` |
-| **Stack** | Node.js, Express, PostgreSQL (Neon), Docker Compose, KrakenD |
-| **Seguridad** | JWT con RSA (RS256) - KrakenD valida tokens, Auth firma con clave privada. Ver [docs/JWT_RSA_MIGRATION.md](../docs/JWT_RSA_MIGRATION.md) |
-| **Roles** | `gestor`, `profesional`, `directivo` (RBAC) |
+| **Entrada HTTP (local)** | `http://localhost:8010/api/v1/...` |
+| **Entrada HTTP (K8s)** | `http://api.innovatech.local/api/v1/...` (vía Ingress NGINX) |
+| **Stack** | Node.js 20+, TypeScript, Express, PostgreSQL, Docker Compose, KrakenD 2.7 |
+| **Autenticación** | JWT **RS256** — `ms-auth` firma con clave privada; KrakenD verifica vía JWKS |
+| **Roles (RBAC)** | `gestor`, `profesional`, `directivo` |
+| **Bases de datos** | **Database per Service**: `users-db` (ms-users) y `pm-db` (project-manager) |
 
-El diseño separa **identidad** (Auth), **dominio de negocio** (Project Manager) y **adaptación al cliente** (BFF), de modo que el frontend no conoce URLs internas ni contratos crudos de cada microservicio. **KrakenD** centraliza autenticación, CORS y rate limiting.
+### Decisiones clave de diseño
+
+- **Database per Service:** cada microservicio tiene su propia base PostgreSQL. Los datos de usuarios viven en `ms-users`, no en `ms-auth`.
+- **API Gateway centralizado:** KrakenD concentra CORS, validación JWT, control de roles y propagación de identidad (`X-User-*`).
+- **BFF como orquestador:** adapta respuestas al frontend (español, agregación) sin duplicar lógica de dominio.
+- **Comunicación interna:** `ms-auth` llama a `ms-users` por HTTP con token interno (`X-Internal-Token`) para login/registro.
 
 ---
 
-## Arquitectura
+## Arquitectura y flujo de peticiones
+
+### Diagrama general
 
 ```mermaid
-flowchart LR
+flowchart TB
   subgraph Cliente
-    FE[Frontend React]
+    FE[Frontend React Vite :5173]
   end
 
-  subgraph Infra
-    GW[API Gateway<br/>KrakenD :8080]
+  subgraph Entrada
+    ING[Ingress NGINX<br/>solo Kubernetes]
+    GW[API Gateway KrakenD :8010 / :8080]
   end
 
-  subgraph Backend
+  subgraph Orquestación
     BFF[BFF :3010]
-    AUTH[Auth :3001]
-    PM[Project Manager :3002]
+  end
+
+  subgraph Microservicios
+    AUTH[ms-auth :3001]
+    USERS[ms-users :3003]
+    PM[ms-project-manager :3002]
   end
 
   subgraph Datos
-    DBA[(PostgreSQL Auth)]
-    DBP[(PostgreSQL PM)]
+    UDB[(PostgreSQL users-db :5433)]
+    PMDB[(PostgreSQL pm-db :5434)]
   end
 
-  FE -->|HTTPS /api/v1 + JWT| GW
-  GW -->|Valida JWT| AUTH
-  GW -->|Headers X-User-*| BFF
+  FE -->|HTTP /api/v1| ING
+  FE -->|local sin Ingress| GW
+  ING --> GW
+  GW -->|JWT + X-User-*| BFF
   BFF --> AUTH
   BFF --> PM
-  AUTH --> DBA
-  PM --> DBP
+  AUTH -->|login/register| USERS
+  USERS --> UDB
+  PM --> PMDB
+  GW -->|JWKS| AUTH
 ```
 
-**Flujo típico (login + listar proyectos):**
+### Local vs Kubernetes
+
+| Capa | Docker Compose | Kubernetes |
+|------|----------------|--------------|
+| Puerta de entrada | Puerto `8010` expuesto por KrakenD | **Ingress NGINX** → Service `api-gateway:8080` |
+| DNS interno | Nombres de servicio Docker (`bff`, `auth`, `users`…) | DNS del cluster (`bff`, `ms-auth`, `ms-users`…) |
+| Bases de datos | Contenedores `users-db` y `pm-db` | URLs en Secrets (Neon, RDS, etc.) |
+
+En local **no hay Ingress**: KrakenD cumple el rol de punto único de entrada. En K8s, el **Ingress** abre el cluster hacia fuera y delega en KrakenD.
+
+### Flujo: login (ruta pública)
 
 ```mermaid
 sequenceDiagram
-  participant C as Cliente
-  participant G as API Gateway
+  participant C as Frontend
+  participant G as KrakenD
   participant B as BFF
-  participant A as Auth
-  participant P as Project Manager
+  participant A as ms-auth
+  participant U as ms-users
 
-  C->>G: POST /api/v1/login
-  G->>B: forward
+  C->>G: POST /api/v1/auth/login
+  G->>B: forward (sin validar JWT)
   B->>A: POST /api/auth/login
-  A-->>B: JWT + usuario
-  B-->>C: sesión unificada
+  A->>U: GET /internal/by-email/:email
+  U-->>A: usuario + hash password
+  A->>A: verifyPassword + generar JWT RS256
+  A-->>B: { token, user }
+  B-->>C: respuesta unificada
+```
 
-  C->>G: GET /api/v1/proyectos + Bearer
-  G->>B: forward
-  B->>P: GET /api/v1/projects
-  B->>A: GET usuarios (enriquecimiento)
-  B-->>C: JSON en español (proyectos + responsables)
+### Flujo: listar proyectos (ruta protegida)
+
+```mermaid
+sequenceDiagram
+  participant C as Frontend
+  participant G as KrakenD
+  participant B as BFF
+  participant P as ms-project-manager
+
+  C->>G: GET /api/v1/projects + Bearer JWT
+  G->>G: Valida JWT (JWKS de ms-auth)
+  G->>G: Inyecta X-User-Id, X-User-Email, X-User-Role
+  G->>B: forward con headers
+  B->>P: GET /api/v1/projects + X-User-*
+  P->>P: Repository → PostgreSQL
+  P-->>B: proyectos JSON
+  B-->>C: respuesta adaptada al frontend
 ```
 
 ---
 
 ## Microservicios
 
-| Servicio | Puerto (Docker) | Responsabilidad | Documentación |
-|----------|-----------------|-----------------|---------------|
-| **API Gateway** | 8010 | Punto único de entrada, proxy a BFF | `api-gateway/nginx.conf` |
-| **BFF** | 3010 | Orquestación, roles, contrato front | [README-ESTUDIO](bff/README-ESTUDIO.md) |
-| **Auth** | 3001 | Registro, login, JWT, roles, blacklist | [README-ESTUDIO](ms-auth/README-ESTUDIO.md) |
-| **Project Manager** | 3002 | Proyectos, tareas, consultas, auditoría | [README-ESTUDIO](ms-project-manager/README-ESTUDIO.md) |
+| Servicio | Puerto (Docker) | Responsabilidad | Capas principales |
+|----------|-----------------|-----------------|-------------------|
+| **API Gateway** | 8010 → 8080 | Entrada única, JWT, CORS, roles | `api-gateway/krakend.json` |
+| **BFF** | 3010 (interno) | Orquestación hacia auth y PM | `presentation` → `application` → `infrastructure` |
+| **ms-auth** | 3001 (interno) | Login, logout, registro, JWT, blacklist, JWKS | Controller → **AuthService** → usersClient |
+| **ms-users** | 3003 (interno) | CRUD usuarios, endpoints internos para auth | Controller → **UserService** → **UserRepository** |
+| **ms-project-manager** | 3002 (interno) | Proyectos, tareas, estados, auditoría | Controller → Service → **Repository** |
+
+### Endpoints de referencia (vía KrakenD)
+
+| Acción | Método | Ruta pública |
+|--------|--------|--------------|
+| Login | POST | `/api/v1/auth/login` |
+| Registro | POST | `/api/v1/auth/register` |
+| Logout | POST | `/api/v1/auth/logout` |
+| Listar proyectos | GET | `/api/v1/projects` |
+| Crear proyecto | POST | `/api/v1/projects` |
+| Tareas de un proyecto | GET | `/api/v1/projects/{id}/tasks` |
+| Cambiar estado tarea | PATCH | `/api/v1/projects/{id}/tasks/{taskId}/status` |
+| JWKS (clave pública) | GET | `/.well-known/jwks.json` |
+
+### Usuarios de prueba (seed local)
+
+Contraseña para todos: **`Secret123`**
+
+| Email | Rol |
+|-------|-----|
+| `gestor@innovatech.cl` | gestor (dueño de proyectos demo) |
+| `profesional@innovatech.cl` | profesional |
+| `directivo@innovatech.cl` | directivo |
 
 ---
 
-## Patrones y justificación
+## Seguridad (JWT RS256)
 
-### Arquetipos arquitectónicos
+```
+ms-auth (private.key)  →  FIRMA tokens JWT
+KrakenD                →  VALIDA tokens consultando http://auth:3001/.well-known/jwks.json
+BFF / ms-project-manager →  Reciben identidad vía headers X-User-* (propagados por KrakenD)
+                         →  Fallback: verifican Bearer con public.key (desarrollo / port-forward)
+```
 
-| Arquetipo | Dónde | Por qué |
-|-----------|-------|---------|
-| **Microservicios** | Auth, PM, BFF | Equipos y despliegues independientes; cada servicio escala y evoluciona según su dominio. |
-| **API Gateway** | nginx | Un solo host/puerto para el cliente; oculta topología interna y centraliza TLS/routing en producción. |
-| **BFF (Backend for Frontend)** | `bff/` | El front necesita respuestas agregadas y en español; evita acoplar la UI a contratos REST crudos de Auth y PM. |
-| **Monolito modular (Auth / PM)** | Capas controller → service → repository | Dominio acotado por servicio sin la complejidad operativa de muchos despliegues internos. |
+**Propagación de claims en KrakenD** (`propagate_claims`):
 
-### Patrones de diseño utilizados
+| Claim JWT | Header HTTP |
+|-----------|-------------|
+| `id` | `X-User-Id` |
+| `email` | `X-User-Email` |
+| `rol` | `X-User-Role` |
 
-| Patrón | Ubicación | Justificación |
-|--------|-----------|---------------|
-| **Arquitectura en capas** | BFF (`presentation` / `application` / `infrastructure`) | Separa HTTP, orquestación y clientes HTTP; facilita tests y cambios de upstream sin tocar rutas. |
-| **Orquestación** | `*OrchestrationService.js` en BFF | Coordina Auth + PM en una sola petición del front (p. ej. proyectos con nombres de responsables). |
-| **Repository** | PM (`projectRepository`, `taskRepository`) | Aísla SQL/PostgreSQL de la lógica de negocio; los servicios no conocen detalles de persistencia. |
-| **DTO / Transformer** | PM (`dtos/`), BFF (`frontendResponseTransformers`) | Contrato estable hacia fuera; el BFF traduce inglés → español sin mutar los microservicios internos. |
-| **Middleware chain** | Express en los tres servicios | Autenticación JWT, roles, métricas y auditoría de forma composable y reutilizable. |
-| **API Gateway (router interno)** | `apiGateway.js` en BFF y PM | Agrupa rutas bajo un prefijo común (`/api/v1`) sin un solo archivo monolítico de rutas. |
-| **Circuit Breaker** | Auth, PM (`circuitBreaker.js`, opossum) | Protege llamadas a dependencias (p. ej. Elasticsearch) ante fallos en cascada. |
-| **Singleton** | Pools de BD, config | Una instancia de conexión/config por proceso Node. |
-| **RBAC** | Auth (emisión `rol`), BFF/PM (`requireRole`) | Autorización declarativa por rol en cada capa que expone datos sensibles. |
-| **Errores de dominio** | `errorHandler.js`, `ValidationError`, `UpstreamError` | Respuestas HTTP coherentes y tipado de fallos (validación vs upstream vs no encontrado). |
-| **Observabilidad** | Prometheus (`/metrics`), Winston, auditoría Elasticsearch | Métricas y trazabilidad sin mezclar logging con lógica de negocio. |
-
-### Principios que guían el diseño
-
-- **Single responsibility:** cada microservicio tiene un bounded context claro.
-- **Fail fast:** validación en BFF/PM antes de llamar a BD o upstream.
-- **Contrato único hacia el cliente:** el front solo habla con `/api/v1` vía gateway.
-- **Seguridad con RSA:** ms-auth firma tokens con clave privada (RS256), BFF/PM solo verifican con clave pública (no pueden crear tokens).
+Rutas sensibles (p. ej. crear proyecto) exigen rol `gestor` o `directivo` directamente en la configuración de KrakenD.
 
 ---
 
-## Estrategia de branching (Git)
+## Patrones de diseño
 
-Se usa un flujo **Git Flow simplificado**: integración en `develop`, releases en `main`, y ramas de feature por tarea o módulo.
+Refactor aplicado para mantener código legible y responsabilidades claras:
 
-### Ramas principales
+| Patrón | Dónde | Qué hace |
+|--------|-------|----------|
+| **API Gateway** | KrakenD | Punto único de entrada, seguridad y routing |
+| **BFF** | `bff/` | Orquestación y contrato orientado al frontend |
+| **Database per Service** | `ms-users`, `ms-project-manager` | BD independiente por dominio |
+| **Repository** | `ms-users`, `ms-project-manager` | SQL aislado en `*Repository.ts` |
+| **Service layer** | Todos los MS | Lógica de negocio, validación de reglas, orquestación interna |
+| **DTO + validación custom** | `*/dtos/` | Limpieza de input y validaciones esenciales (sin Joi/Zod) |
+| **Controller delgado** | Todos los MS | Solo HTTP: delegar al service, mapear errores, métricas |
+| **RBAC** | KrakenD + middlewares | Roles en gateway y en servicios internos |
+| **Circuit Breaker** | ms-auth, ms-project-manager | Protección ante fallos de dependencias (Opossum) |
 
-| Rama | Propósito |
-|------|-----------|
-| `main` | Código estable / entregable |
-| `develop` | Integración continua de features |
-| `feat/*` | Desarrollo por historia (BFF, PM, Auth, front) |
-| `feature/*` | Variante de nomenclatura para Auth (`feature/AS-TASK-XX`) |
-
-### Convención de nombres (ejemplos reales del repo)
+### Regla de validación (una sola fuente)
 
 ```
-feat/BFF-01-BASE-STRUCTURE
-feat/BFF-05-ENDPOINTS-ROUTES
-feat/PM-08-CRUD-TASK
-feat/PM-13-STATE-TRANSITION-VALIDATION
-feature/AS-TASK-01-estructura-auth
+Request → DTO (limpiar + validar lo esencial) → Service (reglas de negocio) → Repository (SQL)
+                ↑
+         El controller NO duplica validaciones
 ```
 
-### Flujo de trabajo
+**Ejemplos concretos del refactor:**
 
-```mermaid
-gitGraph
-  commit id: "main-inicial"
-  branch develop
-  checkout develop
-  commit id: "integración-base"
+- **ms-auth:** `AuthService` concentra register/login/logout; `user.service` solo verifica passwords.
+- **ms-users:** `UserRepository` concentra SQL; `UserService` valida vía DTO y aplica reglas (email duplicado, bcrypt).
+- **ms-project-manager:** validación movida de controllers a `*FromRequest()` en services.
 
-  branch feat/PM-08-CRUD-TASK
-  checkout feat/PM-08-CRUD-TASK
-  commit id: "PM: CRUD tareas"
-  checkout develop
-  merge feat/PM-08-CRUD-TASK tag: "PR #38"
+---
 
-  branch feat/BFF-01-BASE-STRUCTURE
-  checkout feat/BFF-01-BASE-STRUCTURE
-  commit id: "BFF: estructura"
-  checkout develop
-  merge feat/BFF-01-BASE-STRUCTURE tag: "PR #42"
+## Inicio rápido (Docker Compose)
 
-  branch feat/BFF-03-API-GATEWAY
-  checkout feat/BFF-03-API-GATEWAY
-  commit id: "Docker + nginx"
-  checkout develop
-  merge feat/BFF-03-API-GATEWAY
+### Requisitos
 
-  checkout main
-  merge develop tag: "release"
+- Node.js 20+
+- Docker Desktop
+- Git
+
+### Pasos
+
+```bash
+cd backend
+
+# 1. Claves RSA (primera vez)
+cd ms-auth && node scripts/generate-keys.js && cd ..
+
+# 2. Variables de entorno (opcional si usas Postgres local del compose)
+cp .env.docker.example .env.docker
+
+# 3. Levantar stack completo
+docker compose --env-file .env.docker up -d --build
+```
+
+### Verificar servicios
+
+| Recurso | URL |
+|---------|-----|
+| API (KrakenD) | http://localhost:8010/api/v1/ |
+| JWKS | http://localhost:8010/.well-known/jwks.json |
+| PostgreSQL users | `localhost:5433` (db: `innovatech_users`) |
+| PostgreSQL PM | `localhost:5434` (db: `innovatech_pm`) |
+
+### Frontend (opcional)
+
+```bash
+cd ../frontend
+npm install
+npm run dev
+# http://localhost:5173 — apunta a VITE_API_BASE_URL=/api/v1 o http://localhost:8010/api/v1
 ```
 
 ### Comandos útiles
 
 ```bash
-# Ver historial visual
-git log --oneline --graph --all -30
+# Ver logs
+docker compose logs -f api-gateway bff auth users project-manager
 
-# Crear feature desde develop
-git checkout develop
-git pull origin develop
-git checkout -b feat/PM-15-mi-feature
+# Reconstruir un servicio
+docker compose up -d --build auth
 
-# Integrar vía Pull Request hacia develop (recomendado)
-# Luego merge periódico develop → main en releases
+# Parar todo
+docker compose down
 ```
 
-**Regla práctica:** una rama `feat/*` por historia; commits descriptivos (`PM Task-14: …`, `BFF Task-05: …`); no mezclar BFF y PM en la misima rama salvo integración explícita.
+---
+
+## Despliegue Kubernetes e Ingress
+
+Manifiestos en `k8s/` (namespace, **Ingress**, kustomization) y en cada servicio (`*/k8s/`).
+
+### Ingress
+
+El archivo `k8s/ingress.yaml` expone el API Gateway al exterior:
+
+```yaml
+# host: api.innovatech.local → service: api-gateway:8080
+# ingressClassName: nginx
+```
+
+Requisito: tener un **NGINX Ingress Controller** en el cluster (minikube, Rancher Desktop, AKS, etc.).
+
+### Desplegar
+
+```bash
+cd backend
+
+# Claves JWT
+kubectl create secret generic innovatech-jwt-keys -n innovatech \
+  --from-file=private.key=ms-auth/keys/private.key \
+  --from-file=public.key=ms-auth/keys/public.key
+
+# Secretos de BD (copiar secrets.example.yaml → secrets.yaml)
+kubectl apply -f k8s/secrets.yaml
+
+# Stack completo
+kubectl apply -k k8s/
+kubectl get pods,svc,ingress -n innovatech
+```
+
+### Acceso sin Ingress (desarrollo)
+
+```bash
+kubectl port-forward -n innovatech svc/api-gateway 8010:8080
+# API: http://localhost:8010/api/v1/...
+```
+
+| Servicio K8s | Puerto | Acceso |
+|--------------|--------|--------|
+| `api-gateway` | 8080 | Público (Ingress / port-forward) |
+| `bff` | 3010 | Solo interno (ClusterIP) |
+| `ms-auth` | 3001 | Solo interno |
+| `ms-users` | 3003 | Solo interno |
+| `ms-project-manager` | 3002 | Solo interno |
+
+Guía detallada: [k8s/README.md](k8s/README.md)
 
 ---
 
 ## Testing
 
-Estrategia **Jest + Supertest** en los tres microservicios, con **umbral global de cobertura del 50%** (statements, branches, functions, lines).
-
-| Servicio | Herramienta | Ubicación | Qué se prueba |
-|----------|-------------|-----------|---------------|
-| **Auth** | Jest + Supertest | `ms-auth/tests/` | JWT RS256, bcrypt, roles, DTOs, circuit breaker, integración HTTP (JWKS, register/login) |
-| **Project Manager** | Jest + Supertest | `ms-project-manager/tests/` | Servicios, validación, DTOs, middleware, integración HTTP con JWT |
-| **BFF** | Jest + Supertest | `bff/tests/` | Orquestación auth, upstream mock, rutas protegidas, `/health` |
-
-### Ejecutar tests
+Estrategia **Jest + Supertest** (ESM). Umbral de cobertura global **50%** en auth, PM y BFF.
 
 ```bash
-# Los tres microservicios (desde backend/)
+cd backend
+
+# Los tres servicios
 npm test
 
 # Por servicio
@@ -230,118 +346,81 @@ cd ms-auth && npm test
 cd ms-project-manager && npm test
 cd bff && npm test
 
-# CI (sin watch, falla si cobertura < 50%)
+# CI
 npm run test:ci
 ```
 
-### Filosofía
+| Servicio | Qué se prueba |
+|----------|---------------|
+| **ms-auth** | DTOs, JWT RS256, bcrypt, roles, JWKS, login/register (mock de ms-users) |
+| **ms-project-manager** | Servicios, validación, transiciones de estado, middleware |
+| **BFF** | Orquestación, upstream mock, rutas protegidas |
 
-- **Sin Postgres real:** `tests/setup.js` en Auth y PM mockea BD / dependencias; Supertest ejercita la app Express sin `listen`.
-- **Integración HTTP:** BFF y PM validan headers KrakenD/JWT; Auth expone JWKS y flujos básicos de auth.
-- **Legacy:** `metrics.test.js` y `http-validation.test.js` en Auth quedan excluidos del runner (requieren BD y métricas completas).
-- **CI recomendado:** `npm run test:ci` en cada PR hacia `develop`.
+**Notas:**
 
----
-
-## Inicio rápido
-
-### Requisitos
-
-- Node.js 20+
-- Docker Desktop
-- URLs PostgreSQL (Neon u otro) para Auth y PM
-
-### Docker Compose (recomendado)
-
-```bash
-cd backend
-cp .env.docker.example .env.docker
-# Editar DATABASE_URL_AUTH y DATABASE_URL_PM
-
-# 1. Generar claves RSA para JWT (solo la primera vez)
-cd ms-auth && node scripts/generate-keys.js && cd ..
-
-# 2. Configurar bases de datos
-cp .env.docker.example .env.docker
-# Editar DATABASE_URL_AUTH, DATABASE_URL_PM
-
-# 3. Iniciar servicios con KrakenD
-docker compose --env-file .env.docker up --build
-```
-
-**Nota:** Ya **NO** es necesario copiar `public.key` al BFF ni a ms-project-manager. KrakenD valida JWT centralizadamente consultando el endpoint JWKS de ms-auth.
-
-| Endpoint | URL |
-|----------|-----|
-| API (KrakenD) | http://localhost:8010/api/v1/ |
-| JWKS (clave pública) | http://localhost:8010/.well-known/jwks.json |
-| Health BFF | http://localhost:8010/health |
-
-### Desarrollo local (servicio a servicio)
-
-Ver cada [README-ESTUDIO](#documentación-de-estudio) para puertos, variables y migraciones.
-
----
-
-## Despliegue Kubernetes
-
-Manifiestos en la carpeta `k8s/` de cada servicio; despliegue unificado desde [`k8s/`](k8s/README.md).
-
-```bash
-# Construir imágenes
-docker build -t innovatech/ms-auth:latest ./ms-auth
-docker build -t innovatech/ms-project-manager:latest ./ms-project-manager
-docker build -t innovatech/bff:latest ./bff
-
-# Secrets + stack
-kubectl apply -f k8s/namespace.yaml
-# (crear innovatech-db-secrets y auth-jwt-keys — ver k8s/README.md)
-kubectl apply -k .
-```
-
-| Recurso | Ubicación |
-|---------|-----------|
-| Guía general K8s | [k8s/README.md](k8s/README.md) |
-| API Gateway | [api-gateway/k8s/](api-gateway/k8s/) |
-| BFF | [bff/k8s/](bff/k8s/) |
-| Auth | [ms-auth/k8s/](ms-auth/k8s/) |
-| Project Manager | [ms-project-manager/k8s/](ms-project-manager/k8s/) |
-
-Entrada HTTP: `http://localhost:8010/api/v1/…` (LoadBalancer o `kubectl port-forward`).
+- Los tests de integración **no requieren PostgreSQL real** (mocks en `tests/setup.*`).
+- `ms-auth` usa mock de `usersClient` para simular ms-users en ESM (`tests/mocks/usersClient.js`).
+- La app no abre puerto en modo test (`NODE_ENV=test`).
 
 ---
 
 ## Estructura del repositorio
 
 ```
-backend_innovatech/
-├── backend/                     ← microservicios + gateway + compose
-│   ├── README.md
-│   ├── docker-compose.yml
-│   ├── k8s/                     ← namespace, kustomization, secrets
-│   ├── .env.docker
-│   ├── api-gateway/
-│   │   ├── krakend.json         ← Config KrakenD (Docker Compose)
-│   │   └── k8s/                 ← KrakenD + krakend.json (K8s)
-│   ├── bff/k8s/
-│   ├── ms-auth/k8s/
-│   └── ms-project-manager/k8s/
-└── frontend/                    ← cliente React (Vite)
+backend/
+├── README.md                    ← este documento
+├── docker-compose.yml           ← stack local completo
+├── package.json                 ← npm test en los 3 servicios
+├── .env.docker.example
+├── api-gateway/
+│   ├── krakend.json             ← rutas, JWT, CORS, roles
+│   └── k8s/
+├── bff/
+│   ├── src/
+│   │   ├── presentation/        ← controllers, middlewares, routes
+│   │   ├── application/         ← orchestration services
+│   │   └── infrastructure/      ← HTTP clients upstream
+│   └── k8s/
+├── ms-auth/
+│   ├── src/
+│   │   ├── controllers/         ← delgados (HTTP only)
+│   │   ├── services/            ← auth.service, user.service
+│   │   ├── dtos/
+│   │   └── clients/             ← usersClient → ms-users
+│   └── k8s/
+├── ms-users/
+│   ├── src/
+│   │   ├── controllers/
+│   │   ├── services/
+│   │   ├── repositories/        ← userRepository.ts
+│   │   └── dtos/
+│   ├── database/                ← schema + seed
+│   └── k8s/
+├── ms-project-manager/
+│   ├── src/
+│   │   ├── controllers/         ← delgados
+│   │   ├── services/            ← validación + negocio
+│   │   ├── repositories/
+│   │   └── dtos/
+│   ├── db/migrations/
+│   └── k8s/
+└── k8s/
+    ├── namespace.yaml
+    ├── ingress.yaml             ← Ingress NGINX
+    └── kustomization.yaml
 ```
 
 ---
 
-## Documentación de estudio
+## Documentación adicional
 
-Guías orientadas a **entender y presentar** cada componente:
-
-| Microservicio | Guía |
-|---------------|------|
-| Auth | [ms-auth/README-ESTUDIO.md](ms-auth/README-ESTUDIO.md) |
-| BFF | [bff/README-ESTUDIO.md](bff/README-ESTUDIO.md) |
-| Project Manager | [ms-project-manager/README-ESTUDIO.md](ms-project-manager/README-ESTUDIO.md) |
-
-Documentación operativa detallada de Auth: [ms-auth/README.md](ms-auth/README.md).
+| Tema | Ubicación |
+|------|-----------|
+| Despliegue K8s | [k8s/README.md](k8s/README.md) |
+| Auth (operativo) | [ms-auth/README.md](ms-auth/README.md) |
+| ms-users | [ms-users/README.md](ms-users/README.md) |
+| Guías de estudio BFF / Auth / PM | `*/README-ESTUDIO.md` |
+| Migración JWT RSA | [docs/JWT_RSA_MIGRATION.md](../docs/JWT_RSA_MIGRATION.md) |
 
 ---
 

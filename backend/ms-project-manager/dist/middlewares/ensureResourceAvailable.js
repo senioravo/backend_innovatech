@@ -1,6 +1,5 @@
-"use strict";
-Object.defineProperty(exports, "__esModule", { value: true });
-const resourceAvailabilityService = require('../services/resourceAvailabilityService');
+// @ts-nocheck
+import resourceAvailabilityService from '../services/resourceAvailabilityService.js';
 /**
  * Loads project if it exists and belongs to the user; sets req.availableProject.
  * @param {string} paramName - req.params key (e.g. 'id', 'projectId')
@@ -48,8 +47,4 @@ function ensureTaskInProject(projectParam = 'projectId', taskParam = 'taskId') {
         }
     };
 }
-module.exports = {
-    ensureProjectAvailable,
-    ensureTaskAvailable,
-    ensureTaskInProject
-};
+export { ensureProjectAvailable, ensureTaskAvailable, ensureTaskInProject };

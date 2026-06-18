@@ -1,13 +1,10 @@
 // @ts-nocheck
-export {};
 // AS-TASK-03: Controlador para probar Circuit Breaker
 // Endpoints de prueba y monitoreo
 
-const { 
-  validateUserWithBreaker, 
+import { validateUserWithBreaker, 
   getProjectWithBreaker,
-  getAllBreakerStats 
-} = require('../services/internal.service');
+  getAllBreakerStats } from '../services/internal.service.js';
 
 /**
  * GET /api/circuit-breaker/test/auth
@@ -87,9 +84,4 @@ const getBreakerStatistics = async (req, res) => {
   }
 };
 
-module.exports = {
-  testAuthServiceBreaker,
-  testProjectManagerBreaker,
-  getBreakerStatistics
-};
-
+export { testAuthServiceBreaker, testProjectManagerBreaker, getBreakerStatistics };

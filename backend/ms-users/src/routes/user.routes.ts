@@ -1,17 +1,12 @@
-// @ts-nocheck
-export {};
-// Rutas de usuarios
+import express from 'express';
+import * as userController from '../controllers/user.controller.js';
+import { verifyToken, requireRole } from '../middleware/auth.middleware.js';
+import { metricsMiddleware } from '../middleware/metricsMiddleware.js';
 
-const express = require('express');
 const router = express.Router();
-const userController = require('../controllers/user.controller');
-const { verifyToken, requireRole } = require('../middleware/auth.middleware');
-const { metricsMiddleware } = require('../middleware/metricsMiddleware');
 
-// Aplicar middleware de métricas a todas las rutas
 router.use(metricsMiddleware);
 
-// CRUD de usuarios - requieren autenticación
 /**
  * @openapi
  * /api/users:
@@ -26,13 +21,14 @@ router.use(metricsMiddleware);
  *         application/json:
  *           schema:
  *             type: object
- *             required: [nombre, email, password, rol]
+ *             required: [nombre, email, password]
  *             properties:
  *               nombre:
  *                 type: string
  *                 example: Juan Pérez
  *               email:
  *                 type: string
+ *                 format: email
  *                 example: juan@innovatech.cl
  *               password:
  *                 type: string
@@ -45,7 +41,9 @@ router.use(metricsMiddleware);
  *       201:
  *         description: Usuario creado
  *       400:
- *         description: Solicitud inválida
+ *         description: Datos inválidos o email duplicado
+ *       401:
+ *         description: Token inválido
  */
 router.post('/', verifyToken, userController.createUser);
 
@@ -62,12 +60,12 @@ router.post('/', verifyToken, userController.createUser);
  *         name: page
  *         schema:
  *           type: integer
- *           example: 1
+ *           default: 1
  *       - in: query
  *         name: limit
  *         schema:
  *           type: integer
- *           example: 10
+ *           default: 10
  *       - in: query
  *         name: rol
  *         schema:
@@ -79,9 +77,13 @@ router.post('/', verifyToken, userController.createUser);
  *           type: string
  *     responses:
  *       200:
- *         description: Lista de usuarios
+ *         description: Lista paginada de usuarios
+ *       401:
+ *         description: Token inválido
  */
 router.get('/', verifyToken, userController.listUsers);
+
+router.get('/professionals', verifyToken, userController.listProfessionals);
 
 /**
  * @openapi
@@ -96,12 +98,14 @@ router.get('/', verifyToken, userController.listUsers);
  *         name: id
  *         required: true
  *         schema:
- *           type: string
+ *           type: integer
  *     responses:
  *       200:
  *         description: Usuario encontrado
  *       404:
  *         description: Usuario no encontrado
+ *       401:
+ *         description: Token inválido
  */
 router.get('/:id', verifyToken, userController.getUserById);
 
@@ -110,7 +114,7 @@ router.get('/:id', verifyToken, userController.getUserById);
  * /api/users/{id}:
  *   put:
  *     tags: [Users]
- *     summary: Actualizar usuario por ID
+ *     summary: Actualizar usuario
  *     security:
  *       - bearerAuth: []
  *     parameters:
@@ -118,9 +122,8 @@ router.get('/:id', verifyToken, userController.getUserById);
  *         name: id
  *         required: true
  *         schema:
- *           type: string
+ *           type: integer
  *     requestBody:
- *       required: true
  *       content:
  *         application/json:
  *           schema:
@@ -128,15 +131,21 @@ router.get('/:id', verifyToken, userController.getUserById);
  *             properties:
  *               nombre:
  *                 type: string
- *                 example: Juan Pérez Actualizado
  *               email:
  *                 type: string
- *                 example: juan.nuevo@innovatech.cl
+ *                 format: email
+ *               password:
+ *                 type: string
+ *               rol:
+ *                 type: string
+ *                 enum: [gestor, profesional, directivo]
  *     responses:
  *       200:
  *         description: Usuario actualizado
  *       404:
  *         description: Usuario no encontrado
+ *       401:
+ *         description: Token inválido
  */
 router.put('/:id', verifyToken, userController.updateUser);
 
@@ -145,7 +154,8 @@ router.put('/:id', verifyToken, userController.updateUser);
  * /api/users/{id}:
  *   delete:
  *     tags: [Users]
- *     summary: Eliminar usuario por ID
+ *     summary: Eliminar usuario
+ *     description: Requiere rol gestor o directivo
  *     security:
  *       - bearerAuth: []
  *     parameters:
@@ -153,22 +163,24 @@ router.put('/:id', verifyToken, userController.updateUser);
  *         name: id
  *         required: true
  *         schema:
- *           type: string
+ *           type: integer
  *     responses:
  *       200:
  *         description: Usuario eliminado
  *       403:
- *         description: Acceso denegado
+ *         description: Rol insuficiente
+ *       404:
+ *         description: Usuario no encontrado
  */
 router.delete('/:id', verifyToken, requireRole(['gestor', 'directivo']), userController.deleteUser);
 
-// Cambio de rol - solo gestores y directivos
 /**
  * @openapi
  * /api/users/{id}/role:
  *   put:
  *     tags: [Users]
  *     summary: Cambiar rol de usuario
+ *     description: Requiere rol gestor o directivo
  *     security:
  *       - bearerAuth: []
  *     parameters:
@@ -176,7 +188,7 @@ router.delete('/:id', verifyToken, requireRole(['gestor', 'directivo']), userCon
  *         name: id
  *         required: true
  *         schema:
- *           type: string
+ *           type: integer
  *     requestBody:
  *       required: true
  *       content:
@@ -188,16 +200,18 @@ router.delete('/:id', verifyToken, requireRole(['gestor', 'directivo']), userCon
  *               rol:
  *                 type: string
  *                 enum: [gestor, profesional, directivo]
- *                 example: gestor
  *     responses:
  *       200:
  *         description: Rol actualizado
  *       403:
- *         description: Acceso denegado
+ *         description: Rol insuficiente
+ *       404:
+ *         description: Usuario no encontrado
  */
 router.put('/:id/role', verifyToken, requireRole(['gestor', 'directivo']), userController.changeUserRole);
 
-// Búsqueda por email
+router.put('/:id/profile', verifyToken, userController.updateProfile);
+
 /**
  * @openapi
  * /api/users/email/{email}:
@@ -212,6 +226,7 @@ router.put('/:id/role', verifyToken, requireRole(['gestor', 'directivo']), userC
  *         required: true
  *         schema:
  *           type: string
+ *           format: email
  *     responses:
  *       200:
  *         description: Usuario encontrado
@@ -220,4 +235,4 @@ router.put('/:id/role', verifyToken, requireRole(['gestor', 'directivo']), userC
  */
 router.get('/email/:email', verifyToken, userController.getUserByEmail);
 
-module.exports = router;
+export default router;

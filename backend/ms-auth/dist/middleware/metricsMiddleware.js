@@ -1,9 +1,8 @@
-"use strict";
-Object.defineProperty(exports, "__esModule", { value: true });
+// @ts-nocheck
 // AS-TASK-14: Middleware de métricas con Prometheus
 // Responsabilidad: Capturar métricas de performance y operaciones
 // Principio SOLID: Single Responsibility - Solo maneja captura de métricas
-const promClient = require('prom-client');
+import promClient from 'prom-client';
 /**
  * Configuración de Prometheus Client
  * - Registro de métricas por defecto (CPU, memoria, event loop)
@@ -189,10 +188,4 @@ function getRegister() {
 async function getMetrics() {
     return register.metrics();
 }
-module.exports = {
-    metricsMiddleware,
-    recordCriticalOperation,
-    updateActiveUsers,
-    getRegister,
-    getMetrics
-};
+export { metricsMiddleware, recordCriticalOperation, updateActiveUsers, getRegister, getMetrics };

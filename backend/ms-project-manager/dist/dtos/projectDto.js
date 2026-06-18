@@ -1,5 +1,4 @@
-"use strict";
-Object.defineProperty(exports, "__esModule", { value: true });
+// @ts-nocheck
 function formatDate(v) {
     if (v == null)
         return null;
@@ -49,9 +48,4 @@ function pickProjectScheduleFields(body) {
     }
     return out;
 }
-module.exports = {
-    createProjectDto,
-    projectToDto,
-    projectsToDto,
-    pickProjectScheduleFields
-};
+export { createProjectDto, projectToDto, projectsToDto, pickProjectScheduleFields };

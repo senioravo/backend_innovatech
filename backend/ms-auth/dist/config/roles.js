@@ -1,5 +1,4 @@
-"use strict";
-Object.defineProperty(exports, "__esModule", { value: true });
+// @ts-nocheck
 // AS-TASK-08: Configuración de roles del sistema
 // Responsabilidad: Definir y exportar roles y permisos
 // Principio SOLID: Single Responsibility - Solo gestiona roles
@@ -114,15 +113,4 @@ const hasPermission = (rol, modulo, accion) => {
 const getRoleDescription = (rol) => {
     return ROLE_DESCRIPTIONS[rol] || 'Rol desconocido';
 };
-module.exports = {
-    ROLES,
-    DEFAULT_ROLE,
-    ROLE_DESCRIPTIONS,
-    ROLE_PERMISSIONS,
-    isValidRole,
-    getAllRoles,
-    getRoleInfo,
-    getAllRolesInfo,
-    hasPermission,
-    getRoleDescription
-};
+export { ROLES, DEFAULT_ROLE, ROLE_DESCRIPTIONS, ROLE_PERMISSIONS, isValidRole, getAllRoles, getRoleInfo, getAllRolesInfo, hasPermission, getRoleDescription };

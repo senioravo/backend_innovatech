@@ -1,8 +1,7 @@
 // @ts-nocheck
-export {};
-const projectRepository = require('../repositories/projectRepository');
-const taskRepository = require('../repositories/taskRepository');
-const { NotFoundError, ForbiddenError } = require('../utils/errorHandler');
+import projectRepository from '../repositories/projectRepository.js';
+import taskRepository from '../repositories/taskRepository.js';
+import { NotFoundError, ForbiddenError } from '../utils/errorHandler.js';
 
 const resourceAvailabilityService = {
   async assertProjectAvailable(projectId, userId) {
@@ -39,4 +38,4 @@ const resourceAvailabilityService = {
   }
 };
 
-module.exports = resourceAvailabilityService;
+export default resourceAvailabilityService;;

@@ -1,6 +1,4 @@
 // @ts-nocheck
-export {};
-
 /**
  * userDto.ts - Data Transfer Objects para Usuario
  * 
@@ -125,28 +123,26 @@ function errorResponseDto(message, details = null) {
  * @param {Object} userData - Datos a validar
  * @returns {Object} - { valid: boolean, errors: string[] }
  */
+const EMAIL_REGEX = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+const VALID_ROLES = ['gestor', 'profesional', 'directivo'];
+
 function validateUserData(userData) {
   const errors = [];
   const { nombre, email, password, rol } = userData;
 
-  // Validar nombre
   if (!nombre || typeof nombre !== 'string' || nombre.trim().length < 2) {
     errors.push('El nombre debe tener al menos 2 caracteres');
   }
 
-  // Validar email
-  const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-  if (!email || !emailRegex.test(email)) {
+  if (!email || !EMAIL_REGEX.test(email)) {
     errors.push('Email inválido');
   }
 
-  // Validar password
   if (!password || typeof password !== 'string' || password.length < 6) {
     errors.push('La contraseña debe tener al menos 6 caracteres');
   }
 
-  // Validar rol (si se proporciona)
-  if (rol && !['gestor', 'profesional', 'directivo'].includes(rol)) {
+  if (rol && !VALID_ROLES.includes(rol)) {
     errors.push('Rol inválido. Valores permitidos: gestor, profesional, directivo');
   }
 
@@ -156,7 +152,25 @@ function validateUserData(userData) {
   };
 }
 
-module.exports = {
+function validateLoginData(credentials) {
+  const errors = [];
+  const { email, password } = credentials;
+
+  if (!email || !password) {
+    errors.push('Email y contraseña son requeridos');
+  }
+
+  if (email && !EMAIL_REGEX.test(email)) {
+    errors.push('Formato de email inválido');
+  }
+
+  return {
+    valid: errors.length === 0,
+    errors
+  };
+}
+
+export {
   createRegisterDto,
   createLoginDto,
   userToDto,
@@ -164,5 +178,6 @@ module.exports = {
   authResponseDto,
   registerResponseDto,
   errorResponseDto,
-  validateUserData
+  validateUserData,
+  validateLoginData
 };

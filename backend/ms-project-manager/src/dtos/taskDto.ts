@@ -1,5 +1,4 @@
 // @ts-nocheck
-export {};
 function formatDate(v) {
   if (v == null) return null;
   if (typeof v === 'string') return v;
@@ -52,4 +51,4 @@ function pickTaskScheduleFields(body) {
   return out;
 }
 
-module.exports = { createTaskDto, taskToDto, pickTaskScheduleFields };
+export { createTaskDto, taskToDto, pickTaskScheduleFields };

@@ -1,17 +1,24 @@
-// Script para inicializar las tablas en la base de datos de Neon
-const { Pool } = require('pg');
-require('dotenv').config();
+import dotenv from 'dotenv';
+import path from 'path';
+import { fileURLToPath } from 'url';
+import { Pool } from 'pg';
 
-// Conexión a Neon Cloud
-const DATABASE_URL = 'postgresql://neondb_owner:npg_mUZLr81Eslyx@ep-super-tooth-ata043sj-pooler.us-east-1.aws.neon.tech/neondb?sslmode=require';
+dotenv.config({ path: path.resolve(path.dirname(fileURLToPath(import.meta.url)), '.env.docker') });
+dotenv.config();
+
+const DATABASE_URL = process.env.DATABASE_URL || process.env.DATABASE_URL_AUTH;
+
+if (!DATABASE_URL) {
+  console.error('❌ Define DATABASE_URL o DATABASE_URL_AUTH en .env / .env.docker');
+  process.exit(1);
+}
 
 const pool = new Pool({
   connectionString: DATABASE_URL,
-  ssl: { rejectUnauthorized: false }
+  ssl: DATABASE_URL.includes('neon.tech') ? { rejectUnauthorized: false } : false,
 });
 
 const schemaSQL = `
--- Crear tabla usuarios
 CREATE TABLE IF NOT EXISTS usuarios (
   id SERIAL PRIMARY KEY,
   nombre VARCHAR(255) NOT NULL,
@@ -22,13 +29,9 @@ CREATE TABLE IF NOT EXISTS usuarios (
   updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
 
--- Crear índice en email para búsquedas rápidas
 CREATE INDEX IF NOT EXISTS idx_usuarios_email ON usuarios(email);
-
--- Crear índice en rol para filtros
 CREATE INDEX IF NOT EXISTS idx_usuarios_rol ON usuarios(rol);
 
--- Función para actualizar updated_at automáticamente
 CREATE OR REPLACE FUNCTION update_updated_at_column()
 RETURNS TRIGGER AS $$
 BEGIN
@@ -37,14 +40,12 @@ BEGIN
 END;
 $$ LANGUAGE plpgsql;
 
--- Trigger para actualizar updated_at
 DROP TRIGGER IF EXISTS update_usuarios_updated_at ON usuarios;
 CREATE TRIGGER update_usuarios_updated_at
   BEFORE UPDATE ON usuarios
   FOR EACH ROW
   EXECUTE FUNCTION update_updated_at_column();
 
--- Crear tabla para project-manager (projects)
 CREATE TABLE IF NOT EXISTS projects (
   id SERIAL PRIMARY KEY,
   nombre VARCHAR(255) NOT NULL,
@@ -57,7 +58,6 @@ CREATE TABLE IF NOT EXISTS projects (
   updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
 
--- Crear tabla para project-manager (tasks)
 CREATE TABLE IF NOT EXISTS tasks (
   id SERIAL PRIMARY KEY,
   titulo VARCHAR(255) NOT NULL,
@@ -71,45 +71,37 @@ CREATE TABLE IF NOT EXISTS tasks (
   updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
 
--- Índices para mejor performance
 CREATE INDEX IF NOT EXISTS idx_tasks_project_id ON tasks(project_id);
 CREATE INDEX IF NOT EXISTS idx_projects_assignee_id ON projects(assignee_id);
 CREATE INDEX IF NOT EXISTS idx_tasks_assignee_id ON tasks(assignee_id);
 `;
 
 async function initializeDatabase() {
-  console.log('🔄 Iniciando conexión a Neon Cloud...');
-  
+  console.log('🔄 Iniciando conexión a la base de datos...');
+
   try {
     const client = await pool.connect();
     console.log('✅ Conectado a la base de datos');
-    
-    console.log('🔄 Ejecutando scripts de creación de tablas...');
+
     await client.query(schemaSQL);
     console.log('✅ Tablas creadas exitosamente');
-    
-    // Verificar tablas creadas
+
     const result = await client.query(`
-      SELECT table_name 
-      FROM information_schema.tables 
+      SELECT table_name
+      FROM information_schema.tables
       WHERE table_schema = 'public'
       ORDER BY table_name;
     `);
-    
+
     console.log('\n📊 Tablas en la base de datos:');
-    result.rows.forEach(row => {
-      console.log('  ✓', row.table_name);
-    });
-    
+    result.rows.forEach((row) => console.log('  ✓', row.table_name));
+
     client.release();
     await pool.end();
-    
-    console.log('\n✅ Base de datos inicializada correctamente');
-    console.log('🚀 Ahora puedes iniciar los microservicios\n');
-    
+
+    console.log('\n✅ Base de datos inicializada correctamente\n');
   } catch (error) {
     console.error('❌ Error al inicializar la base de datos:', error.message);
-    console.error(error.stack);
     process.exit(1);
   }
 }

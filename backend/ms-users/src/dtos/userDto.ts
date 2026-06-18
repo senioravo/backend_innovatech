@@ -1,17 +1,19 @@
-// @ts-nocheck
-export {};
+const EMAIL_REGEX = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+const VALID_ROLES = ['gestor', 'profesional', 'directivo'];
 
-/**
- * userDto.ts - Data Transfer Objects para Usuario en ms-users
- * Responsable de formateo y validación de datos de usuarios
- */
+type UserInput = {
+  nombre?: string | null;
+  email?: string | null;
+  password?: string | null;
+  rol?: string | null;
+};
 
-/**
- * Convierte UserModel a DTO de respuesta (SIN password)
- * @param {Object} user - UserModel o resultado de BD
- * @returns {Object|null} - Usuario sin campos sensibles
- */
-function userToDto(user) {
+type ValidateOptions = {
+  requirePassword?: boolean;
+  partial?: boolean;
+};
+
+function userToDto(user: Record<string, unknown> | null) {
   if (!user) return null;
 
   return {
@@ -19,29 +21,22 @@ function userToDto(user) {
     nombre: user.nombre,
     email: user.email,
     rol: user.rol,
+    habilidades: user.habilidades ?? '',
+    disponibilidad: user.disponibilidad ?? 'disponible',
+    horasSemanalesDisponibles: user.horas_semanales_disponibles ?? 40,
     createdAt: user.created_at || user.createdAt,
     updatedAt: user.updated_at || user.updatedAt
   };
 }
 
-/**
- * Convierte array de usuarios a DTOs
- * @param {Array} users - Array de UserModel o resultados de BD
- * @returns {Array} - Array de usuarios sin campos sensibles
- */
 function usersToDto(users) {
   if (!Array.isArray(users)) return [];
   return users.map(userToDto);
 }
 
-/**
- * Valida y limpia datos para creación de usuario
- * @param {Object} body - Request body con datos del usuario
- * @returns {Object} - Datos limpios y validados
- */
 function createUserDto(body) {
   const { nombre, email, password, rol } = body;
-  
+
   return {
     nombre: typeof nombre === 'string' ? nombre.trim() : null,
     email: typeof email === 'string' ? email.trim().toLowerCase() : null,
@@ -50,14 +45,9 @@ function createUserDto(body) {
   };
 }
 
-/**
- * Valida y limpia datos para actualización de usuario
- * @param {Object} body - Request body con datos a actualizar
- * @returns {Object} - Datos limpios
- */
-function updateUserDto(body) {
-  const updates = {};
-  
+function updateUserDto(body: Record<string, unknown>) {
+  const updates: Record<string, string | null> = {};
+
   if (body.nombre !== undefined) {
     updates.nombre = typeof body.nombre === 'string' ? body.nombre.trim() : null;
   }
@@ -70,16 +60,10 @@ function updateUserDto(body) {
   if (body.rol !== undefined) {
     updates.rol = typeof body.rol === 'string' ? body.rol.trim() : null;
   }
-  
+
   return updates;
 }
 
-/**
- * Formato de respuesta exitosa
- * @param {string} message - Mensaje de éxito
- * @param {Object} data - Datos de respuesta
- * @returns {Object} - Respuesta formateada
- */
 function successResponseDto(message, data = null) {
   return {
     success: true,
@@ -88,12 +72,6 @@ function successResponseDto(message, data = null) {
   };
 }
 
-/**
- * Formato de respuesta de error
- * @param {string} message - Mensaje de error
- * @param {Object} details - Detalles adicionales del error
- * @returns {Object} - Respuesta de error formateada
- */
 function errorResponseDto(message, details = null) {
   return {
     success: false,
@@ -102,36 +80,33 @@ function errorResponseDto(message, details = null) {
   };
 }
 
-/**
- * Valida estructura de datos de usuario
- * @param {Object} userData - Datos a validar
- * @returns {Object} - { valid: boolean, errors: string[] }
- */
-function validateUserData(userData) {
+function validateUserData(userData: UserInput, options: ValidateOptions = {}) {
+  const { requirePassword = false, partial = false } = options;
   const errors = [];
   const { nombre, email, password, rol } = userData;
 
-  // Validar nombre
-  if (!nombre || typeof nombre !== 'string' || nombre.trim().length < 2) {
-    errors.push('El nombre debe tener al menos 2 caracteres');
+  if (!partial || nombre !== undefined) {
+    if (!nombre || typeof nombre !== 'string' || nombre.trim().length < 2) {
+      errors.push('El nombre debe tener al menos 2 caracteres');
+    }
   }
 
-  // Validar email
-  const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-  if (!email || !emailRegex.test(email)) {
-    errors.push('Email inválido');
+  if (!partial || email !== undefined) {
+    if (!email || !EMAIL_REGEX.test(email)) {
+      errors.push('Email inválido');
+    }
   }
 
-  // Validar password (solo si se proporciona)
-  if (password !== undefined && password !== null) {
-    if (typeof password !== 'string' || password.length < 6) {
+  if (requirePassword || (partial && password !== undefined)) {
+    if (!password || typeof password !== 'string' || password.length < 6) {
       errors.push('La contraseña debe tener al menos 6 caracteres');
     }
   }
 
-  // Validar rol (si se proporciona)
-  if (rol && !['gestor', 'profesional', 'directivo'].includes(rol)) {
-    errors.push('Rol inválido. Valores permitidos: gestor, profesional, directivo');
+  if (rol !== undefined && rol !== null && rol !== '') {
+    if (!VALID_ROLES.includes(rol as string)) {
+      errors.push('Rol inválido. Valores permitidos: gestor, profesional, directivo');
+    }
   }
 
   return {
@@ -140,7 +115,7 @@ function validateUserData(userData) {
   };
 }
 
-module.exports = {
+export {
   userToDto,
   usersToDto,
   createUserDto,

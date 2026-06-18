@@ -1,3 +1,7 @@
+import path from 'path';
+import { fileURLToPath } from 'url';
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
 /**
  * Script para generar par de claves RSA para JWT
  * Genera:
@@ -5,9 +9,8 @@
  * - public.key: Clave pública (compartida con BFF para VERIFICAR tokens)
  */
 
-const crypto = require('crypto');
-const fs = require('fs');
-const path = require('path');
+import crypto from 'crypto';
+import fs from 'fs';
 
 const keysDir = path.join(__dirname, '..', 'keys');
 

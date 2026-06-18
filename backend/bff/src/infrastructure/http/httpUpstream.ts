@@ -1,5 +1,5 @@
-export {};
-const { UpstreamError } = require('../../utils/errorHandler');
+// @ts-nocheck
+import { UpstreamError } from '../../utils/errorHandler.js';
 
 type UpstreamOptions = {
   method?: string;
@@ -48,4 +48,4 @@ async function upstreamJson(url: string, { method = 'GET', headers = {}, body }:
   return { status: res.status, data };
 }
 
-module.exports = { joinUrl, upstreamJson };
+export { joinUrl, upstreamJson };

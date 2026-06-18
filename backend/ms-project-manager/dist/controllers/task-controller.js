@@ -1,11 +1,10 @@
-"use strict";
-Object.defineProperty(exports, "__esModule", { value: true });
-const taskService = require('../services/taskService');
-const ValidationService = require('../services/validationService');
-const { createTaskDto, taskToDto, pickTaskScheduleFields } = require('../dtos/taskDto');
-const { normalizeTaskStatus } = require('../constants/taskStatuses');
-const { ValidationError } = require('../utils/errorHandler');
-const { auditFromRequest } = require('../utils/auditLog');
+// @ts-nocheck
+import taskService from '../services/taskService.js';
+import ValidationService from '../services/validationService.js';
+import { createTaskDto, taskToDto, pickTaskScheduleFields } from '../dtos/taskDto.js';
+import { normalizeTaskStatus } from '../constants/taskStatuses.js';
+import { ValidationError } from '../utils/errorHandler.js';
+import { auditFromRequest } from '../utils/auditLog.js';
 const taskController = {
     async listTasksForProject(req, res, next) {
         try {
@@ -143,4 +142,5 @@ const taskController = {
         }
     }
 };
-module.exports = taskController;
+export default taskController;
+;
