@@ -1,16 +1,4 @@
-jest.mock('../src/repositories/taskRepository.js', () => ({
-  findByProjectId: jest.fn(),
-  create: jest.fn(),
-  update: jest.fn(),
-  delete: jest.fn()
-}));
-
-jest.mock('../src/services/resourceAvailabilityService.js', () => ({
-  assertProjectAvailable: jest.fn(),
-  assertTaskInProject: jest.fn(),
-  assertTaskAvailable: jest.fn()
-}));
-
+import { jest } from '@jest/globals';
 import taskRepository from '../src/repositories/taskRepository.js';
 import resourceAvailabilityService from '../src/services/resourceAvailabilityService.js';
 import taskService from '../src/services/taskService.js';
@@ -19,10 +7,11 @@ import { NotFoundError, ValidationError } from '../src/utils/errorHandler.js';
 describe('taskService', () => {
   beforeEach(() => {
     jest.clearAllMocks();
+    jest.restoreAllMocks();
   });
 
   test('listTasksByProject delega en repositorio', async () => {
-    resourceAvailabilityService.assertProjectAvailable.mockResolvedValue(undefined);
+    jest.spyOn(resourceAvailabilityService, 'assertProjectAvailable').mockResolvedValue(undefined);
     taskRepository.findByProjectId.mockResolvedValue([{ id: 1, title: 'T1' }]);
     const rows = await taskService.listTasksByProject(3, 7);
     expect(rows).toHaveLength(1);
@@ -38,7 +27,7 @@ describe('taskService', () => {
   });
 
   test('updateTaskStatus avanza estado válido', async () => {
-    resourceAvailabilityService.assertTaskInProject.mockResolvedValue({
+    jest.spyOn(resourceAvailabilityService, 'assertTaskInProject').mockResolvedValue({
       id: '1',
       status: 'PENDING'
     });
@@ -49,7 +38,7 @@ describe('taskService', () => {
   });
 
   test('updateTaskStatus rechaza transición inválida', async () => {
-    resourceAvailabilityService.assertTaskInProject.mockResolvedValue({
+    jest.spyOn(resourceAvailabilityService, 'assertTaskInProject').mockResolvedValue({
       id: '1',
       status: 'PENDING'
     });
@@ -59,20 +48,20 @@ describe('taskService', () => {
   });
 
   test('deleteTask elimina cuando existe', async () => {
-    resourceAvailabilityService.assertTaskAvailable.mockResolvedValue({ id: '9' });
+    jest.spyOn(resourceAvailabilityService, 'assertTaskAvailable').mockResolvedValue({ id: '9' });
     taskRepository.delete.mockResolvedValue(true);
     const ok = await taskService.deleteTask(9, 1);
     expect(ok).toBe(true);
   });
 
   test('deleteTask lanza NotFoundError', async () => {
-    resourceAvailabilityService.assertTaskAvailable.mockResolvedValue({ id: '9' });
+    jest.spyOn(resourceAvailabilityService, 'assertTaskAvailable').mockResolvedValue({ id: '9' });
     taskRepository.delete.mockResolvedValue(false);
     await expect(taskService.deleteTask(9, 1)).rejects.toBeInstanceOf(NotFoundError);
   });
 
   test('createTask delega en repositorio', async () => {
-    resourceAvailabilityService.assertProjectAvailable.mockResolvedValue(undefined);
+    jest.spyOn(resourceAvailabilityService, 'assertProjectAvailable').mockResolvedValue(undefined);
     taskRepository.create.mockResolvedValue({ id: '1', title: 'Nueva' });
     const task = await taskService.createTask(1, 2, {
       title: 'Nueva',
@@ -84,7 +73,7 @@ describe('taskService', () => {
   });
 
   test('updateTask rechaza transición inválida', async () => {
-    resourceAvailabilityService.assertTaskAvailable.mockResolvedValue({
+    jest.spyOn(resourceAvailabilityService, 'assertTaskAvailable').mockResolvedValue({
       id: '1',
       status: 'PENDING'
     });
@@ -94,7 +83,7 @@ describe('taskService', () => {
   });
 
   test('assignAssignee actualiza responsable', async () => {
-    resourceAvailabilityService.assertTaskAvailable.mockResolvedValue({ id: '1' });
+    jest.spyOn(resourceAvailabilityService, 'assertTaskAvailable').mockResolvedValue({ id: '1' });
     taskRepository.update.mockResolvedValue({ id: '1', assigneeId: 'u-9' });
     const task = await taskService.assignAssignee(1, 2, 'u-9');
     expect(task.assigneeId).toBe('u-9');

@@ -1,3 +1,4 @@
+import { jest } from '@jest/globals';
 import requireRole from '../src/middlewares/roleMiddleware.js';
 
 function mockRes() {

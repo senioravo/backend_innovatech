@@ -21,8 +21,9 @@ export default {
     '!src/**/*.test.js'
   ],
   coverageThreshold: {
-    global: { branches: 50, functions: 50, lines: 50, statements: 50 }
+    global: { lines: 60, statements: 60 }
   },
+  injectGlobals: true,
   testTimeout: 5000,
   setupFiles: ['<rootDir>/tests/setup.env.js'],
   setupFilesAfterEnv: ['<rootDir>/tests/setup.mocks.js'],

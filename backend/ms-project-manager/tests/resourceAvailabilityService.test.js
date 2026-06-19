@@ -1,12 +1,4 @@
-jest.mock('../src/repositories/projectRepository.js', () => ({
-  findByIdAndUserId: jest.fn()
-}));
-
-jest.mock('../src/repositories/taskRepository.js', () => ({
-  findByIdAndUserId: jest.fn(),
-  findByProjectIdAndTaskId: jest.fn()
-}));
-
+import { jest } from '@jest/globals';
 import projectRepository from '../src/repositories/projectRepository.js';
 import taskRepository from '../src/repositories/taskRepository.js';
 import resourceAvailabilityService from '../src/services/resourceAvailabilityService.js';

@@ -1,3 +1,4 @@
+import { jest } from '@jest/globals';
 import { handleNotFound,
   handleError } from '../src/utils/responseUtil.js';
 import { ValidationError,

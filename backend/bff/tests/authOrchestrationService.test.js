@@ -1,10 +1,4 @@
-jest.mock('../src/infrastructure/clients/authUpstreamClient.js', () => ({
-  register: jest.fn(),
-  login: jest.fn(),
-  getRoles: jest.fn(),
-  health: jest.fn()
-}));
-
+import { jest } from '@jest/globals';
 import authUpstreamClient from '../src/infrastructure/clients/authUpstreamClient.js';
 import authOrchestrationService from '../src/application/auth/authOrchestrationService.js';
 

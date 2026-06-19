@@ -1,465 +1,458 @@
-# 📖 Guía Completa de Inicio - Innovatech Backend
+# Guia de inicio - InnovaTech (full stack)
 
-## 🎯 Resumen del Sistema
-
-Sistema de microservicios con documentación Swagger integrada en todos los servicios.
-
-### Servicios Disponibles
-
-| Servicio | Puerto | Health Endpoint | Swagger UI | Swagger JSON |
-|----------|--------|----------------|------------|--------------|
-| **ms-auth** | 3001 | `/api/auth/health` | http://localhost:3001/api-docs | http://localhost:3001/api-docs.json |
-| **ms-users** | 3003 | `/health` | http://localhost:3003/api-docs | http://localhost:3003/api-docs.json |
-| **ms-project-manager** | 3002 | `/health` | http://localhost:3002/api-docs | http://localhost:3002/api-docs.json |
-| **BFF** | 3010 | `/health` | http://localhost:3010/api-docs | http://localhost:3010/api-docs.json |
+Instrucciones para levantar el proyecto completo: frontend React, API Gateway KrakenD, BFF y microservicios backend con PostgreSQL.
 
 ---
 
-##  Opción 1: Inicio Manual (Desarrollo)
+## Resumen del sistema
 
-### Pre-requisitos
-- Node.js 18+ instalado
-- PostgreSQL o acceso a Neon Cloud (ya configurado)
-- Claves RSA generadas (ver sección de Configuración)
+InnovaTech es una plataforma de gestion de proyectos y tareas con autenticacion JWT (RS256), roles RBAC y arquitectura de microservicios.
 
-### Pasos para Iniciar Cada Servicio
+| Componente | Rol |
+|------------|-----|
+| **Frontend** | React 18 + Vite (`:5173`) |
+| **KrakenD** | API Gateway, CORS, validacion JWT, RBAC (`:8010`) |
+| **BFF** | Orquestacion y contrato orientado al frontend (`:3010`, interno) |
+| **ms-auth** | Login, registro, JWT, JWKS, logout (`:3001`, interno) |
+| **ms-users** | Usuarios, perfiles, endpoints internos (`:3003`, interno) |
+| **ms-project-manager** | Proyectos, tareas, KPIs, colaboracion (`:3002`, interno) |
+| **PostgreSQL** | `users-db` (:5433) y `pm-db` (:5434) |
 
-#### 1. Abrir 4 terminales diferentes (una por servicio)
+**Entrada unica para el cliente:** `http://localhost:8010/api/v1/`
 
-#### 2. Terminal 1 - ms-auth
-```powershell
-cd backend\ms-auth
-npm run dev
-```
-**Salida esperada:** `Microservicio Auth ejecutándose en puerto 3001`
+El frontend no debe llamar directamente a los microservicios internos.
 
-#### 3. Terminal 2 - ms-users
-```powershell
-cd backend\ms-users
-npm run dev
-```
-**Salida esperada:** ` Microservicio Users ejecutándose en puerto 3003`
-
-#### 4. Terminal 3 - ms-project-manager
-```powershell
-cd backend\ms-project-manager
-npm run dev
-```
-**Salida esperada:** ` Project Manager ejecutándose en puerto 3002`
-
-#### 5. Terminal 4 - BFF
-```powershell
-cd backend\bff
-npm run dev
-```
-**Salida esperada:** `BFF escuchando en puerto 3010`
-
-### Verificación Rápida
-
-Ejecuta este script de PowerShell para verificar que todos los servicios estén corriendo:
-
-```powershell
-@("3001/api/auth/health", "3003/health", "3002/health", "3010/health") | ForEach-Object { 
-    try { 
-        $r = Invoke-WebRequest -UseBasicParsing "http://localhost:$_" -TimeoutSec 2
-        Write-Host "✅ $_: $($r.StatusCode)" 
-    } catch { 
-        Write-Host "❌ $_: no responde" 
-    } 
-}
-```
+Documentacion tecnica del backend: [backend/README.md](backend/README.md)
 
 ---
 
-##  Opción 2: Docker Compose (Producción)
+## Requisitos
 
-### Pre-requisitos
-- Docker Desktop instalado y corriendo
-- Archivo `.env.docker` configurado (ver sección de Configuración)
+- Node.js 20 o superior
+- npm
+- Docker Desktop (recomendado para levantar todo el backend)
+- Git
 
-### Iniciar todos los servicios
-```powershell
-cd backend
-docker compose --env-file .env.docker up --build
-```
-
-### Detener todos los servicios
-```powershell
-docker compose down
-```
-
-### Ver logs de un servicio específico
-```powershell
-docker compose logs -f ms-auth
-docker compose logs -f ms-users
-docker compose logs -f ms-project-manager
-docker compose logs -f bff
-```
+Opcional para desarrollo manual sin Docker: PostgreSQL local o Neon Cloud.
 
 ---
 
-##  Configuración Inicial
+## Opcion recomendada: Docker Compose + Frontend
 
-### 1. Generar Claves RSA (Solo Primera Vez)
-
-Las claves RSA son necesarias para firmar y verificar tokens JWT entre microservicios.
+### 1. Claves RSA (solo la primera vez)
 
 ```powershell
 cd backend\ms-auth
 node .\scripts\generate-keys.js
+cd ..
 ```
 
-Esto genera:
-- `keys/private.key` (usada por ms-auth para firmar JWT)
-- `keys/public.key` (copiada a todos los servicios para verificar JWT)
+Genera `keys/private.key` (ms-auth firma JWT) y `keys/public.key` (verificacion en gateway y servicios).
 
-### 2. Configurar Base de Datos
+### 2. Variables de entorno Docker
 
-#### Opción A: Usar Neon Cloud (Ya configurado)
-Los archivos `.env.docker` ya están configurados para usar Neon Cloud.
+```powershell
+cd backend
+copy .env.docker.example .env.docker
+```
 
-#### Opción B: PostgreSQL Local
-1. Crear base de datos `innovatech_db`
-2. Ejecutar el schema SQL:
-   ```powershell
-   psql -U postgres -d innovatech_db -f backend\ms-auth\database\schema.sql
-   ```
-3. Actualizar `.env.docker` con tu conexión local:
-   ```env
-   DATABASE_URL_AUTH=postgresql://usuario:password@localhost:5432/innovatech_db
-   DATABASE_URL_USERS=postgresql://usuario:password@localhost:5432/innovatech_db
-   ```
+En desarrollo local el compose usa PostgreSQL embebido (`users-db`, `pm-db`). Las variables `DATABASE_URL_*` en `.env.docker` son opcionales salvo que apuntes a Neon u otra BD externa.
 
-### 3. Instalar Dependencias (Solo Primera Vez o Después de Cambios)
+### 3. Levantar backend completo
+
+```powershell
+cd backend
+docker compose --env-file .env.docker up -d --build
+```
+
+Servicios incluidos: KrakenD, BFF, ms-auth, ms-users, ms-project-manager, ambas bases PostgreSQL y Prometheus.
+
+### 4. Verificar backend
+
+| Recurso | URL |
+|---------|-----|
+| API (KrakenD) | http://localhost:8010/api/v1/ |
+| JWKS | http://localhost:8010/.well-known/jwks.json |
+| PostgreSQL users | localhost:5433 (base `innovatech_users`) |
+| PostgreSQL PM | localhost:5434 (base `innovatech_pm`) |
+| Prometheus | http://localhost:9090 |
+
+Comprobacion rapida en PowerShell:
+
+```powershell
+@(
+  "8010/.well-known/jwks.json",
+  "8010/api/v1/auth/health"
+) | ForEach-Object {
+  try {
+    $r = Invoke-WebRequest -UseBasicParsing "http://localhost:$_" -TimeoutSec 5
+    Write-Host "OK $_ : $($r.StatusCode)"
+  } catch {
+    Write-Host "FAIL $_ : no responde"
+  }
+}
+```
+
+### 5. Levantar frontend
+
+En otra terminal, desde la raiz del repositorio:
+
+```powershell
+cd frontend
+npm install
+copy .env.example .env
+npm run dev
+```
+
+Abrir http://localhost:5173
+
+Vite hace proxy de `/api` hacia `http://localhost:8010`, por lo que el frontend usa `/api/v1` sin configurar CORS manualmente.
+
+### 6. Usuarios de prueba (seed local)
+
+Password para todos: `Secret123`
+
+| Email | Rol |
+|-------|-----|
+| gestor@innovatech.cl | gestor |
+| profesional@innovatech.cl | profesional |
+| directivo@innovatech.cl | directivo |
+
+### Comandos utiles Docker
+
+```powershell
+cd backend
+
+# Logs
+docker compose logs -f api-gateway bff auth users project-manager
+
+# Reconstruir un servicio
+docker compose up -d --build auth
+
+# Detener todo
+docker compose down
+```
+
+---
+
+## Opcion alternativa: desarrollo manual (sin Docker)
+
+Util cuando quieres depurar un solo microservicio. Necesitas PostgreSQL accesible y las claves RSA generadas.
+
+Abre una terminal por servicio (orden sugerido: ms-users, ms-auth, ms-project-manager, BFF). KrakenD en manual es mas complejo; para flujo completo usa Docker.
+
+### ms-users (puerto 3003)
+
+```powershell
+cd backend\ms-users
+npm install
+npm run dev
+```
+
+Health: http://localhost:3003/health  
+Swagger: http://localhost:3003/api-docs
+
+### ms-auth (puerto 3001)
 
 ```powershell
 cd backend\ms-auth
 npm install
-
-cd ..\ms-users
-npm install
-
-cd ..\ms-project-manager
-npm install
-
-cd ..\bff
-npm install
+npm run dev
 ```
 
----
+Health: http://localhost:3001/api/auth/health  
+Swagger: http://localhost:3001/api-docs
 
-## 🔍 Uso de Swagger
+Variable clave: `USERS_SERVICE_URL=http://localhost:3003`
 
-### Acceder a la Documentación Interactiva
+### ms-project-manager (puerto 3002)
 
-1. **ms-auth**: http://localhost:3001/api-docs
-   - Login, logout, registro
-   - Gestión de roles
-   - 9 endpoints documentados
-
-2. **ms-users**: http://localhost:3003/api-docs
-   - CRUD de usuarios
-   - Búsqueda y filtrado
-   - Paginación
-
-3. **ms-project-manager**: http://localhost:3002/api-docs
-   - Gestión de proyectos
-   - Gestión de tareas
-   - Documentación completa con ejemplos
-
-4. **BFF**: http://localhost:3010/api-docs
-   - Endpoints agregados para frontend
-   - Orquestación entre servicios
-   - Rutas públicas y protegidas
-
-### Cómo Probar los Endpoints con Swagger
-
-#### 1. Obtener Token JWT (Login)
-
-1. Ir a http://localhost:3001/api-docs
-2. Expandir `POST /api/auth/login`
-3. Click en "Try it out"
-4. Ingresar credenciales:
-   ```json
-   {
-     "email": "usuario@ejemplo.com",
-     "password": "tu_password"
-   }
-   ```
-5. Click "Execute"
-6. **Copiar el token** de la respuesta
-
-#### 2. Usar el Token en Requests Protegidos
-
-1. Click en el botón **"Authorize" ** (arriba a la derecha en Swagger UI)
-2. Ingresar: `Bearer tu_token_jwt_aqui`
-3. Click "Authorize"
-4. Ahora puedes usar todos los endpoints protegidos
-
-#### 3. Probar Endpoints con Parámetros
-
-Ejemplo: Obtener proyecto por ID
-1. Expandir `GET /api/v1/projects/{id}`
-2. Click "Try it out"
-3. Ingresar un ID válido (ej: `123`)
-4. Click "Execute"
-5. Ver la respuesta
-
----
-
-##  Solución de Problemas Comunes
-
-### Problema: "Puerto ya en uso" (EADDRINUSE)
-
-**Síntoma:** 
-```
-Error: listen EADDRINUSE: address already in use :::3001
-```
-
-**Solución:**
 ```powershell
-# Ver qué proceso usa el puerto
-netstat -ano | findstr :3001
+cd backend\ms-project-manager
+npm install
+npm run dev
+```
 
-# Matar el proceso (reemplazar PID con el número que aparece)
+Health: http://localhost:3002/health  
+Swagger: http://localhost:3002/api-docs
+
+### BFF (puerto 3010)
+
+```powershell
+cd backend\bff
+npm install
+npm run dev
+```
+
+Health: http://localhost:3010/health  
+Swagger: http://localhost:3010/api-docs
+
+Sin KrakenD, el frontend debe apuntar a URLs directas o levantar el gateway por separado.
+
+### Verificacion manual
+
+```powershell
+@(
+  "3001/api/auth/health",
+  "3003/health",
+  "3002/health",
+  "3010/health"
+) | ForEach-Object {
+  try {
+    $r = Invoke-WebRequest -UseBasicParsing "http://localhost:$_" -TimeoutSec 2
+    Write-Host "OK $_ : $($r.StatusCode)"
+  } catch {
+    Write-Host "FAIL $_ : no responde"
+  }
+}
+```
+
+---
+
+## Instalacion de dependencias (primera vez)
+
+```powershell
+cd backend\ms-auth && npm install
+cd ..\ms-users && npm install
+cd ..\ms-project-manager && npm install
+cd ..\bff && npm install
+cd ..\..\frontend && npm install
+```
+
+---
+
+## Swagger (documentacion interactiva)
+
+Cada servicio expone OpenAPI en `/api-docs`:
+
+| Servicio | Swagger UI |
+|----------|------------|
+| ms-auth | http://localhost:3001/api-docs |
+| ms-users | http://localhost:3003/api-docs |
+| ms-project-manager | http://localhost:3002/api-docs |
+| BFF | http://localhost:3010/api-docs |
+
+### Probar login y token JWT
+
+1. Ir a Swagger de ms-auth o usar la API publica via KrakenD: `POST http://localhost:8010/api/v1/auth/login`
+2. Body de ejemplo:
+
+```json
+{
+  "email": "gestor@innovatech.cl",
+  "password": "Secret123"
+}
+```
+
+3. Copiar el token de la respuesta.
+4. En Swagger, pulsar **Authorize** e ingresar: `Bearer <token>`
+5. Probar rutas protegidas en ms-project-manager o via gateway (`GET /api/v1/projects`).
+
+En produccion con KrakenD, la validacion JWT la hace el gateway consultando JWKS de ms-auth; el BFF recibe headers `X-User-Id`, `X-User-Email`, `X-User-Role`.
+
+---
+
+## Tests
+
+El proyecto incluye pruebas unitarias e integracion con umbral minimo del 60% de cobertura en lineas/statements.
+
+### Backend (Jest + Supertest, ESM)
+
+```powershell
+cd backend\ms-auth && npm test
+cd ..\ms-users && npm test
+cd ..\ms-project-manager && npm test
+cd ..\bff && npm test
+```
+
+Script agrupado (auth, PM, BFF):
+
+```powershell
+cd backend
+npm test
+```
+
+### Frontend (Vitest + Testing Library)
+
+```powershell
+cd frontend
+npm test
+npm run test:coverage
+```
+
+---
+
+## Arquitectura
+
+```
+Frontend (React/Vite :5173)
+        |
+        v
+KrakenD API Gateway (:8010)
+  - JWT RS256 (JWKS ms-auth)
+  - CORS, RBAC
+        |
+        v
+BFF (:3010, interno)
+  - Orquestacion
+  - Rutas /proyectos agregadas
+        |
+        +-- ms-auth (:3001) ----HTTP interno----> ms-users (:3003) --> PostgreSQL users-db
+        |
+        +-- ms-project-manager (:3002) ---------> PostgreSQL pm-db
+```
+
+### Database per Service
+
+- **ms-users** persiste la tabla `usuarios` en `innovatech_users` (puerto host 5433).
+- **ms-project-manager** persiste proyectos y tareas en `innovatech_pm` (puerto host 5434).
+- **ms-auth** no es dueno de datos de usuario; delega login/registro en ms-users via REST interno con `X-Internal-Token`.
+
+Schemas:
+
+- `backend/ms-users/database/schema.sql`
+- `backend/ms-project-manager/db/migrations/`
+
+### Flujo de autenticacion (resumen)
+
+1. Cliente: `POST /api/v1/auth/login` (KrakenD, ruta publica).
+2. KrakenD reenvia al BFF, BFF reenvia a ms-auth.
+3. ms-auth consulta ms-users (`/api/users/internal/by-email/:email`).
+4. ms-auth verifica password (bcrypt) y firma JWT RS256.
+5. Cliente envia `Authorization: Bearer <token>` en rutas protegidas.
+6. KrakenD valida JWT con `/.well-known/jwks.json` e inyecta headers de identidad.
+
+### Patrones de codigo
+
+- Controller delgado, Service (negocio), Repository (SQL), DTO (validacion).
+- Backend en ES Modules (`"type": "module"`).
+- Comunicacion entre servicios: REST + JSON.
+
+---
+
+## Estructura del repositorio
+
+```
+backend_innovatech/
+├── INSTRUCCIONES-INICIO.md    (este archivo)
+├── frontend/                  React + Vite + Vitest
+├── backend/
+│   ├── README.md              Documentacion backend detallada
+│   ├── docker-compose.yml
+│   ├── api-gateway/           KrakenD (krakend.json)
+│   ├── bff/
+│   ├── ms-auth/
+│   ├── ms-users/
+│   ├── ms-project-manager/
+│   └── k8s/                   Manifiestos Kubernetes
+```
+
+---
+
+## Solucion de problemas
+
+### Puerto en uso (EADDRINUSE)
+
+```powershell
+netstat -ano | findstr :3001
 Stop-Process -Id <PID> -Force
 ```
 
-**O matar todos los procesos Node:**
+O detener procesos Node:
+
 ```powershell
 Get-Process -Name node -ErrorAction SilentlyContinue | Stop-Process -Force
 ```
 
-### Problema: BFF no responde (timeout)
+### KrakenD o BFF no responde
 
-**Posibles causas:**
-1. Puerto 3010 ocupado por otro proceso
-2. Caché de ts-node-dev inconsistente
-
-**Solución:**
 ```powershell
-# Matar proceso en puerto 3010
-$pid = (netstat -ano | findstr :3010 | Select-String -Pattern '\d+$').Matches.Value
-if($pid) { Stop-Process -Id $pid -Force }
-
-# Limpiar caché y reiniciar
-cd backend\bff
-Remove-Item -Recurse -Force node_modules\.cache -ErrorAction SilentlyContinue
-npm run dev
+cd backend
+docker compose ps
+docker compose logs api-gateway bff
 ```
 
-### Problema: Swagger muestra endpoints vacíos
+### Error de base de datos
 
-**Causa:** Falta documentación OpenAPI en el código.
+1. Verificar que contenedores `users-db` y `pm-db` esten running.
+2. Revisar `DATABASE_URL` en logs de ms-users / ms-project-manager.
+3. Si usas Neon, comprobar conectividad y `sslmode` en la URL.
 
-**Verificación:**
-- Revisar que los archivos de rutas tengan comentarios `@openapi`
-- Verificar que `apis` en swaggerJsdoc apunte a los archivos correctos
+### JWT invalido o expirado
 
-### Problema: Error de base de datos
+1. Volver a hacer login.
+2. Verificar que existan las claves en `backend/ms-auth/keys/`.
+3. Comprobar JWKS: http://localhost:8010/.well-known/jwks.json
 
-**Síntoma:**
-```
-Connection timeout or database not accessible
-```
+### Swagger sin endpoints
 
-**Solución:**
-1. Verificar que la URL de conexión en `.env.docker` sea correcta
-2. Verificar que la base de datos esté accesible:
-   ```powershell
-   # Para Neon Cloud, debe ser accesible desde internet
-   # Para PostgreSQL local, debe estar corriendo:
-   pg_isready -h localhost -p 5432
-   ```
+Revisar que las rutas tengan anotaciones `@openapi` y que la app monte `/api-docs`.
 
-### Problema: JWT inválido o expirado
+### Frontend no conecta al backend
 
-**Causa:** Token expirado o claves RSA no sincronizadas.
-
-**Solución:**
-1. Hacer login nuevamente para obtener un token fresco
-2. Verificar que todos los servicios tengan la misma `public.key`:
-   ```powershell
-   # Comparar checksums
-   Get-FileHash backend\ms-auth\keys\public.key
-   Get-FileHash backend\ms-users\keys\public.key
-   Get-FileHash backend\ms-project-manager\keys\public.key
-   Get-FileHash backend\bff\keys\public.key
-   ```
-3. Si son diferentes, copiar la clave pública de ms-auth a los otros servicios:
-   ```powershell
-   Copy-Item backend\ms-auth\keys\public.key backend\ms-users\keys\
-   Copy-Item backend\ms-auth\keys\public.key backend\ms-project-manager\keys\
-   Copy-Item backend\ms-auth\keys\public.key backend\bff\keys\
-   ```
+1. Confirmar Docker en `:8010`.
+2. Revisar `frontend/.env` (`VITE_API_BASE_URL=/api/v1` o URL completa).
+3. Confirmar proxy en `frontend/vite.config.js`.
 
 ---
 
-##  Arquitectura del Sistema
+## Kubernetes (opcional)
 
-```
-┌─────────────┐
-│  Frontend   │
-│ (React/Vue) │
-└──────┬──────┘
-       │
-       ▼
-┌─────────────────────────────────────┐
-│          API Gateway (BFF)          │
-│         Port: 3010                  │
-│  • Orquestación de servicios        │
-│  • Transformación de respuestas     │
-│  • Agregación de datos              │
-└──────┬──────────────────────────────┘
-       │
-       ├─────────────┬──────────────────┬──────────────────┐
-       ▼             ▼                  ▼                  ▼
-┌─────────────┐ ┌──────────────┐ ┌─────────────────────┐ ┌────────────┐
-│  ms-auth    │ │  ms-users    │ │ ms-project-manager  │ │ KrakenD    │
-│  Port: 3001 │ │  Port: 3003  │ │    Port: 3002       │ │ (Opcional) │
-│             │ │              │ │                     │ └────────────┘
-│ • Login     │ │ • CRUD Users │ │ • Projects          │
-│ • Logout    │ │ • Roles      │ │ • Tasks             │
-│ • JWT Sign  │ │ • Search     │ │ • Assignments       │
-│ • Roles     │ │              │ │                     │
-└─────┬───────┘ └──────┬───────┘ └──────────┬──────────┘
-      │                │                     │
-      │                │                     │
-      ▼                ▼                     ▼
-┌─────────────┐ ┌──────────────┐ ┌─────────────────────┐
-│ PostgreSQL  │ │ PostgreSQL   │ │   PostgreSQL        │
-│ (Auth DB)   │ │ (Users DB)   │ │   (Projects DB)     │
-│             │ │              │ │                     │
-│ • usuarios  │ │ • usuarios   │ │ • projects          │
-│ • roles     │ │ • perfiles   │ │ • tasks             │
-│ • blacklist │ │              │ │ • assignments       │
-└─────────────┘ └──────────────┘ └─────────────────────┘
+Para despliegue en cluster, ver [backend/k8s/README.md](backend/k8s/README.md).
+
+Resumen:
+
+```powershell
+cd backend\ms-auth
+node scripts\generate-keys.js
+
+kubectl create secret generic innovatech-jwt-keys -n innovatech `
+  --from-file=private.key=ms-auth/keys/private.key `
+  --from-file=public.key=ms-auth/keys/public.key
+
+kubectl apply -k k8s/
 ```
 
-**⚠️ IMPORTANTE: Patrón Database per Service**
+Acceso local al gateway en cluster:
 
-Cada microservicio tiene su **propia base de datos independiente**:
-- ✅ Mayor independencia y escalabilidad
-- ✅ Cada servicio puede evolucionar su esquema sin afectar otros
-- ✅ Fallos aislados (una BD caída no afecta otros servicios)
-
-Ver documentación completa: [backend/docs/DATABASE-PER-SERVICE.md](backend/docs/DATABASE-PER-SERVICE.md)
-
-### Flujo de Autenticación
-
-1. **Usuario hace login** → `POST /api/v1/login` (BFF)
-2. **BFF reenvía** → `POST /api/auth/login` (ms-auth)
-3. **ms-auth valida** credenciales en su base de datos
-4. **ms-auth firma JWT** con clave privada RSA
-5. **ms-auth retorna** token al BFF
-6. **BFF retorna** token al frontend
-7. **Frontend incluye** token en header `Authorization: Bearer <token>`
-8. **Cada servicio verifica** el token con clave pública RSA
-
-### Patrón Database per Service
-
-Cada microservicio tiene su **propia base de datos independiente**:
-
-- **ms-auth**: Base de datos exclusiva para autenticación
-  - Tabla `usuarios` (credenciales, passwords hash)
-  - Tabla `roles` (catálogo de roles)
-  - Tabla `token_blacklist` (tokens revocados)
-
-- **ms-users**: Base de datos exclusiva para perfiles de usuario
-  - Tabla `usuarios` (información de perfil completa)
-  - Puede tener más tablas de perfil en el futuro
-
-- **ms-project-manager**: Base de datos exclusiva para proyectos
-  - Tabla `projects` (proyectos)
-  - Tabla `tasks` (tareas)
-  - Tabla `assignments` (asignaciones)
-
-**Ventajas:**
-- ✅ Independencia: cada servicio evoluciona sin afectar otros
-- ✅ Escalabilidad: cada BD puede escalarse por separado
-- ✅ Resiliencia: fallos aislados por servicio
-
-**Configuración en `.env.docker`:**
-```env
-DATABASE_URL_AUTH=postgresql://...      # BD exclusiva de ms-auth
-DATABASE_URL_USERS=postgresql://...     # BD exclusiva de ms-users (DIFERENTE)
-DATABASE_URL_PM=postgresql://...        # BD exclusiva de ms-project-manager
-```
-
-**📚 Ver más:** [backend/docs/DATABASE-PER-SERVICE.md](backend/docs/DATABASE-PER-SERVICE.md)
-
----
-
-## 📝 Notas Adicionales
-
-### Swagger Features Implementadas
-
-✅ **Request Body Schemas**: Todos los POST/PUT tienen ejemplos de JSON  
-✅ **Path Parameters**: Documentados con tipo y ejemplos  
-✅ **Query Parameters**: Paginación y filtros documentados  
-✅ **Response Examples**: Respuestas 200, 400, 401, 403, 404, 500  
-✅ **Security Schemes**: Bearer JWT configurado  
-✅ **Tags**: Endpoints agrupados por funcionalidad  
-
-### Tecnologías Utilizadas
-
-- **Node.js** v24.16.0
-- **TypeScript** v6.0.3
-- **Express** v4.21.2
-- **swagger-jsdoc** v6.2.8
-- **swagger-ui-express** v5.0.1
-- **ts-node-dev** v2.0.0 (desarrollo)
-- **PostgreSQL** (Neon Cloud)
-- **JWT** RS256 con RSA keys
-
-### Scripts Disponibles
-
-Cada microservicio tiene los siguientes scripts en `package.json`:
-
-```json
-{
-  "dev": "ts-node-dev --respawn --transpile-only src/app.ts",
-  "build": "tsc",
-  "start": "node dist/app.js",
-  "test": "jest"
-}
-```
-
-### Estructura de Directorios
-
-```
-backend/
-├── api-gateway/          # KrakenD config (opcional)
-├── bff/                  # Backend For Frontend
-├── ms-auth/              # Microservicio de autenticación
-├── ms-users/             # Microservicio de usuarios
-├── ms-project-manager/   # Microservicio de proyectos/tareas
-├── docker-compose.yml    # Orquestación de servicios
-└── .env.docker          # Variables de entorno
+```powershell
+kubectl port-forward -n innovatech svc/api-gateway 8010:8080
 ```
 
 ---
 
-## 🎓 Recursos de Aprendizaje
+## Tecnologias
 
-- **Swagger/OpenAPI**: https://swagger.io/docs/
-- **Express.js**: https://expressjs.com/
-- **TypeScript**: https://www.typescriptlang.org/docs/
-- **JWT**: https://jwt.io/introduction
-- **Microservicios**: https://microservices.io/
-
----
-
-## 🤝 Soporte
-
-Si encuentras algún problema:
-
-1. Revisa la sección de Solución de Problemas
-2. Verifica los logs de cada servicio
-3. Asegúrate de que las dependencias estén instaladas
-4. Verifica que los puertos no estén ocupados
-5. Revisa que las claves RSA estén sincronizadas
+| Area | Stack |
+|------|-------|
+| Frontend | React 18, Vite 5, React Router, Vitest |
+| Backend | Node.js 20+, TypeScript, Express, ES Modules |
+| Gateway | KrakenD 2.7 |
+| BD | PostgreSQL 16 |
+| Auth | JWT RS256, bcrypt, JWKS |
+| Docs API | swagger-jsdoc, swagger-ui-express |
+| Contenedores | Docker Compose |
+| Tests backend | Jest, Supertest |
+| Observabilidad | Prometheus (compose local) |
 
 ---
 
-**¡Sistema completamente funcional con Swagger en todos los microservicios! 🎉**
+## Recursos
+
+- Backend detallado: [backend/README.md](backend/README.md)
+- Kubernetes: [backend/k8s/README.md](backend/k8s/README.md)
+- Swagger/OpenAPI: https://swagger.io/docs/
+- JWT: https://jwt.io/introduction
+
+---
+
+## Soporte rapido
+
+1. Revisar logs: `docker compose logs -f <servicio>`
+2. Verificar health de cada capa (gateway, BFF, microservicios).
+3. Confirmar claves RSA y usuarios seed.
+4. Ejecutar tests: `npm test` en backend y frontend.
+
+---
+
+InnovaTech - stack completo: frontend, gateway KrakenD, BFF, microservicios, PostgreSQL y pruebas automatizadas.
