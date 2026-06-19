@@ -255,6 +255,104 @@
       ]
     },
     {
+      "@comment": "Frontend: Login público",
+      "endpoint": "/api/v1/login",
+      "method": "POST",
+      "output_encoding": "json",
+      "backend": [
+        {
+          "url_pattern": "/api/v1/login",
+          "encoding": "json",
+          "method": "POST",
+          "host": ["http://bff:3010"]
+        }
+      ]
+    },
+    {
+      "@comment": "Frontend: Proyectos agregados (requiere JWT)",
+      "endpoint": "/api/v1/proyectos",
+      "method": "GET",
+      "output_encoding": "json",
+      "extra_config": {
+        "auth/validator": {
+          "alg": "RS256",
+          "jwk_url": "http://krakend:8080/.well-known/jwks.json",
+          "cache": true,
+          "cache_duration": 300,
+          "disable_jwk_security": true,
+          "propagate_claims": [
+            ["id", "x-user-id"],
+            ["email", "x-user-email"],
+            ["rol", "x-user-role"]
+          ]
+        }
+      },
+      "backend": [
+        {
+          "url_pattern": "/api/v1/proyectos",
+          "encoding": "json",
+          "method": "GET",
+          "host": ["http://bff:3010"]
+        }
+      ]
+    },
+    {
+      "@comment": "Frontend: Tareas por proyecto (requiere JWT)",
+      "endpoint": "/api/v1/proyectos/{id}/tareas",
+      "method": "GET",
+      "output_encoding": "json",
+      "extra_config": {
+        "auth/validator": {
+          "alg": "RS256",
+          "jwk_url": "http://krakend:8080/.well-known/jwks.json",
+          "cache": true,
+          "cache_duration": 300,
+          "disable_jwk_security": true,
+          "propagate_claims": [
+            ["id", "x-user-id"],
+            ["email", "x-user-email"],
+            ["rol", "x-user-role"]
+          ]
+        }
+      },
+      "backend": [
+        {
+          "url_pattern": "/api/v1/proyectos/{id}/tareas",
+          "encoding": "json",
+          "method": "GET",
+          "host": ["http://bff:3010"]
+        }
+      ]
+    },
+    {
+      "@comment": "KPIs: Dashboard de progreso (requiere JWT)",
+      "endpoint": "/api/v1/kpis/dashboard",
+      "method": "GET",
+      "output_encoding": "json",
+      "extra_config": {
+        "auth/validator": {
+          "alg": "RS256",
+          "jwk_url": "http://krakend:8080/.well-known/jwks.json",
+          "cache": true,
+          "cache_duration": 300,
+          "disable_jwk_security": true,
+          "propagate_claims": [
+            ["id", "x-user-id"],
+            ["email", "x-user-email"],
+            ["rol", "x-user-role"]
+          ]
+        }
+      },
+      "backend": [
+        {
+          "url_pattern": "/api/v1/kpis/dashboard",
+          "encoding": "json",
+          "method": "GET",
+          "host": ["http://bff:3010"]
+        }
+      ]
+    },
+    {
       "@comment": "Health check - sin autenticación",
       "endpoint": "/health",
       "method": "GET",
@@ -278,7 +376,7 @@
           "url_pattern": "/.well-known/jwks.json",
           "encoding": "json",
           "method": "GET",
-          "host": ["http://ms-auth:3001"]
+          "host": ["http://auth:3001"]
         }
       ]
     }

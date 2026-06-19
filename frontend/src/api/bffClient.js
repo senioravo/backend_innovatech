@@ -104,6 +104,11 @@ export function fetchTareas(proyectoId) {
   return request(`/proyectos/${encodeURIComponent(proyectoId)}/tareas`);
 }
 
+/** GET /kpis/dashboard — progreso agregado vía ms-kpi */
+export function fetchKpisDashboard() {
+  return request('/kpis/dashboard');
+}
+
 /** POST /projects — crear proyecto (reenvío PM) */
 export function createProject(payload) {
   return request('/projects', {

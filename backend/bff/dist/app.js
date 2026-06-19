@@ -59,6 +59,19 @@ app.use(config.API_GATEWAY_PREFIX, apiGateway);
 app.use(handleNotFound);
 app.use(handleError);
 const PORT = config.PORT;
+// Capturar errores no manejados para diagnóstico
+process.on('unhandledRejection', (reason, promise) => {
+    console.error('❌ Unhandled Rejection detectado en BFF:');
+    console.error('Razón:', reason);
+    console.error('Promise:', promise);
+    // No salir inmediatamente para poder ver el error
+});
+process.on('uncaughtException', (error) => {
+    console.error('❌ Uncaught Exception detectado en BFF:');
+    console.error(error);
+    // Dar tiempo para ver el error antes de salir
+    setTimeout(() => process.exit(1), 1000);
+});
 app.listen(PORT, () => {
     console.log(`BFF escuchando en puerto ${PORT}`);
 });

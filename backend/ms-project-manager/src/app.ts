@@ -81,15 +81,12 @@ if (process.env.NODE_ENV !== 'test') {
       });
     })
     .catch((err) => {
-      console.error('No se pudo conectar a PostgreSQL:', err.message);
-      process.exit(1);
+      // If DB verification fails, log a warning but still start the server
+      console.warn('Proyecto Manager iniciará sin verificación de PostgreSQL:', err.message);
+      app.listen(PORT, () => {
+        console.log(`🚀 Project Manager ejecutándose en puerto ${PORT}`);
+      });
     });
-  })
-  .catch((err) => {
-    console.warn('Proyecto Manager iniciará sin verificación de PostgreSQL:', err.message);
-    app.listen(PORT, () => {
-      console.log(`🚀 Project Manager ejecutándose en puerto ${PORT}`);
-    });
-  });
+}
 
 module.exports = app;

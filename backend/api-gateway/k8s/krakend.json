@@ -28,11 +28,11 @@
       "@comment": "Auth: Login público (sin validación JWT)",
       "endpoint": "/api/v1/auth/login",
       "method": "POST",
-      "output_encoding": "json",
+      "output_encoding": "no-op",
       "backend": [
         {
-          "url_pattern": "/api/auth/login",
-          "encoding": "json",
+          "url_pattern": "/api/v1/auth/login",
+          "encoding": "no-op",
           "method": "POST",
           "host": ["http://bff:3010"]
         }
@@ -42,11 +42,11 @@
       "@comment": "Auth: Register público (sin validación JWT)",
       "endpoint": "/api/v1/auth/register",
       "method": "POST",
-      "output_encoding": "json",
+      "output_encoding": "no-op",
       "backend": [
         {
-          "url_pattern": "/api/auth/register",
-          "encoding": "json",
+          "url_pattern": "/api/v1/auth/register",
+          "encoding": "no-op",
           "method": "POST",
           "host": ["http://bff:3010"]
         }
@@ -200,7 +200,7 @@
     },
     {
       "@comment": "Tareas: Listar por proyecto (requiere JWT)",
-      "endpoint": "/api/v1/projects/{project_id}/tasks",
+      "endpoint": "/api/v1/projects/{id}/tasks",
       "method": "GET",
       "output_encoding": "json",
       "extra_config": {
@@ -219,7 +219,7 @@
       },
       "backend": [
         {
-          "url_pattern": "/api/v1/projects/{project_id}/tasks",
+          "url_pattern": "/api/v1/projects/{id}/tasks",
           "encoding": "json",
           "method": "GET",
           "host": ["http://bff:3010"]
@@ -228,7 +228,7 @@
     },
     {
       "@comment": "Tareas: Crear (requiere JWT)",
-      "endpoint": "/api/v1/projects/{project_id}/tasks",
+      "endpoint": "/api/v1/projects/{id}/tasks",
       "method": "POST",
       "output_encoding": "json",
       "extra_config": {
@@ -247,9 +247,107 @@
       },
       "backend": [
         {
-          "url_pattern": "/api/v1/projects/{project_id}/tasks",
+          "url_pattern": "/api/v1/projects/{id}/tasks",
           "encoding": "json",
           "method": "POST",
+          "host": ["http://bff:3010"]
+        }
+      ]
+    },
+    {
+      "@comment": "Frontend: Login público (contrato usado por el frontend)",
+      "endpoint": "/api/v1/login",
+      "method": "POST",
+      "output_encoding": "no-op",
+      "backend": [
+        {
+          "url_pattern": "/api/v1/login",
+          "encoding": "no-op",
+          "method": "POST",
+          "host": ["http://bff:3010"]
+        }
+      ]
+    },
+    {
+      "@comment": "Frontend: Proyectos agregados (requiere JWT)",
+      "endpoint": "/api/v1/proyectos",
+      "method": "GET",
+      "output_encoding": "json",
+      "extra_config": {
+        "auth/validator": {
+          "alg": "RS256",
+          "jwk_url": "http://api-gateway:8080/.well-known/jwks.json",
+          "cache": true,
+          "cache_duration": 300,
+          "disable_jwk_security": true,
+          "propagate_claims": [
+            ["id", "x-user-id"],
+            ["email", "x-user-email"],
+            ["rol", "x-user-role"]
+          ]
+        }
+      },
+      "backend": [
+        {
+          "url_pattern": "/api/v1/proyectos",
+          "encoding": "json",
+          "method": "GET",
+          "host": ["http://bff:3010"]
+        }
+      ]
+    },
+    {
+      "@comment": "Frontend: Tareas por proyecto (requiere JWT)",
+      "endpoint": "/api/v1/proyectos/{id}/tareas",
+      "method": "GET",
+      "output_encoding": "json",
+      "extra_config": {
+        "auth/validator": {
+          "alg": "RS256",
+          "jwk_url": "http://api-gateway:8080/.well-known/jwks.json",
+          "cache": true,
+          "cache_duration": 300,
+          "disable_jwk_security": true,
+          "propagate_claims": [
+            ["id", "x-user-id"],
+            ["email", "x-user-email"],
+            ["rol", "x-user-role"]
+          ]
+        }
+      },
+      "backend": [
+        {
+          "url_pattern": "/api/v1/proyectos/{id}/tareas",
+          "encoding": "json",
+          "method": "GET",
+          "host": ["http://bff:3010"]
+        }
+      ]
+    },
+    {
+      "@comment": "KPIs: Dashboard de progreso (requiere JWT)",
+      "endpoint": "/api/v1/kpis/dashboard",
+      "method": "GET",
+      "output_encoding": "json",
+      "extra_config": {
+        "auth/validator": {
+          "alg": "RS256",
+          "jwk_url": "http://api-gateway:8080/.well-known/jwks.json",
+          "cache": true,
+          "cache_duration": 300,
+          "disable_jwk_security": true,
+          "propagate_claims": [
+            ["id", "x-user-id"],
+            ["email", "x-user-email"],
+            ["rol", "x-user-role"]
+          ]
+        }
+      },
+      "backend": [
+        {
+          "url_pattern": "/api/v1/kpis/dashboard",
+          "encoding": "json",
+          "method": "GET",
           "host": ["http://bff:3010"]
         }
       ]
@@ -278,7 +376,7 @@
           "url_pattern": "/.well-known/jwks.json",
           "encoding": "json",
           "method": "GET",
-          "host": ["http://ms-auth:3001"]
+          "host": ["http://auth:3001"]
         }
       ]
     }

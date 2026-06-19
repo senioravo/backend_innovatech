@@ -4,6 +4,7 @@ const publicSessionRoutes = require('../routes/publicSessionRoutes');
 const authPublicOrchestrationRoutes = require('../routes/authPublicOrchestrationRoutes');
 const authProtectedOrchestrationRoutes = require('../routes/authProtectedOrchestrationRoutes');
 const frontendProyectosRoutes = require('../routes/frontendProyectosRoutes');
+const frontendKpiRoutes = require('../routes/frontendKpiRoutes');
 const protectedProjectManagerRoutes = require('../routes/protectedProjectManagerRoutes');
 
 /**
@@ -16,6 +17,7 @@ gatewayRouter.use(publicSessionRoutes);
 gatewayRouter.use('/auth', authPublicOrchestrationRoutes);
 gatewayRouter.use('/auth', authProtectedOrchestrationRoutes);
 gatewayRouter.use(frontendProyectosRoutes);
+gatewayRouter.use(frontendKpiRoutes);
 gatewayRouter.use(protectedProjectManagerRoutes);
 
 module.exports = gatewayRouter;

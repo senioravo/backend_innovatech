@@ -1,4 +1,4 @@
-# Stack local: API Gateway (KrakenD) → BFF → auth | project-manager
+# Stack local: API Gateway (KrakenD) → BFF → auth | project-manager | kpi
 # Uso:
 #   1. Genera claves RSA: cd ms-auth && node scripts/generate-keys.js
 #   2. Copia public.key al BFF: cp ms-auth/keys/public.key bff/keys/public.key
@@ -46,11 +46,14 @@ services:
       AUTH_API_PREFIX: /api/auth
       PROJECT_MANAGER_BASE_URL: http://project-manager:3002
       PROJECT_MANAGER_API_PREFIX: /api/v1
+      KPI_SERVICE_BASE_URL: http://kpi:3004
+      KPI_API_PREFIX: /api/v1
     expose:
       - "3010"
     depends_on:
       - auth
       - project-manager
+      - kpi
 
   auth:
     build:
@@ -88,6 +91,19 @@ services:
       - ./ms-project-manager/keys/public.key:/app/keys/public.key:ro
     expose:
       - "3002"
+
+  kpi:
+    build:
+      context: ./ms-kpi
+    environment:
+      PORT: "3004"
+      API_GATEWAY_PREFIX: /api/v1
+      PROJECT_MANAGER_BASE_URL: http://project-manager:3002
+      PROJECT_MANAGER_API_PREFIX: /api/v1
+    volumes:
+      - ./ms-auth/keys/public.key:/app/keys/public.key:ro
+    expose:
+      - "3004"
 
   users:
     build:

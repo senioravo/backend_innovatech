@@ -16,5 +16,9 @@ module.exports = {
   /** Base URL del microservicio project-manager. */
   projectManagerBaseUrl: trimBase(process.env.PROJECT_MANAGER_BASE_URL, 'http://localhost:3002'),
   /** Prefijo API de project-manager (coincide con API_GATEWAY_PREFIX del PM). */
-  projectManagerApiPrefix: (process.env.PROJECT_MANAGER_API_PREFIX || '/api/v1').trim() || '/api/v1'
+  projectManagerApiPrefix: (process.env.PROJECT_MANAGER_API_PREFIX || '/api/v1').trim() || '/api/v1',
+  /** Base URL del microservicio KPI. */
+  kpiBaseUrl: trimBase(process.env.KPI_SERVICE_BASE_URL, 'http://localhost:3004'),
+  /** Prefijo API de ms-kpi. */
+  kpiApiPrefix: (process.env.KPI_API_PREFIX || '/api/v1').trim() || '/api/v1'
 };
