@@ -16,12 +16,12 @@ class AuthService {
   async register(body) {
     const userData = createRegisterDto(body);
 
-    if (!userData.rol) {
-      userData.rol = userService.getDefaultRole();
+    if (!userData.role) {
+      userData.role = userService.getDefaultRole();
     }
 
-    if (!userData.nombre || !userData.email || !userData.password) {
-      throw new ValidationError(['Campos obligatorios faltantes: nombre, email, password']);
+    if (!userData.name || !userData.email || !userData.password) {
+      throw new ValidationError(['Campos obligatorios faltantes: name, email, password']);
     }
 
     const validation = validateUserData(userData);
@@ -53,7 +53,7 @@ class AuthService {
     const token = jwtHelper.generateToken({
       id: user.id,
       email: user.email,
-      rol: user.rol
+      role: user.role ?? user.rol
     });
 
     return { user, token, expiresIn: jwtHelper.getConfig().expiresIn };
@@ -63,7 +63,7 @@ class AuthService {
     const blacklisted = tokenBlacklistService.addToBlacklist(token, {
       id: user.id,
       email: user.email,
-      rol: user.rol
+      role: user.role ?? user.rol
     });
 
     if (!blacklisted) {
@@ -80,9 +80,9 @@ class AuthService {
   getRoles() {
     return getAllRolesInfo().map((role, index) => ({
       id: index + 1,
-      nombre: role.nombre,
-      descripcion: role.descripcion,
-      permisos: role.permisos
+      name: role.name ?? role.nombre,
+      description: role.description ?? role.descripcion,
+      permissions: role.permissions ?? role.permisos
     }));
   }
 

@@ -1,16 +1,18 @@
-import { toProyecto,
-  toTarea,
-  buildResumenTareas,
-  buildUsuarioSesion,
-  extractRolesCatalog } from '../src/application/transformers/frontendResponseTransformers.js';
+import {
+  toProject,
+  toTask,
+  buildTaskSummary,
+  buildSessionUser,
+  extractRolesCatalog
+} from '../src/application/transformers/frontendResponseTransformers.js';
 
 describe('frontendResponseTransformers', () => {
   const userMap = new Map([
-    ['u1', { id: 'u1', nombre: 'Ana', email: 'ana@test.com', rol: 'gestor' }]
+    ['u1', { id: 'u1', name: 'Ana', email: 'ana@test.com', role: 'gestor' }]
   ]);
 
-  test('toProyecto mapea campos al español', () => {
-    const p = toProyecto(
+  test('toProject maps PM fields to frontend contract', () => {
+    const p = toProject(
       {
         id: 'p1',
         name: 'Proyecto A',
@@ -23,12 +25,12 @@ describe('frontendResponseTransformers', () => {
       },
       userMap
     );
-    expect(p.nombre).toBe('Proyecto A');
-    expect(p.responsable.nombre).toBe('Ana');
+    expect(p.name).toBe('Proyecto A');
+    expect(p.assignee.name).toBe('Ana');
   });
 
-  test('toTarea incluye estado y completada', () => {
-    const t = toTarea(
+  test('toTask includes status and completed flag', () => {
+    const t = toTask(
       {
         id: 't1',
         projectId: 'p1',
@@ -44,29 +46,29 @@ describe('frontendResponseTransformers', () => {
       },
       userMap
     );
-    expect(t.titulo).toBe('Tarea');
-    expect(t.estado).toBe('IN_PROGRESS');
-    expect(t.completada).toBe(false);
+    expect(t.title).toBe('Tarea');
+    expect(t.status).toBe('IN_PROGRESS');
+    expect(t.completed).toBe(false);
   });
 
-  test('buildResumenTareas cuenta por estado', () => {
-    const resumen = buildResumenTareas([
-      { estado: 'PENDING' },
-      { estado: 'PENDING' },
-      { estado: 'DONE' }
+  test('buildTaskSummary counts by status', () => {
+    const summary = buildTaskSummary([
+      { status: 'PENDING' },
+      { status: 'PENDING' },
+      { status: 'DONE' }
     ]);
-    expect(resumen.total).toBe(3);
-    expect(resumen.porEstado.PENDING).toBe(2);
-    expect(resumen.porEstado.DONE).toBe(1);
+    expect(summary.total).toBe(3);
+    expect(summary.byStatus.PENDING).toBe(2);
+    expect(summary.byStatus.DONE).toBe(1);
   });
 
-  test('buildUsuarioSesion une JWT con catálogo de roles', () => {
+  test('buildSessionUser merges JWT with role catalog', () => {
     const req = { user: { id: 1, email: 'a@b.com', role: 'gestor' } };
     const roles = extractRolesCatalog({
-      data: [{ nombre: 'gestor', descripcion: 'Gestor', permisos: { proyectos: ['ver'] } }]
+      data: [{ name: 'gestor', description: 'Gestor', permissions: { projects: ['view'] } }]
     });
-    const usuario = buildUsuarioSesion(req, roles);
-    expect(usuario.rol).toBe('gestor');
-    expect(usuario.permisos.proyectos).toContain('ver');
+    const user = buildSessionUser(req, roles);
+    expect(user.role).toBe('gestor');
+    expect(user.permissions.projects).toContain('view');
   });
 });

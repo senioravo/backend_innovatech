@@ -1,5 +1,16 @@
 # Microservicio Users - InnovaTech
 
+## Technical specification
+
+| Aspect | Detail |
+|--------|--------|
+| **Language** | TypeScript (Node.js 20+) |
+| **Framework** | Express.js 4.18 |
+| **Libraries** | bcrypt, pg, jsonwebtoken, winston, prom-client, opossum, cors, dotenv, swagger-jsdoc, swagger-ui-express, @elastic/elasticsearch |
+| **Design patterns** | Repository, service layer, DTO + validation, thin controller, RBAC, circuit breaker, database per service |
+| **Database** | PostgreSQL (Neon Cloud o local; `innovatech_users` / `users-db`) |
+| **Testing** | Jest 30 + Supertest 7 + ts-jest |
+
 ## Descripción
 
 Microservicio de gestión de usuarios para la plataforma InnovaTech. Proporciona funcionalidades CRUD completas para usuarios, gestión de perfiles y asignación de roles. Este microservicio fue separado de ms-auth para aplicar el **Principio de Responsabilidad Única (SOLID)**.

@@ -60,6 +60,7 @@ import exampleRoutes from './routes/example.routes.js';
 
 // JWKS: Endpoint para servir clave pública en formato JWK (para KrakenD)
 import jwksRoutes from './routes/jwks.routes.js';
+import { handleNotFound, handleError } from './utils/responseUtil.js';
 
 // Configurar rutas
 app.use('/api/auth', authRoutes);
@@ -67,6 +68,9 @@ app.use('/api/metrics', metricsRoutes);
 app.use('/api/circuit-breaker', circuitBreakerRoutes);
 app.use('/api/example', exampleRoutes);
 app.use('/', jwksRoutes);
+
+app.use(handleNotFound);
+app.use(handleError);
 
 const PORT = process.env.PORT || 3001;
 if (process.env.NODE_ENV !== 'test') {

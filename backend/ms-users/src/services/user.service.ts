@@ -20,12 +20,12 @@ class UserService {
   async createUser(body: Record<string, unknown>) {
     const userData = createUserDto(body);
 
-    if (!userData.rol) {
-      userData.rol = this.getDefaultRole();
+    if (!userData.role) {
+      userData.role = this.getDefaultRole();
     }
 
-    if (!userData.nombre || !userData.email || !userData.password) {
-      throw new ValidationError(['Campos obligatorios faltantes: nombre, email, password']);
+    if (!userData.name || !userData.email || !userData.password) {
+      throw new ValidationError(['Campos obligatorios faltantes: name, email, password']);
     }
 
     const validation = validateUserData(userData, { requirePassword: true });
@@ -33,7 +33,7 @@ class UserService {
       throw new ValidationError(validation.errors);
     }
 
-    if (!VALID_ROLES.includes(userData.rol)) {
+    if (!VALID_ROLES.includes(userData.role)) {
       throw new ValidationError([`Rol inválido. Valores permitidos: ${VALID_ROLES.join(', ')}`]);
     }
 
@@ -44,10 +44,10 @@ class UserService {
     try {
       const passwordHash = await bcrypt.hash(userData.password, SALT_ROUNDS);
       const newUser = await userRepository.create({
-        nombre: userData.nombre,
+        name: userData.name,
         email: userData.email,
         passwordHash,
-        rol: userData.rol
+        role: userData.role
       });
 
       logger.info('[UserService] Usuario creado exitosamente', {

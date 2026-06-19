@@ -4,6 +4,7 @@
 #   2. Copia public.key al BFF: cp ms-auth/keys/public.key bff/keys/public.key
 #   3. Copia .env.docker.example a .env.docker y rellena DATABASE_URL
 #   4. docker compose --env-file .env.docker up --build
+# Migraciones: Flyway (flyway-users, flyway-pm) antes de levantar los microservicios.
 # Entrada HTTP: http://localhost:8010/api/v1/…
 # 
 # SEGURIDAD JWT (RS256) con KrakenD:
@@ -22,9 +23,25 @@ services:
       - "5433:5432"
     volumes:
       - users_db_data:/var/lib/postgresql/data
-      - ./ms-users/database/schema.sql:/docker-entrypoint-initdb.d/01-schema.sql:ro
-      - ./ms-users/database/seed-users.sql:/docker-entrypoint-initdb.d/02-seed-users.sql:ro
-      - ./ms-users/database/002_user_profiles.sql:/docker-entrypoint-initdb.d/03-profiles.sql:ro
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres -d innovatech_users"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+  flyway-users:
+    image: flyway/flyway:10
+    depends_on:
+      users-db:
+        condition: service_healthy
+    volumes:
+      - ./ms-users/db/flyway:/flyway/sql:ro
+    command: >
+      -url=jdbc:postgresql://users-db:5432/innovatech_users
+      -user=postgres
+      -password=postgres
+      -connectRetries=10
+      migrate
 
   pm-db:
     image: postgres:16-alpine
@@ -36,10 +53,25 @@ services:
       - "5434:5432"
     volumes:
       - pm_db_data:/var/lib/postgresql/data
-      - ./ms-project-manager/db/migrations/001_schema.sql:/docker-entrypoint-initdb.d/01-schema.sql:ro
-      - ./ms-project-manager/db/migrations/002_task_status.sql:/docker-entrypoint-initdb.d/02-task-status.sql:ro
-      - ./ms-project-manager/db/migrations/003_project_status.sql:/docker-entrypoint-initdb.d/03-project-status.sql:ro
-      - ./ms-project-manager/db/migrations/004_collaboration_analytics.sql:/docker-entrypoint-initdb.d/04-collaboration.sql:ro
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres -d innovatech_pm"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+  flyway-pm:
+    image: flyway/flyway:10
+    depends_on:
+      pm-db:
+        condition: service_healthy
+    volumes:
+      - ./ms-project-manager/db/flyway:/flyway/sql:ro
+    command: >
+      -url=jdbc:postgresql://pm-db:5432/innovatech_pm
+      -user=postgres
+      -password=postgres
+      -connectRetries=10
+      migrate
 
   api-gateway:
     image: devopsfaith/krakend:2.7
@@ -109,7 +141,10 @@ services:
     expose:
       - "3002"
     depends_on:
-      - pm-db
+      flyway-pm:
+        condition: service_completed_successfully
+      pm-db:
+        condition: service_healthy
 
   users:
     build:
@@ -130,7 +165,10 @@ services:
     expose:
       - "3003"
     depends_on:
-      - users-db
+      flyway-users:
+        condition: service_completed_successfully
+      users-db:
+        condition: service_healthy
 
   prometheus:
     image: prom/prometheus:v2.54.1

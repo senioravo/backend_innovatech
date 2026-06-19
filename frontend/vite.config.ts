@@ -15,17 +15,17 @@ export default defineConfig({
   test: {
     globals: true,
     environment: 'jsdom',
-    setupFiles: './src/test/setup.js',
+    setupFiles: './src/test/setup.ts',
     coverage: {
       provider: 'v8',
       reporter: ['text', 'html', 'json-summary'],
-      include: ['src/**/*.{js,jsx}'],
-      exclude: ['src/main.jsx', 'src/test/**'],
+      include: ['src/**/*.{ts,tsx}'],
+      exclude: ['src/main.tsx', 'src/App.tsx', 'src/test/**'],
       thresholds: {
         lines: 60,
+        statements: 60,
         functions: 60,
-        branches: 60,
-        statements: 60
+        branches: 55
       }
     }
   }

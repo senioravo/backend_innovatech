@@ -20,13 +20,15 @@
  * @returns {Object} - Datos limpios y validados
  */
 function createRegisterDto(body) {
-  const { nombre, email, password, rol } = body;
-  
+  const name = body?.name ?? body?.nombre;
+  const role = body?.role ?? body?.rol;
+  const { email, password } = body ?? {};
+
   return {
-    nombre: typeof nombre === 'string' ? nombre.trim() : null,
+    name: typeof name === 'string' ? name.trim() : null,
     email: typeof email === 'string' ? email.trim().toLowerCase() : null,
     password: typeof password === 'string' ? password : null,
-    rol: typeof rol === 'string' ? rol.trim() : null
+    role: typeof role === 'string' ? role.trim() : null
   };
 }
 
@@ -54,9 +56,9 @@ function userToDto(user) {
 
   return {
     id: user.id,
-    nombre: user.nombre,
+    name: user.name ?? user.nombre,
     email: user.email,
-    rol: user.rol,
+    role: user.role ?? user.rol,
     createdAt: user.createdAt || user.created_at,
     updatedAt: user.updatedAt || user.updated_at
   };
@@ -128,9 +130,11 @@ const VALID_ROLES = ['gestor', 'profesional', 'directivo'];
 
 function validateUserData(userData) {
   const errors = [];
-  const { nombre, email, password, rol } = userData;
+  const name = userData?.name ?? userData?.nombre;
+  const role = userData?.role ?? userData?.rol;
+  const { email, password } = userData ?? {};
 
-  if (!nombre || typeof nombre !== 'string' || nombre.trim().length < 2) {
+  if (!name || typeof name !== 'string' || name.trim().length < 2) {
     errors.push('El nombre debe tener al menos 2 caracteres');
   }
 
@@ -142,7 +146,7 @@ function validateUserData(userData) {
     errors.push('La contraseña debe tener al menos 6 caracteres');
   }
 
-  if (rol && !VALID_ROLES.includes(rol)) {
+  if (role && !VALID_ROLES.includes(role)) {
     errors.push('Rol inválido. Valores permitidos: gestor, profesional, directivo');
   }
 

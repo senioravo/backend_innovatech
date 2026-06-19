@@ -45,12 +45,12 @@ const getUserByEmailWithPassword = async (req, res) => {
       success: true,
       data: {
         id: user.id,
-        nombre: user.nombre,
+        name: user.name,
         email: user.email,
         password: user.password,
-        rol: user.rol,
-        created_at: user.created_at,
-        updated_at: user.updated_at
+        role: user.role,
+        createdAt: user.createdAt,
+        updatedAt: user.updatedAt
       }
     });
   } catch (error) {
@@ -73,10 +73,10 @@ const createUserInternal = async (req, res) => {
       message: 'Usuario creado exitosamente',
       data: {
         id: newUser.id,
-        nombre: newUser.nombre,
+        name: newUser.name,
         email: newUser.email,
-        rol: newUser.rol,
-        created_at: newUser.created_at
+        role: newUser.role,
+        createdAt: newUser.createdAt
       }
     });
   } catch (error) {

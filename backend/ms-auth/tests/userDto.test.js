@@ -14,9 +14,9 @@ describe('userDto', () => {
       password: 'secret',
       rol: ' gestor '
     });
-    expect(dto.nombre).toBe('Ana');
+    expect(dto.name).toBe('Ana');
     expect(dto.email).toBe('ana@innovatech.cl');
-    expect(dto.rol).toBe('gestor');
+    expect(dto.role).toBe('gestor');
   });
 
   test('createLoginDto normaliza email', () => {
@@ -27,10 +27,10 @@ describe('userDto', () => {
   test('userToDto omite password', () => {
     const dto = userToDto({
       id: 1,
-      nombre: 'Ana',
+      name: 'Ana',
       email: 'a@b.cl',
       password: 'hash',
-      rol: 'gestor',
+      role: 'gestor',
       created_at: '2026-01-01'
     });
     expect(dto).not.toHaveProperty('password');
@@ -42,13 +42,13 @@ describe('userDto', () => {
   });
 
   test('authResponseDto incluye token y usuario', () => {
-    const res = authResponseDto({ id: 1, email: 'a@b.cl', rol: 'gestor' }, 'jwt-token');
+    const res = authResponseDto({ id: 1, email: 'a@b.cl', role: 'gestor' }, 'jwt-token');
     expect(res.success).toBe(true);
     expect(res.data.token).toBe('jwt-token');
   });
 
   test('registerResponseDto formatea registro', () => {
-    const res = registerResponseDto({ id: 2, email: 'b@c.cl', rol: 'gestor' });
+    const res = registerResponseDto({ id: 2, email: 'b@c.cl', role: 'gestor' });
     expect(res.data.user.id).toBe(2);
   });
 
