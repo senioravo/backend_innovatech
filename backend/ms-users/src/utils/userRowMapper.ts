@@ -1,3 +1,10 @@
+type NameRoleInput = {
+  name?: string;
+  nombre?: string;
+  role?: string;
+  rol?: string;
+};
+
 /**
  * Maps PostgreSQL row columns (Spanish DB names) to English domain properties.
  */
@@ -22,11 +29,11 @@ function mapUserRows(rows) {
   return rows.map(mapUserRow);
 }
 
-function pickName(body = {}) {
+function pickName(body: NameRoleInput = {}) {
   return body.name ?? body.nombre ?? null;
 }
 
-function pickRole(body = {}) {
+function pickRole(body: NameRoleInput = {}) {
   return body.role ?? body.rol ?? null;
 }
 

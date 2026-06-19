@@ -214,7 +214,7 @@
             ["role", "x-user-role"]
           ],
           "roles_key": "role",
-          "roles": ["directivo"]
+          "roles": ["gestor"]
         }
       },
       "backend": [
@@ -474,27 +474,6 @@
         }
       },
       "backend": [{ "url_pattern": "/api/v1/notifications", "method": "GET", "host": ["http://bff:3010"] }]
-    },
-    {
-      "@comment": "Eliminar proyecto",
-      "endpoint": "/api/v1/projects/{id}",
-      "method": "DELETE",
-      "output_encoding": "json",
-      "input_headers": ["Authorization"],
-      "extra_config": {
-        "auth/validator": {
-          "alg": "RS256",
-          "jwk_url": "http://auth:3001/.well-known/jwks.json",
-          "cache": true,
-          "disable_jwk_security": true,
-          "issuer": "innovatech-auth",
-          "key_identify_strategy": "kid",
-          "propagate_claims": [["id", "x-user-id"], ["email", "x-user-email"], ["role", "x-user-role"]],
-          "roles_key": "role",
-          "roles": ["gestor"]
-        }
-      },
-      "backend": [{ "url_pattern": "/api/v1/projects/{id}", "method": "DELETE", "host": ["http://bff:3010"] }]
     },
     {
       "@comment": "Comentarios en tarea",

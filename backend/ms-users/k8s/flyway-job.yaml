@@ -20,6 +20,7 @@ spec:
             - -user=postgres
             - -password=$(POSTGRES_PASSWORD)
             - -connectRetries=10
+            - -baselineOnMigrate=true
             - migrate
           env:
             - name: POSTGRES_PASSWORD
