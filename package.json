@@ -1,0 +1,35 @@
+{
+  "name": "backend_innovatech",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "directories": {
+    "doc": "docs"
+  },
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "dev:auth": "npm run dev --prefix backend/ms-auth",
+    "dev:users": "npm run dev --prefix backend/ms-users",
+    "dev:project-manager": "npm run dev --prefix backend/ms-project-manager",
+    "dev:bff": "npm run dev --prefix backend/bff"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/senioravo/backend_innovatech.git"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "type": "module",
+  "bugs": {
+    "url": "https://github.com/senioravo/backend_innovatech/issues"
+  },
+  "homepage": "https://github.com/senioravo/backend_innovatech#readme",
+  "dependencies": {
+    "swagger-jsdoc": "^6.3.0",
+    "swagger-ui-express": "^5.0.1"
+  },
+  "devDependencies": {
+    "swagger-autogen": "^2.23.7"
+  }
+}

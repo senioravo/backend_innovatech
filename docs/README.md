@@ -1,9 +1,5 @@
 # InnovaTech — Documentación
 
-Guía de inicio rápido: [INSTRUCCIONES-INICIO.md](INSTRUCCIONES-INICIO.md)
-
-Guía central del proyecto: [README.md](../README.md)
-
 Coloca en esta carpeta los entregables requeridos por la evaluación:
 
 | Archivo | Descripción |

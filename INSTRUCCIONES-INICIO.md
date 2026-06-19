@@ -22,7 +22,7 @@ InnovaTech es una plataforma de gestion de proyectos y tareas con autenticacion 
 
 El frontend no debe llamar directamente a los microservicios internos.
 
-Documentacion tecnica del backend: [backend/README.md](../backend/README.md)
+Documentacion tecnica del backend: [backend/README.md](backend/README.md)
 
 ---
 
@@ -333,22 +333,18 @@ Schemas:
 ## Estructura del repositorio
 
 ```
-InnovaTech/
-├── README.md                  Guia central del proyecto
-├── frontend/                  React + Vite + TypeScript + Vitest
+backend_innovatech/
+├── INSTRUCCIONES-INICIO.md    (este archivo)
+├── frontend/                  React + Vite + Vitest
 ├── backend/
 │   ├── README.md              Documentacion backend detallada
 │   ├── docker-compose.yml
-│   ├── scripts/               Smoke E2E y utilidades
 │   ├── api-gateway/           KrakenD (krakend.json)
 │   ├── bff/
 │   ├── ms-auth/
 │   ├── ms-users/
 │   ├── ms-project-manager/
 │   └── k8s/                   Manifiestos Kubernetes
-└── docs/
-    ├── INSTRUCCIONES-INICIO.md (este archivo)
-    └── diagramas/             Fuentes C1 / C2 / C3
 ```
 
 ---
@@ -396,13 +392,13 @@ Revisar que las rutas tengan anotaciones `@openapi` y que la app monte `/api-doc
 
 1. Confirmar Docker en `:8010`.
 2. Revisar `frontend/.env` (`VITE_API_BASE_URL=/api/v1` o URL completa).
-3. Confirmar proxy en `frontend/vite.config.ts`.
+3. Confirmar proxy en `frontend/vite.config.js`.
 
 ---
 
 ## Kubernetes (opcional)
 
-Para despliegue en cluster, ver [backend/k8s/README.md](../backend/k8s/README.md).
+Para despliegue en cluster, ver [backend/k8s/README.md](backend/k8s/README.md).
 
 Resumen:
 
@@ -443,9 +439,8 @@ kubectl port-forward -n innovatech svc/api-gateway 8010:8080
 
 ## Recursos
 
-- Guia central: [README.md](../README.md)
-- Backend detallado: [backend/README.md](../backend/README.md)
-- Kubernetes: [backend/k8s/README.md](../backend/k8s/README.md)
+- Backend detallado: [backend/README.md](backend/README.md)
+- Kubernetes: [backend/k8s/README.md](backend/k8s/README.md)
 - Swagger/OpenAPI: https://swagger.io/docs/
 - JWT: https://jwt.io/introduction
 

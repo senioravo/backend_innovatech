@@ -1,15 +1,9 @@
 {
   "name": "innovatech-backend",
   "private": true,
-  "type": "module",
   "description": "Monorepo scripts for InnovaTech microservices",
   "scripts": {
-    "test": "npm test --prefix ms-auth && npm test --prefix ms-users && npm test --prefix ms-project-manager && npm test --prefix bff",
-    "test:ci": "npm run test:ci --prefix ms-auth && npm run test:ci --prefix ms-users && npm run test:ci --prefix ms-project-manager && npm run test:ci --prefix bff",
-    "dev:auth": "npm run dev --prefix ms-auth",
-    "dev:users": "npm run dev --prefix ms-users",
-    "dev:project-manager": "npm run dev --prefix ms-project-manager",
-    "dev:bff": "npm run dev --prefix bff",
-    "smoke": "node scripts/smoke-e2e.mjs"
+    "test": "npm test --prefix ms-auth && npm test --prefix ms-project-manager && npm test --prefix bff",
+    "test:ci": "npm run test:ci --prefix ms-auth && npm run test:ci --prefix ms-project-manager && npm run test:ci --prefix bff"
   }
 }
