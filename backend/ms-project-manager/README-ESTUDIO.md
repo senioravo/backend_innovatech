@@ -190,6 +190,6 @@ Sin conexión a BD: ideal para CI rápido.
 
 ## Referencias
 
-- [README backend](../../README.md)
+- [README del proyecto](../../docs/README.md)
 - [BFF README-ESTUDIO](../bff/README-ESTUDIO.md)
 - [Auth README-ESTUDIO](../ms-auth/README-ESTUDIO.md)

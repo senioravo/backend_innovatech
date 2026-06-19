@@ -196,6 +196,6 @@ Tests **sin red**: lógica pura y middleware mockeado.
 
 ## Referencias
 
-- [README backend](../../README.md)
+- [README del proyecto](../../docs/README.md)
 - [Auth README-ESTUDIO](../ms-auth/README-ESTUDIO.md)
 - [PM README-ESTUDIO](../ms-project-manager/README-ESTUDIO.md)

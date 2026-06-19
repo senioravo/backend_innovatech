@@ -334,8 +334,6 @@ Schemas:
 
 ```
 InnovaTech/
-├── README.md                  Guia central del proyecto
-├── frontend/                  React + Vite + TypeScript + Vitest
 ├── backend/
 │   ├── README.md              Documentacion backend detallada
 │   ├── docker-compose.yml
@@ -346,7 +344,9 @@ InnovaTech/
 │   ├── ms-users/
 │   ├── ms-project-manager/
 │   └── k8s/                   Manifiestos Kubernetes
+├── frontend/                  React + Vite + TypeScript + Vitest
 └── docs/
+    ├── README.md              Guia central del proyecto
     ├── INSTRUCCIONES-INICIO.md (este archivo)
     └── diagramas/             Fuentes C1 / C2 / C3
 ```
@@ -443,7 +443,7 @@ kubectl port-forward -n innovatech svc/api-gateway 8010:8080
 
 ## Recursos
 
-- Guia central: [README.md](../README.md)
+- Guia central: [README.md](README.md)
 - Backend detallado: [backend/README.md](../backend/README.md)
 - Kubernetes: [backend/k8s/README.md](../backend/k8s/README.md)
 - Swagger/OpenAPI: https://swagger.io/docs/

@@ -12,7 +12,7 @@
 | **Pruebas** | Jest 30 + Supertest 7 + ts-jest (119+ tests) |
 
 > **Guía de estudio (presentación / aprendizaje):** [README-ESTUDIO.md](./README-ESTUDIO.md)  
-> **Documentación del backend completo:** [../../README.md](../../README.md)
+> **Documentación del backend completo:** [../../docs/README.md](../../docs/README.md)
 
 **Task ID:** AS-TASK-20
 
