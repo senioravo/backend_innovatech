@@ -41,11 +41,11 @@ function userFromBearerToken(req) {
       algorithms: ['RS256'],
       issuer: process.env.JWT_ISSUER || 'innovatech-auth'
     });
-    if (!decoded?.id || !decoded?.email || !decoded?.rol) return null;
+    if (!decoded?.id || !decoded?.email || !(decoded?.role ?? decoded?.rol)) return null;
     return {
       id: parseInt(String(decoded.id), 10),
       email: String(decoded.email),
-      role: String(decoded.rol)
+      role: String(decoded.role ?? decoded.rol)
     };
   } catch (error) {
     console.warn('[BFF-JWT-MIDDLEWARE] Token Bearer inválido:', error.message);

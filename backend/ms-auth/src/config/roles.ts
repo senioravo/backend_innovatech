@@ -91,10 +91,14 @@ const getRoleInfo = (rol) => {
  * @returns {Array} - Array de objetos con información de roles
  */
 const getAllRolesInfo = () => {
-  return getAllRoles().map(rol => ({
-    nombre: rol,
-    descripcion: ROLE_DESCRIPTIONS[rol],
-    permisos: ROLE_PERMISSIONS[rol]
+  return getAllRoles().map((roleKey) => ({
+    name: roleKey,
+    description: ROLE_DESCRIPTIONS[roleKey],
+    permissions: ROLE_PERMISSIONS[roleKey],
+    // Legacy keys for backward compatibility
+    nombre: roleKey,
+    descripcion: ROLE_DESCRIPTIONS[roleKey],
+    permisos: ROLE_PERMISSIONS[roleKey]
   }));
 };
 

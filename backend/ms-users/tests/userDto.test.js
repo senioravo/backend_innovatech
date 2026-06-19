@@ -9,7 +9,7 @@ import {
 } from '../src/dtos/userDto.js';
 
 describe('userDto', () => {
-  test('userToDto mapea campos de perfil profesional', () => {
+  test('userToDto maps professional profile fields', () => {
     const dto = userToDto({
       id: 1,
       nombre: 'Ana',
@@ -23,30 +23,31 @@ describe('userDto', () => {
 
     expect(dto).toMatchObject({
       id: 1,
-      nombre: 'Ana',
-      habilidades: 'Node, React',
-      horasSemanalesDisponibles: 20
+      name: 'Ana',
+      role: 'gestor',
+      skills: 'Node, React',
+      weeklyAvailableHours: 20
     });
   });
 
-  test('usersToDto devuelve arreglo vacío si no es array', () => {
+  test('usersToDto returns empty array for invalid input', () => {
     expect(usersToDto(null)).toEqual([]);
   });
 
-  test('createUserDto normaliza email', () => {
+  test('createUserDto normalizes email and accepts legacy fields', () => {
     expect(createUserDto({ email: '  GESTOR@TEST.CL  ', nombre: 'X', password: '123456' })).toEqual({
-      nombre: 'X',
+      name: 'X',
       email: 'gestor@test.cl',
       password: '123456',
-      rol: null
+      role: null
     });
   });
 
-  test('updateUserDto solo incluye campos enviados', () => {
-    expect(updateUserDto({ nombre: ' Nuevo ' })).toEqual({ nombre: 'Nuevo' });
+  test('updateUserDto only includes provided fields', () => {
+    expect(updateUserDto({ nombre: ' Nuevo ' })).toEqual({ name: 'Nuevo' });
   });
 
-  test('successResponseDto y errorResponseDto', () => {
+  test('successResponseDto and errorResponseDto', () => {
     expect(successResponseDto('ok', { id: 1 })).toEqual({
       success: true,
       message: 'ok',
@@ -59,7 +60,7 @@ describe('userDto', () => {
     });
   });
 
-  test('validateUserData rechaza datos inválidos', () => {
+  test('validateUserData rejects invalid data', () => {
     const result = validateUserData(
       { nombre: 'A', email: 'bad', password: '123', rol: 'admin' },
       { requirePassword: true }
@@ -68,13 +69,13 @@ describe('userDto', () => {
     expect(result.errors.length).toBeGreaterThan(0);
   });
 
-  test('validateUserData acepta datos válidos', () => {
+  test('validateUserData accepts valid data', () => {
     const result = validateUserData(
       {
-        nombre: 'Ana Gestora',
+        name: 'Ana Gestora',
         email: 'ana@test.cl',
         password: 'Secret123',
-        rol: 'gestor'
+        role: 'gestor'
       },
       { requirePassword: true }
     );

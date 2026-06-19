@@ -67,7 +67,7 @@
           "propagate_claims": [
             ["id", "x-user-id"],
             ["email", "x-user-email"],
-            ["rol", "x-user-role"]
+            ["role", "x-user-role"]
           ]
         }
       },
@@ -95,9 +95,9 @@
           "propagate_claims": [
             ["id", "x-user-id"],
             ["email", "x-user-email"],
-            ["rol", "x-user-role"]
+            ["role", "x-user-role"]
           ],
-          "roles_key": "rol",
+          "roles_key": "role",
           "roles": ["gestor", "directivo"]
         }
       },
@@ -125,7 +125,7 @@
           "propagate_claims": [
             ["id", "x-user-id"],
             ["email", "x-user-email"],
-            ["rol", "x-user-role"]
+            ["role", "x-user-role"]
           ]
         }
       },
@@ -153,9 +153,9 @@
           "propagate_claims": [
             ["id", "x-user-id"],
             ["email", "x-user-email"],
-            ["rol", "x-user-role"]
+            ["role", "x-user-role"]
           ],
-          "roles_key": "rol",
+          "roles_key": "role",
           "roles": ["gestor", "directivo"]
         }
       },
@@ -183,9 +183,9 @@
           "propagate_claims": [
             ["id", "x-user-id"],
             ["email", "x-user-email"],
-            ["rol", "x-user-role"]
+            ["role", "x-user-role"]
           ],
-          "roles_key": "rol",
+          "roles_key": "role",
           "roles": ["directivo"]
         }
       },
@@ -213,7 +213,7 @@
           "propagate_claims": [
             ["id", "x-user-id"],
             ["email", "x-user-email"],
-            ["rol", "x-user-role"]
+            ["role", "x-user-role"]
           ]
         }
       },
@@ -241,7 +241,7 @@
           "propagate_claims": [
             ["id", "x-user-id"],
             ["email", "x-user-email"],
-            ["rol", "x-user-role"]
+            ["role", "x-user-role"]
           ]
         }
       },

@@ -65,15 +65,14 @@ class JWTHelper {
 
     try {
       // Validar datos requeridos
-      if (!user.id || !user.email || !user.rol) {
+      if (!user.id || !user.email || !(user.role ?? user.rol)) {
         throw new Error('Datos de usuario incompletos para generar JWT');
       }
 
-      // Payload del token
       const payload = {
         id: user.id,
         email: user.email,
-        rol: user.rol
+        role: user.role ?? user.rol
       };
 
       // Opciones de firma

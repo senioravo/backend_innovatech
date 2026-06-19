@@ -1,7 +1,6 @@
 import { query } from '../config/database.js';
-import logger from '../utils/logger.js';
+import { mapUserRow, mapUserRows } from '../utils/userRowMapper.js';
 import { getAllRoles } from '../config/roles.js';
-
 const VALID_ROLES = getAllRoles();
 
 class UserRepository {
@@ -13,14 +12,14 @@ class UserRepository {
     return result.rows.length > 0;
   }
 
-  async create(data: { nombre: string; email: string; passwordHash: string; rol: string }) {
+  async create(data: { name: string; email: string; passwordHash: string; role: string }) {
     const result = await query(
       `INSERT INTO usuarios (nombre, email, password, rol, created_at, updated_at)
        VALUES ($1, $2, $3, $4, NOW(), NOW())
        RETURNING id, nombre, email, rol, created_at, updated_at`,
-      [data.nombre, data.email.toLowerCase(), data.passwordHash, data.rol]
+      [data.name, data.email.toLowerCase(), data.passwordHash, data.role]
     );
-    return result.rows[0];
+    return mapUserRow(result.rows[0]);
   }
 
   async findById(id: number) {
@@ -30,7 +29,7 @@ class UserRepository {
        FROM usuarios WHERE id = $1`,
       [id]
     );
-    return result.rows.length > 0 ? result.rows[0] : null;
+    return result.rows.length > 0 ? mapUserRow(result.rows[0]) : null;
   }
 
   async findByEmail(email: string) {
@@ -38,7 +37,7 @@ class UserRepository {
       'SELECT id, nombre, email, rol, created_at, updated_at FROM usuarios WHERE email = $1',
       [email.toLowerCase()]
     );
-    return result.rows.length > 0 ? result.rows[0] : null;
+    return result.rows.length > 0 ? mapUserRow(result.rows[0]) : null;
   }
 
   async findByEmailWithPassword(email: string) {
@@ -46,17 +45,16 @@ class UserRepository {
       'SELECT id, nombre, email, password, rol, created_at, updated_at FROM usuarios WHERE email = $1',
       [email.toLowerCase()]
     );
-    return result.rows.length > 0 ? result.rows[0] : null;
+    return result.rows.length > 0 ? mapUserRow(result.rows[0]) : null;
   }
 
   async findAll(options: {
     page?: number;
     limit?: number;
-    rol?: string | null;
+    role?: string | null;
     search?: string | null;
   } = {}) {
-    const { page = 1, limit = 10, rol = null, search = null } = options;
-    const offset = (Number(page) - 1) * Number(limit);
+    const { page = 1, limit = 10, role = null, search = null } = options;    const offset = (Number(page) - 1) * Number(limit);
     let queryText = `SELECT id, nombre, email, rol, habilidades, disponibilidad,
                             horas_semanales_disponibles, created_at, updated_at
                      FROM usuarios`;
@@ -64,11 +62,10 @@ class UserRepository {
     const params: unknown[] = [];
     const whereClauses: string[] = [];
 
-    if (rol && VALID_ROLES.includes(rol)) {
+    if (role && VALID_ROLES.includes(role)) {
       whereClauses.push(`rol = $${params.length + 1}`);
-      params.push(rol);
+      params.push(role);
     }
-
     if (search) {
       whereClauses.push(`(nombre ILIKE $${params.length + 1} OR email ILIKE $${params.length + 1})`);
       params.push(`%${search}%`);
@@ -92,21 +89,28 @@ class UserRepository {
     const totalPages = Math.ceil(total / Number(limit));
 
     return {
-      users: usersResult.rows,
+      users: mapUserRows(usersResult.rows),
       pagination: { total, page, limit, totalPages }
     };
   }
 
   async update(id: number, fields: Record<string, unknown>) {
+    const dbFields: Record<string, unknown> = {};
+    if (fields.name !== undefined) dbFields.nombre = fields.name;
+    if (fields.nombre !== undefined) dbFields.nombre = fields.nombre;
+    if (fields.email !== undefined) dbFields.email = fields.email;
+    if (fields.password !== undefined) dbFields.password = fields.password;
+    if (fields.role !== undefined) dbFields.rol = fields.role;
+    if (fields.rol !== undefined) dbFields.rol = fields.rol;
+
     const updateFields: string[] = [];
     const params: unknown[] = [];
     let paramIndex = 1;
 
-    for (const [key, value] of Object.entries(fields)) {
+    for (const [key, value] of Object.entries(dbFields)) {
       updateFields.push(`${key} = $${paramIndex++}`);
       params.push(value);
     }
-
     updateFields.push('updated_at = NOW()');
     params.push(id);
 
@@ -118,7 +122,7 @@ class UserRepository {
     `;
 
     const result = await query(queryText, params);
-    return result.rows.length > 0 ? result.rows[0] : null;
+    return result.rows.length > 0 ? mapUserRow(result.rows[0]) : null;
   }
 
   async delete(id: number) {
@@ -129,16 +133,16 @@ class UserRepository {
     return result.rows.length > 0;
   }
 
-  async updateRole(id: number, newRol: string) {
+  async updateRole(id: number, newRole: string) {
     const result = await query(
       `UPDATE usuarios
        SET rol = $1, updated_at = NOW()
        WHERE id = $2
        RETURNING id, nombre, email, rol, habilidades, disponibilidad,
                  horas_semanales_disponibles, created_at, updated_at`,
-      [newRol, id]
+      [newRole, id]
     );
-    return result.rows.length > 0 ? result.rows[0] : null;
+    return result.rows.length > 0 ? mapUserRow(result.rows[0]) : null;
   }
 
   async findProfessionals() {
@@ -149,9 +153,8 @@ class UserRepository {
        WHERE rol IN ('profesional', 'gestor')
        ORDER BY nombre ASC`
     );
-    return result.rows;
+    return mapUserRows(result.rows);
   }
-
   async updateProfile(id: number, profile: Record<string, unknown>) {
     const fields: string[] = [];
     const params: unknown[] = [];
@@ -181,7 +184,7 @@ class UserRepository {
                  horas_semanales_disponibles, created_at, updated_at`,
       params
     );
-    return result.rows.length > 0 ? result.rows[0] : null;
+    return result.rows.length > 0 ? mapUserRow(result.rows[0]) : null;
   }
 }
 

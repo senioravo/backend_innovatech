@@ -28,9 +28,9 @@ describe('proyectosOrchestrationService', () => {
 
     const result = await proyectosOrchestrationService.listProyectos(req);
 
-    expect(result.proyectos).toHaveLength(1);
-    expect(result.usuario.email).toBe('gestor@test.cl');
-    expect(result.proyectos[0].nombre).toBe('Alpha');
+    expect(result.projects).toHaveLength(1);
+    expect(result.user.email).toBe('gestor@test.cl');
+    expect(result.projects[0].name).toBe('Alpha');
   });
 
   test('listTareasByProyecto devuelve resumen', async () => {
@@ -48,8 +48,8 @@ describe('proyectosOrchestrationService', () => {
       headers: {}
     });
 
-    expect(result.proyectoId).toBe('p1');
-    expect(result.tareas).toHaveLength(2);
-    expect(result.resumen.total).toBe(2);
+    expect(result.projectId).toBe('p1');
+    expect(result.tasks).toHaveLength(2);
+    expect(result.summary.total).toBe(2);
   });
 });

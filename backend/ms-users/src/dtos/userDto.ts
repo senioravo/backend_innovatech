@@ -1,10 +1,14 @@
+import { pickName, pickRole } from '../utils/userRowMapper.js';
+
 const EMAIL_REGEX = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 const VALID_ROLES = ['gestor', 'profesional', 'directivo'];
 
 type UserInput = {
+  name?: string | null;
   nombre?: string | null;
   email?: string | null;
   password?: string | null;
+  role?: string | null;
   rol?: string | null;
 };
 
@@ -18,14 +22,14 @@ function userToDto(user: Record<string, unknown> | null) {
 
   return {
     id: user.id,
-    nombre: user.nombre,
+    name: user.name ?? user.nombre,
     email: user.email,
-    rol: user.rol,
-    habilidades: user.habilidades ?? '',
-    disponibilidad: user.disponibilidad ?? 'disponible',
-    horasSemanalesDisponibles: user.horas_semanales_disponibles ?? 40,
-    createdAt: user.created_at || user.createdAt,
-    updatedAt: user.updated_at || user.updatedAt
+    role: user.role ?? user.rol,
+    skills: user.skills ?? user.habilidades ?? '',
+    availability: user.availability ?? user.disponibilidad ?? 'disponible',
+    weeklyAvailableHours: user.weeklyAvailableHours ?? user.horas_semanales_disponibles ?? 40,
+    createdAt: user.createdAt ?? user.created_at,
+    updatedAt: user.updatedAt ?? user.updated_at
   };
 }
 
@@ -35,21 +39,26 @@ function usersToDto(users) {
 }
 
 function createUserDto(body) {
-  const { nombre, email, password, rol } = body;
+  const name = pickName(body);
+  const role = pickRole(body);
+  const { email, password } = body ?? {};
 
   return {
-    nombre: typeof nombre === 'string' ? nombre.trim() : null,
+    name: typeof name === 'string' ? name.trim() : null,
     email: typeof email === 'string' ? email.trim().toLowerCase() : null,
     password: typeof password === 'string' ? password : null,
-    rol: typeof rol === 'string' ? rol.trim() : null
+    role: typeof role === 'string' ? role.trim() : null
   };
 }
 
 function updateUserDto(body: Record<string, unknown>) {
   const updates: Record<string, string | null> = {};
 
-  if (body.nombre !== undefined) {
-    updates.nombre = typeof body.nombre === 'string' ? body.nombre.trim() : null;
+  const name = pickName(body);
+  const role = pickRole(body);
+
+  if (body.name !== undefined || body.nombre !== undefined) {
+    updates.name = typeof name === 'string' ? name.trim() : null;
   }
   if (body.email !== undefined) {
     updates.email = typeof body.email === 'string' ? body.email.trim().toLowerCase() : null;
@@ -57,8 +66,8 @@ function updateUserDto(body: Record<string, unknown>) {
   if (body.password !== undefined) {
     updates.password = typeof body.password === 'string' ? body.password : null;
   }
-  if (body.rol !== undefined) {
-    updates.rol = typeof body.rol === 'string' ? body.rol.trim() : null;
+  if (body.role !== undefined || body.rol !== undefined) {
+    updates.role = typeof role === 'string' ? role.trim() : null;
   }
 
   return updates;
@@ -83,10 +92,12 @@ function errorResponseDto(message, details = null) {
 function validateUserData(userData: UserInput, options: ValidateOptions = {}) {
   const { requirePassword = false, partial = false } = options;
   const errors = [];
-  const { nombre, email, password, rol } = userData;
+  const name = userData?.name ?? userData?.nombre;
+  const role = userData?.role ?? userData?.rol;
+  const { email, password } = userData ?? {};
 
-  if (!partial || nombre !== undefined) {
-    if (!nombre || typeof nombre !== 'string' || nombre.trim().length < 2) {
+  if (!partial || name !== undefined || userData?.nombre !== undefined || userData?.name !== undefined) {
+    if (!name || typeof name !== 'string' || name.trim().length < 2) {
       errors.push('El nombre debe tener al menos 2 caracteres');
     }
   }
@@ -103,8 +114,8 @@ function validateUserData(userData: UserInput, options: ValidateOptions = {}) {
     }
   }
 
-  if (rol !== undefined && rol !== null && rol !== '') {
-    if (!VALID_ROLES.includes(rol as string)) {
+  if (role !== undefined && role !== null && role !== '') {
+    if (!VALID_ROLES.includes(role as string)) {
       errors.push('Rol inválido. Valores permitidos: gestor, profesional, directivo');
     }
   }

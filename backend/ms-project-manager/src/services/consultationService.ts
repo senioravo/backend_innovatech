@@ -44,22 +44,22 @@ const consultationService = {
 
     return {
       userId,
-      avanceProyectosPct: avancePct,
-      tareasTotales: total,
-      tareasCompletadas: done,
-      tareasEnProgreso: inProgress,
-      tareasPendientes: pending,
-      utilizacionRecursos: {
-        horasAsignadas,
-        horasDisponibles,
-        utilizacionPct: Math.min(100, Math.round((horasAsignadas / horasDisponibles) * 100))
+      projectProgressPct: avancePct,
+      totalTasks: total,
+      completedTasks: done,
+      inProgressTasks: inProgress,
+      pendingTasks: pending,
+      resourceUtilization: {
+        assignedHours: horasAsignadas,
+        availableHours: horasDisponibles,
+        utilizationPct: Math.min(100, Math.round((horasAsignadas / horasDisponibles) * 100))
       },
-      productividad: {
-        tasaCompletitudPct: avancePct,
-        proyectosActivos: projects.length
+      productivity: {
+        completionRatePct: avancePct,
+        activeProjects: projects.length
       },
       countByStatus: counts,
-      generadoEn: new Date().toISOString()
+      generatedAt: new Date().toISOString()
     };
   },
 
@@ -73,11 +73,11 @@ const consultationService = {
 
     const lines = [
       'Indicador,Valor',
-      `Avance proyectos (%),${kpis.avanceProyectosPct}`,
-      `Tareas totales,${kpis.tareasTotales}`,
-      `Tareas completadas,${kpis.tareasCompletadas}`,
-      `Utilización recursos (%),${kpis.utilizacionRecursos.utilizacionPct}`,
-      `Proyectos activos,${kpis.productividad.proyectosActivos}`,
+      `Project progress (%),${kpis.projectProgressPct}`,
+      `Total tasks,${kpis.totalTasks}`,
+      `Completed tasks,${kpis.completedTasks}`,
+      `Resource utilization (%),${kpis.resourceUtilization.utilizationPct}`,
+      `Active projects,${kpis.productivity.activeProjects}`,
       '',
       'Estado,Cantidad',
       ...Object.entries(kpis.countByStatus).map(([k, v]) => `${k},${v}`)

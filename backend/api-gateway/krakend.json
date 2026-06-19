@@ -83,7 +83,7 @@
           "propagate_claims": [
             ["id", "x-user-id"],
             ["email", "x-user-email"],
-            ["rol", "x-user-role"]
+            ["role", "x-user-role"]
           ]
         }
       },
@@ -114,9 +114,9 @@
           "propagate_claims": [
             ["id", "x-user-id"],
             ["email", "x-user-email"],
-            ["rol", "x-user-role"]
+            ["role", "x-user-role"]
           ],
-          "roles_key": "rol",
+          "roles_key": "role",
           "roles": ["gestor", "directivo"]
         }
       },
@@ -147,7 +147,7 @@
           "propagate_claims": [
             ["id", "x-user-id"],
             ["email", "x-user-email"],
-            ["rol", "x-user-role"]
+            ["role", "x-user-role"]
           ]
         }
       },
@@ -178,9 +178,9 @@
           "propagate_claims": [
             ["id", "x-user-id"],
             ["email", "x-user-email"],
-            ["rol", "x-user-role"]
+            ["role", "x-user-role"]
           ],
-          "roles_key": "rol",
+          "roles_key": "role",
           "roles": ["gestor", "directivo"]
         }
       },
@@ -211,10 +211,10 @@
           "propagate_claims": [
             ["id", "x-user-id"],
             ["email", "x-user-email"],
-            ["rol", "x-user-role"]
+            ["role", "x-user-role"]
           ],
-          "roles_key": "rol",
-          "roles": ["directivo"]
+          "roles_key": "role",
+          "roles": ["gestor"]
         }
       },
       "backend": [
@@ -244,7 +244,7 @@
           "propagate_claims": [
             ["id", "x-user-id"],
             ["email", "x-user-email"],
-            ["rol", "x-user-role"]
+            ["role", "x-user-role"]
           ]
         }
       },
@@ -275,7 +275,7 @@
           "propagate_claims": [
             ["id", "x-user-id"],
             ["email", "x-user-email"],
-            ["rol", "x-user-role"]
+            ["role", "x-user-role"]
           ]
         }
       },
@@ -306,7 +306,7 @@
           "propagate_claims": [
             ["id", "x-user-id"],
             ["email", "x-user-email"],
-            ["rol", "x-user-role"]
+            ["role", "x-user-role"]
           ]
         }
       },
@@ -337,7 +337,7 @@
           "propagate_claims": [
             ["id", "x-user-id"],
             ["email", "x-user-email"],
-            ["rol", "x-user-role"]
+            ["role", "x-user-role"]
           ]
         }
       },
@@ -368,7 +368,7 @@
           "propagate_claims": [
             ["id", "x-user-id"],
             ["email", "x-user-email"],
-            ["rol", "x-user-role"]
+            ["role", "x-user-role"]
           ]
         }
       },
@@ -399,7 +399,7 @@
           "propagate_claims": [
             ["id", "x-user-id"],
             ["email", "x-user-email"],
-            ["rol", "x-user-role"]
+            ["role", "x-user-role"]
           ]
         }
       },
@@ -431,7 +431,7 @@
           "disable_jwk_security": true,
           "issuer": "innovatech-auth",
           "key_identify_strategy": "kid",
-          "propagate_claims": [["id", "x-user-id"], ["email", "x-user-email"], ["rol", "x-user-role"]]
+          "propagate_claims": [["id", "x-user-id"], ["email", "x-user-email"], ["role", "x-user-role"]]
         }
       },
       "backend": [{ "url_pattern": "/api/v1/consultations/kpis", "method": "GET", "host": ["http://bff:3010"] }]
@@ -451,7 +451,7 @@
           "disable_jwk_security": true,
           "issuer": "innovatech-auth",
           "key_identify_strategy": "kid",
-          "propagate_claims": [["id", "x-user-id"], ["email", "x-user-email"], ["rol", "x-user-role"]]
+          "propagate_claims": [["id", "x-user-id"], ["email", "x-user-email"], ["role", "x-user-role"]]
         }
       },
       "backend": [{ "url_pattern": "/api/v1/consultations/reports/export", "method": "GET", "host": ["http://bff:3010"] }]
@@ -470,31 +470,10 @@
           "disable_jwk_security": true,
           "issuer": "innovatech-auth",
           "key_identify_strategy": "kid",
-          "propagate_claims": [["id", "x-user-id"], ["email", "x-user-email"], ["rol", "x-user-role"]]
+          "propagate_claims": [["id", "x-user-id"], ["email", "x-user-email"], ["role", "x-user-role"]]
         }
       },
       "backend": [{ "url_pattern": "/api/v1/notifications", "method": "GET", "host": ["http://bff:3010"] }]
-    },
-    {
-      "@comment": "Eliminar proyecto",
-      "endpoint": "/api/v1/projects/{id}",
-      "method": "DELETE",
-      "output_encoding": "json",
-      "input_headers": ["Authorization"],
-      "extra_config": {
-        "auth/validator": {
-          "alg": "RS256",
-          "jwk_url": "http://auth:3001/.well-known/jwks.json",
-          "cache": true,
-          "disable_jwk_security": true,
-          "issuer": "innovatech-auth",
-          "key_identify_strategy": "kid",
-          "propagate_claims": [["id", "x-user-id"], ["email", "x-user-email"], ["rol", "x-user-role"]],
-          "roles_key": "rol",
-          "roles": ["gestor"]
-        }
-      },
-      "backend": [{ "url_pattern": "/api/v1/projects/{id}", "method": "DELETE", "host": ["http://bff:3010"] }]
     },
     {
       "@comment": "Comentarios en tarea",
@@ -510,7 +489,7 @@
           "disable_jwk_security": true,
           "issuer": "innovatech-auth",
           "key_identify_strategy": "kid",
-          "propagate_claims": [["id", "x-user-id"], ["email", "x-user-email"], ["rol", "x-user-role"]]
+          "propagate_claims": [["id", "x-user-id"], ["email", "x-user-email"], ["role", "x-user-role"]]
         }
       },
       "backend": [{ "url_pattern": "/api/v1/projects/{id}/tasks/{taskId}/comments", "method": "GET", "host": ["http://bff:3010"] }]
@@ -528,7 +507,7 @@
           "disable_jwk_security": true,
           "issuer": "innovatech-auth",
           "key_identify_strategy": "kid",
-          "propagate_claims": [["id", "x-user-id"], ["email", "x-user-email"], ["rol", "x-user-role"]]
+          "propagate_claims": [["id", "x-user-id"], ["email", "x-user-email"], ["role", "x-user-role"]]
         }
       },
       "backend": [{ "url_pattern": "/api/v1/projects/{id}/tasks/{taskId}/comments", "method": "POST", "host": ["http://bff:3010"] }]
@@ -547,7 +526,7 @@
           "disable_jwk_security": true,
           "issuer": "innovatech-auth",
           "key_identify_strategy": "kid",
-          "propagate_claims": [["id", "x-user-id"], ["email", "x-user-email"], ["rol", "x-user-role"]]
+          "propagate_claims": [["id", "x-user-id"], ["email", "x-user-email"], ["role", "x-user-role"]]
         }
       },
       "backend": [{ "url_pattern": "/api/v1/projects/{id}/tasks/{taskId}/attachments", "method": "GET", "host": ["http://bff:3010"] }]
@@ -565,7 +544,7 @@
           "disable_jwk_security": true,
           "issuer": "innovatech-auth",
           "key_identify_strategy": "kid",
-          "propagate_claims": [["id", "x-user-id"], ["email", "x-user-email"], ["rol", "x-user-role"]]
+          "propagate_claims": [["id", "x-user-id"], ["email", "x-user-email"], ["role", "x-user-role"]]
         }
       },
       "backend": [{ "url_pattern": "/api/v1/projects/{id}/tasks/{taskId}/attachments", "method": "POST", "host": ["http://bff:3010"] }]
@@ -584,7 +563,7 @@
           "disable_jwk_security": true,
           "issuer": "innovatech-auth",
           "key_identify_strategy": "kid",
-          "propagate_claims": [["id", "x-user-id"], ["email", "x-user-email"], ["rol", "x-user-role"]]
+          "propagate_claims": [["id", "x-user-id"], ["email", "x-user-email"], ["role", "x-user-role"]]
         }
       },
       "backend": [{ "url_pattern": "/api/v1/tasks/{id}", "method": "DELETE", "host": ["http://bff:3010"] }]

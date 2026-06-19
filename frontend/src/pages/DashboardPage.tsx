@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useState } from 'react';
+import { useCallback, useEffect, useState, type FormEvent } from 'react';
 import { useNavigate } from 'react-router-dom';
 import {
   addTaskAttachment,
@@ -10,56 +10,67 @@ import {
   downloadReport,
   fetchKpis,
   fetchNotifications,
-  fetchProyectos,
+  fetchProjects,
   fetchTaskAttachments,
   fetchTaskComments,
-  fetchTareas,
+  fetchTasks,
   patchTaskStatus
 } from '../api/bffClient';
 import { useAuth } from '../auth/AuthContext';
+import type { KpisResponse, Project, Task, TasksResponse, UserSession } from '../types/api';
 
-const ESTADOS = ['PENDING', 'IN_PROGRESS', 'IN_REVIEW', 'DONE'];
+const STATUSES = ['PENDING', 'IN_PROGRESS', 'IN_REVIEW', 'DONE'];
 
-const ESTADO_LABELS = {
+const STATUS_LABELS: Record<string, string> = {
   PENDING: 'Pendiente',
   IN_PROGRESS: 'En progreso',
   IN_REVIEW: 'En revisión',
   DONE: 'Hecho'
 };
 
-function estadoLabel(codigo) {
-  return ESTADO_LABELS[codigo] ?? codigo;
+function statusLabel(code: string) {
+  return STATUS_LABELS[code] ?? code;
 }
 
-function estadosPermitidos(estadoActual) {
-  const i = ESTADOS.indexOf(estadoActual);
-  if (i === -1) return ESTADOS;
-  return ESTADOS.slice(i, Math.min(i + 2, ESTADOS.length));
+function allowedStatuses(currentStatus: string) {
+  const i = STATUSES.indexOf(currentStatus);
+  if (i === -1) return STATUSES;
+  return STATUSES.slice(i, Math.min(i + 2, STATUSES.length));
 }
 
-function calcularAvance(resumen) {
-  if (!resumen?.total) return 0;
-  const done = resumen.porEstado?.DONE || 0;
-  return Math.round((done / resumen.total) * 100);
+function calcProgress(summary: TasksResponse['summary']) {
+  if (!summary?.total) return 0;
+  const done = summary.byStatus?.DONE || 0;
+  return Math.round((done / summary.total) * 100);
 }
 
 const SELECTED_PROJECT_KEY = 'innovatech_selected_project';
 
-function TaskRow({ t, proyectoId, onStatusChange, onRefresh }) {
+type TaskComment = { id: string; userId?: string; content: string };
+type TaskAttachment = { id: string; documentName: string; documentUrl: string };
+
+type TaskRowProps = {
+  task: Task;
+  projectId: string;
+  onStatusChange: (taskId: string, status: string) => void;
+  onRefresh: () => void;
+};
+
+function TaskRow({ task, projectId, onStatusChange, onRefresh }: TaskRowProps) {
   const [open, setOpen] = useState(false);
-  const [comments, setComments] = useState([]);
-  const [attachments, setAttachments] = useState([]);
+  const [comments, setComments] = useState<TaskComment[]>([]);
+  const [attachments, setAttachments] = useState<TaskAttachment[]>([]);
   const [commentText, setCommentText] = useState('');
   const [docName, setDocName] = useState('');
   const [docUrl, setDocUrl] = useState('');
 
   async function loadDetails() {
     const [c, a] = await Promise.all([
-      fetchTaskComments(proyectoId, t.id),
-      fetchTaskAttachments(proyectoId, t.id)
+      fetchTaskComments(projectId, task.id),
+      fetchTaskAttachments(projectId, task.id)
     ]);
-    setComments(c?.comments ?? []);
-    setAttachments(a?.attachments ?? []);
+    setComments((c as { comments?: TaskComment[] })?.comments ?? []);
+    setAttachments((a as { attachments?: TaskAttachment[] })?.attachments ?? []);
   }
 
   async function toggleOpen() {
@@ -67,17 +78,17 @@ function TaskRow({ t, proyectoId, onStatusChange, onRefresh }) {
     setOpen(!open);
   }
 
-  async function submitComment(e) {
+  async function submitComment(e: FormEvent) {
     e.preventDefault();
-    await addTaskComment(proyectoId, t.id, commentText);
+    await addTaskComment(projectId, task.id, commentText);
     setCommentText('');
     await loadDetails();
     onRefresh();
   }
 
-  async function submitAttachment(e) {
+  async function submitAttachment(e: FormEvent) {
     e.preventDefault();
-    await addTaskAttachment(proyectoId, t.id, docName, docUrl);
+    await addTaskAttachment(projectId, task.id, docName, docUrl);
     setDocName('');
     setDocUrl('');
     await loadDetails();
@@ -86,19 +97,19 @@ function TaskRow({ t, proyectoId, onStatusChange, onRefresh }) {
   return (
     <>
       <tr>
-        <td>{t.titulo}</td>
-        <td>{estadoLabel(t.estado)}</td>
-        <td>{t.completada ? 'Sí' : 'No'}</td>
+        <td>{task.title}</td>
+        <td>{statusLabel(task.status)}</td>
+        <td>{task.completed ? 'Sí' : 'No'}</td>
         <td>
           <select
-            value={t.estado}
+            value={task.status}
             onChange={(e) => {
-              if (e.target.value !== t.estado) onStatusChange(t.id, e.target.value);
+              if (e.target.value !== task.status) onStatusChange(task.id, e.target.value);
             }}
           >
-            {estadosPermitidos(t.estado).map((s) => (
+            {allowedStatuses(task.status).map((s) => (
               <option key={s} value={s}>
-                {estadoLabel(s)}
+                {statusLabel(s)}
               </option>
             ))}
           </select>
@@ -167,13 +178,15 @@ export default function DashboardPage() {
 
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
-  const [sessionUser, setSessionUser] = useState(null);
-  const [proyectos, setProyectos] = useState([]);
-  const [selectedId, setSelectedId] = useState(null);
-  const [tareasData, setTareasData] = useState(null);
-  const [tareasLoading, setTareasLoading] = useState(false);
-  const [kpis, setKpis] = useState(null);
-  const [notifications, setNotifications] = useState([]);
+  const [sessionUser, setSessionUser] = useState<UserSession | null>(null);
+  const [projects, setProjects] = useState<Project[]>([]);
+  const [selectedProject, setSelectedProject] = useState<string | null>(null);
+  const [tasksData, setTasksData] = useState<TasksResponse | null>(null);
+  const [tasksLoading, setTasksLoading] = useState(false);
+  const [kpis, setKpis] = useState<KpisResponse | null>(null);
+  const [notifications, setNotifications] = useState<
+    Array<{ id: string; title: string; message: string }>
+  >([]);
 
   const [newProject, setNewProject] = useState({
     name: '',
@@ -183,35 +196,36 @@ export default function DashboardPage() {
   });
   const [newTask, setNewTask] = useState({ title: '', description: '', startDate: '', endDate: '' });
 
-  const rol = (sessionUser?.rol || user?.rol || '').toLowerCase();
-  const canCreateProject = rol === 'gestor';
-  const canSeeAnalytics = rol === 'directivo' || rol === 'gestor';
+  const role = (sessionUser?.role || user?.role || '').toLowerCase();
+  const canCreateProject = role === 'gestor';
+  const canSeeAnalytics = role === 'directivo' || role === 'gestor';
 
-  const loadTareas = useCallback(async (proyectoId) => {
-    setSelectedId(proyectoId);
-    sessionStorage.setItem(SELECTED_PROJECT_KEY, proyectoId);
-    setTareasLoading(true);
-    setTareasData(null);
+  const loadTasks = useCallback(async (projectId: string) => {
+    setSelectedProject(projectId);
+    sessionStorage.setItem(SELECTED_PROJECT_KEY, projectId);
+    setTasksLoading(true);
+    setTasksData(null);
     try {
-      const data = await fetchTareas(proyectoId);
-      setTareasData(data);
+      const data = await fetchTasks(projectId);
+      setTasksData(data);
     } catch (err) {
-      setError(err.message);
+      setError((err as Error).message);
     } finally {
-      setTareasLoading(false);
+      setTasksLoading(false);
     }
   }, []);
 
-  const loadProyectos = useCallback(async () => {
+  const loadProjects = useCallback(async () => {
     setLoading(true);
     setError('');
     try {
-      const data = await fetchProyectos();
-      setSessionUser(data.usuario ?? null);
-      setProyectos(data.proyectos ?? []);
+      const data = await fetchProjects();
+      setSessionUser(data.user ?? null);
+      setProjects(data.projects ?? []);
     } catch (err) {
-      setError(err.message);
-      if (err.status === 401) {
+      const e = err as Error & { status?: number };
+      setError(e.message);
+      if (e.status === 401) {
         await logout();
         navigate('/login', { replace: true });
       }
@@ -232,17 +246,17 @@ export default function DashboardPage() {
   }, [canSeeAnalytics]);
 
   useEffect(() => {
-    loadProyectos();
+    loadProjects();
     loadAnalytics();
-  }, [loadProyectos, loadAnalytics]);
+  }, [loadProjects, loadAnalytics]);
 
   useEffect(() => {
-    if (loading || selectedId || proyectos.length === 0) return;
+    if (loading || selectedProject || projects.length === 0) return;
     const savedId = sessionStorage.getItem(SELECTED_PROJECT_KEY);
-    if (savedId && proyectos.some((p) => p.id === savedId)) {
-      loadTareas(savedId);
+    if (savedId && projects.some((p) => p.id === savedId)) {
+      loadTasks(savedId);
     }
-  }, [loading, proyectos, selectedId, loadTareas]);
+  }, [loading, projects, selectedProject, loadTasks]);
 
   async function handleLogout() {
     sessionStorage.removeItem(SELECTED_PROJECT_KEY);
@@ -250,73 +264,73 @@ export default function DashboardPage() {
     navigate('/login', { replace: true });
   }
 
-  async function handleCreateProject(e) {
+  async function handleCreateProject(e: FormEvent) {
     e.preventDefault();
     setError('');
     try {
       await createProject(newProject);
       setNewProject({ name: '', description: '', startDate: '', endDate: '' });
-      await loadProyectos();
+      await loadProjects();
     } catch (err) {
-      setError(err.message);
+      setError((err as Error).message);
     }
   }
 
-  async function handleCreateTask(e) {
+  async function handleCreateTask(e: FormEvent) {
     e.preventDefault();
-    if (!selectedId) return;
+    if (!selectedProject) return;
     setError('');
     try {
-      await createTask(selectedId, newTask);
+      await createTask(selectedProject, newTask);
       setNewTask({ title: '', description: '', startDate: '', endDate: '' });
-      await loadTareas(selectedId);
+      await loadTasks(selectedProject);
       await loadAnalytics();
     } catch (err) {
-      setError(err.message);
+      setError((err as Error).message);
     }
   }
 
-  async function handleStatusChange(taskId, status) {
-    if (!selectedId) return;
+  async function handleStatusChange(taskId: string, status: string) {
+    if (!selectedProject) return;
     setError('');
     try {
-      await patchTaskStatus(selectedId, taskId, status);
-      await loadTareas(selectedId);
+      await patchTaskStatus(selectedProject, taskId, status);
+      await loadTasks(selectedProject);
       await loadAnalytics();
     } catch (err) {
-      const msg = String(err.message || '');
+      const msg = String((err as Error).message || '');
       setError(
         msg.includes('Invalid status transition')
           ? 'Solo puedes avanzar un paso: Pendiente → En progreso → En revisión → Hecho.'
           : msg
       );
-      await loadTareas(selectedId);
+      await loadTasks(selectedProject);
     }
   }
 
-  async function handleDeleteProject(id) {
+  async function handleDeleteProject(id: string) {
     if (!window.confirm('¿Eliminar proyecto?')) return;
     try {
       await deleteProject(id);
-      if (selectedId === id) setSelectedId(null);
-      await loadProyectos();
+      if (selectedProject === id) setSelectedProject(null);
+      await loadProjects();
     } catch (err) {
-      setError(err.message);
+      setError((err as Error).message);
     }
   }
 
-  async function handleDeleteTask(taskId) {
+  async function handleDeleteTask(taskId: string) {
     if (!window.confirm('¿Eliminar tarea?')) return;
     try {
       await deleteTask(taskId);
-      await loadTareas(selectedId);
+      if (selectedProject) await loadTasks(selectedProject);
     } catch (err) {
-      setError(err.message);
+      setError((err as Error).message);
     }
   }
 
-  const selectedProyecto = proyectos.find((p) => p.id === selectedId);
-  const avancePct = calcularAvance(tareasData?.resumen);
+  const selectedProjectDetails = projects.find((p) => p.id === selectedProject);
+  const progressPct = calcProgress(tasksData?.summary);
 
   return (
     <div style={{ fontFamily: 'sans-serif', margin: 16, maxWidth: 1000 }}>
@@ -329,7 +343,7 @@ export default function DashboardPage() {
 
       {sessionUser && (
         <p>
-          Sesión: <strong>{sessionUser.email}</strong> — rol: <strong>{sessionUser.rol}</strong>
+          Sesión: <strong>{sessionUser.email}</strong> — rol: <strong>{sessionUser.role}</strong>
         </p>
       )}
 
@@ -341,9 +355,9 @@ export default function DashboardPage() {
         <section style={{ marginTop: 16, padding: 12, border: '1px solid #4a90d9', background: '#f0f7ff' }}>
           <h2>KPIs y analítica</h2>
           <p>
-            Avance global: <strong>{kpis.avanceProyectosPct}%</strong> — Tareas completadas:{' '}
-            {kpis.tareasCompletadas}/{kpis.tareasTotales} — Utilización recursos:{' '}
-            {kpis.utilizacionRecursos?.utilizacionPct}%
+            Avance global: <strong>{kpis.projectProgressPct}%</strong> — Tareas completadas:{' '}
+            {kpis.completedTasks}/{kpis.totalTasks} — Utilización recursos:{' '}
+            {kpis.resourceUtilization?.utilizationPct}%
           </p>
           <button type="button" onClick={() => downloadReport('csv')}>
             Exportar reporte CSV (Excel)
@@ -370,7 +384,7 @@ export default function DashboardPage() {
       {loading && <p>Cargando proyectos…</p>}
 
       <section style={{ marginTop: 24 }}>
-        <h2>Proyectos ({proyectos.length})</h2>
+        <h2>Proyectos ({projects.length})</h2>
 
         {canCreateProject && (
           <form onSubmit={handleCreateProject} style={{ marginBottom: 16, padding: 12, border: '1px solid #ccc' }}>
@@ -413,9 +427,9 @@ export default function DashboardPage() {
         )}
 
         <ul style={{ listStyle: 'none', padding: 0 }}>
-          {proyectos.map((p) => (
+          {projects.map((p) => (
             <li key={p.id} style={{ marginBottom: 8, padding: 8, border: '1px solid #ddd' }}>
-              <button type="button" onClick={() => loadTareas(p.id)}>
+              <button type="button" onClick={() => loadTasks(p.id)}>
                 Ver tareas
               </button>{' '}
               {canCreateProject && (
@@ -423,14 +437,14 @@ export default function DashboardPage() {
                   Eliminar
                 </button>
               )}{' '}
-              <strong>{p.nombre}</strong>
+              <strong>{p.name}</strong>
               <br />
-              <small>{p.descripcion}</small>
-              {(p.fechaInicio || p.fechaFin) && (
+              <small>{p.description}</small>
+              {(p.startDate || p.endDate) && (
                 <>
                   <br />
                   <small>
-                    {p.fechaInicio || '—'} → {p.fechaFin || '—'}
+                    {p.startDate || '—'} → {p.endDate || '—'}
                   </small>
                 </>
               )}
@@ -439,16 +453,16 @@ export default function DashboardPage() {
         </ul>
       </section>
 
-      {selectedId && (
+      {selectedProject && (
         <section style={{ marginTop: 24, padding: 12, border: '2px solid #333' }}>
-          <h2>Tareas — {selectedProyecto?.nombre || selectedId}</h2>
+          <h2>Tareas — {selectedProjectDetails?.name || selectedProject}</h2>
 
-          {tareasLoading && <p>Cargando tareas…</p>}
+          {tasksLoading && <p>Cargando tareas…</p>}
 
-          {tareasData?.resumen && (
+          {tasksData?.summary && (
             <div style={{ marginBottom: 16 }}>
               <p>
-                Progreso del proyecto: <strong>{avancePct}%</strong> ({tareasData.resumen.total} tareas)
+                Progreso del proyecto: <strong>{progressPct}%</strong> ({tasksData.summary.total} tareas)
               </p>
               <div
                 style={{
@@ -461,7 +475,7 @@ export default function DashboardPage() {
               >
                 <div
                   style={{
-                    width: `${avancePct}%`,
+                    width: `${progressPct}%`,
                     height: '100%',
                     background: '#4caf50',
                     transition: 'width 0.3s'
@@ -469,8 +483,8 @@ export default function DashboardPage() {
                 />
               </div>
               <p style={{ fontSize: 14, marginTop: 8 }}>
-                {Object.entries(tareasData.resumen.porEstado || {})
-                  .map(([k, v]) => `${estadoLabel(k)}: ${v}`)
+                {Object.entries(tasksData.summary.byStatus || {})
+                  .map(([k, v]) => `${statusLabel(k)}: ${v}`)
                   .join(' · ')}
               </p>
             </div>
@@ -505,22 +519,22 @@ export default function DashboardPage() {
               </tr>
             </thead>
             <tbody>
-              {(tareasData?.tareas ?? []).map((t) => (
+              {(tasksData?.tasks ?? []).map((task) => (
                 <TaskRow
-                  key={t.id}
-                  t={t}
-                  proyectoId={selectedId}
+                  key={task.id}
+                  task={task}
+                  projectId={selectedProject}
                   onStatusChange={handleStatusChange}
-                  onRefresh={() => loadTareas(selectedId)}
+                  onRefresh={() => loadTasks(selectedProject)}
                 />
               ))}
             </tbody>
           </table>
 
-          {(tareasData?.tareas ?? []).map((t) => (
-            <p key={`del-${t.id}`}>
-              <button type="button" onClick={() => handleDeleteTask(t.id)}>
-                Eliminar tarea: {t.titulo}
+          {(tasksData?.tasks ?? []).map((task) => (
+            <p key={`del-${task.id}`}>
+              <button type="button" onClick={() => handleDeleteTask(task.id)}>
+                Eliminar tarea: {task.title}
               </button>
             </p>
           ))}

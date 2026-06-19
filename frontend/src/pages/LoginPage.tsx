@@ -10,7 +10,7 @@ export default function LoginPage() {
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
 
-  async function handleSubmit(e) {
+  async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
     setError('');
     setLoading(true);
@@ -18,7 +18,7 @@ export default function LoginPage() {
       await login(email.trim(), password);
       navigate('/dashboard', { replace: true });
     } catch (err) {
-      setError(err.message || 'Error al iniciar sesión');
+      setError(err instanceof Error ? err.message : 'Error al iniciar sesión');
     } finally {
       setLoading(false);
     }
