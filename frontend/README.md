@@ -115,4 +115,5 @@ Contraseña para todos: **`Secret123`**
 
 - [README raíz del repositorio](../README.md)
 - [Backend y Docker Compose](../backend/README.md)
-- [Inicio rápido](../INSTRUCCIONES-INICIO.md)
+- [Guía central](../README.md)
+- [Inicio rápido](../docs/INSTRUCCIONES-INICIO.md)
