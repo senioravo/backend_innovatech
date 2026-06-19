@@ -1,10 +1,10 @@
 # Flyway — ms-users
 
-Database migrations for the **users** PostgreSQL database.
+Migraciones de base de datos para PostgreSQL del servicio **users**.
 
 ## Local (Docker Compose)
 
-Migrations run automatically via the `flyway-users` service before `users` starts.
+Las migraciones se ejecutan automáticamente mediante el servicio `flyway-users` antes de que arranque `users`.
 
 ## Manual
 
@@ -17,10 +17,10 @@ docker run --rm \
   migrate
 ```
 
-## Files
+## Archivos
 
-| Version | Description |
+| Versión | Descripción |
 |---------|-------------|
-| V1 | Core `usuarios` schema |
-| V2 | Profile columns (skills, availability) |
-| V3 | Demo seed users |
+| V1 | Esquema base de `usuarios` |
+| V2 | Columnas de perfil (skills, disponibilidad) |
+| V3 | Usuarios demo (seed) |

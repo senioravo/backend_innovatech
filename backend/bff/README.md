@@ -1,15 +1,15 @@
 # BFF (Backend for Frontend) — InnovaTech
 
-## Technical specification
+## Especificación técnica
 
-| Aspect | Detail |
-|--------|--------|
-| **Language** | TypeScript (Node.js 20+) |
+| Aspecto | Detalle |
+|---------|---------|
+| **Lenguaje** | TypeScript (Node.js 20+) |
 | **Framework** | Express.js 4.18 |
-| **Libraries** | cors, dotenv, express, jsonwebtoken, swagger-jsdoc, swagger-ui-express |
-| **Design patterns** | BFF, layered architecture (presentation / application / infrastructure), orchestration, RBAC middleware, response transformers |
-| **Database** | None (stateless; delegates persistence to microservices) |
-| **Testing** | Jest 29 + Supertest 7 + ts-jest |
+| **Librerías** | cors, dotenv, express, jsonwebtoken, swagger-jsdoc, swagger-ui-express |
+| **Patrones de diseño** | BFF, arquitectura en capas (presentación / aplicación / infraestructura), orquestación, middleware RBAC, transformadores de respuesta |
+| **Base de datos** | Ninguna (sin estado; delega persistencia a los microservicios) |
+| **Pruebas** | Jest 29 + Supertest 7 + ts-jest |
 
 ## Descripción
 

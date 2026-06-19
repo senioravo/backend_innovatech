@@ -1,15 +1,15 @@
 # API Gateway (KrakenD) — InnovaTech
 
-## Technical specification
+## Especificación técnica
 
-| Aspect | Detail |
-|--------|--------|
-| **Language** | JSON configuration (KrakenD declarative) |
+| Aspecto | Detalle |
+|---------|---------|
+| **Lenguaje** | Configuración declarativa JSON (KrakenD) |
 | **Framework** | KrakenD 2.7 |
-| **Libraries** | auth/validator (JWT + JWKS), security/cors, telemetry/logging, backend/http |
-| **Design patterns** | API Gateway, JWT validation (RS256), RBAC at gateway, claim propagation (`X-User-*`), backend aggregation |
-| **Database** | None (stateless proxy) |
-| **Testing** | Manual / integración vía stack Docker Compose y pruebas E2E del frontend |
+| **Librerías** | auth/validator (JWT + JWKS), security/cors, telemetry/logging, backend/http |
+| **Patrones de diseño** | API Gateway, validación JWT (RS256), RBAC en gateway, propagación de claims (`X-User-*`), agregación de backends |
+| **Base de datos** | Ninguna (proxy sin estado) |
+| **Pruebas** | Manuales / integración vía Docker Compose y pruebas E2E del frontend |
 
 ## Descripción
 
@@ -60,7 +60,7 @@ Archivo: `krakend.json`
 
 - **Puerto:** 8080 (expuesto como 8010 en Compose)
 - **JWT:** RS256 vía `http://auth:3001/.well-known/jwks.json`
-- **Claims propagados:** `id` → `X-User-Id`, `email` → `X-User-Email`, `rol` → `X-User-Role`
+- **Claims propagados:** `id` → `X-User-Id`, `email` → `X-User-Email`, `role` → `X-User-Role`
 - **Rutas públicas:** `/api/v1/auth/login`, `/api/v1/auth/register`
 - **Rutas protegidas:** proyectos, tareas, KPIs, notificaciones → BFF
 

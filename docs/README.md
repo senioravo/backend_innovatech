@@ -1,18 +1,18 @@
-# InnovaTech — Documentation
+# InnovaTech — Documentación
 
-Place the required deliverables in this folder:
+Coloca en esta carpeta los entregables requeridos por la evaluación:
 
-| File | Description |
-|------|-------------|
-| `report.pdf` | Technical report (~10 min reading): C1/C2/C3, patterns, data model |
-| `presentation.pdf` | Presentation deck (max 5 min demo) |
-| `caso-estudio.pdf` | Original case study |
-| `diagramas/` | Source files for C1, C2, C3 diagrams |
+| Archivo | Descripción |
+|---------|-------------|
+| `report.pdf` | Informe técnico (~10 min de lectura): C1/C2/C3, patrones, modelo de datos |
+| `presentation.pdf` | Presentación (demo máx. 5 min) |
+| `caso-estudio.pdf` | Caso de estudio original |
+| `diagramas/` | Fuentes de los diagramas C1, C2, C3 |
 
-## Repository layout
+## Estructura del repositorio
 
 ```
-/backend   — Microservices, BFF, API Gateway, Docker, Kubernetes
+/backend   — Microservicios, BFF, API Gateway, Docker, Kubernetes
 /frontend  — React + TypeScript (Vite)
-/docs      — Reports, presentation, diagrams (this folder)
+/docs      — Informes, presentación, diagramas (esta carpeta)
 ```

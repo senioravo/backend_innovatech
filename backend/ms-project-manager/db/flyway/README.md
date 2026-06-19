@@ -1,10 +1,10 @@
 # Flyway — ms-project-manager
 
-Database migrations for the **project manager** PostgreSQL database.
+Migraciones de base de datos para PostgreSQL del servicio **project manager**.
 
 ## Local (Docker Compose)
 
-Migrations run automatically via the `flyway-pm` service before `project-manager` starts.
+Las migraciones se ejecutan automáticamente mediante el servicio `flyway-pm` antes de que arranque `project-manager`.
 
 ## Manual
 
@@ -17,11 +17,11 @@ docker run --rm \
   migrate
 ```
 
-## Files
+## Archivos
 
-| Version | Description |
+| Versión | Descripción |
 |---------|-------------|
-| V1 | PROJECT and TASK tables |
-| V2 | Task status workflow |
-| V3 | Project lifecycle status |
-| V4 | Comments, attachments, notifications |
+| V1 | Tablas PROJECT y TASK |
+| V2 | Flujo de estados de tareas |
+| V3 | Ciclo de vida del proyecto |
+| V4 | Comentarios, adjuntos, notificaciones |

@@ -1,9 +1,9 @@
-# Architecture diagrams (C1, C2, C3)
+# Diagramas de arquitectura (C1, C2, C3)
 
-Add the source files for your C4 model diagrams here (e.g. `.drawio`, `.puml`, `.mmd`).
+Agrega aquí los archivos fuente de tus diagramas del modelo C4 (por ejemplo `.drawio`, `.puml`, `.mmd`).
 
-Suggested naming:
+Nomenclatura sugerida:
 
-- `c1-context` — System context
-- `c2-containers` — Container diagram
-- `c3-components` — Component diagram (per service if needed)
+- `c1-contexto` — Diagrama de contexto del sistema
+- `c2-contenedores` — Diagrama de contenedores
+- `c3-componentes` — Diagrama de componentes (por servicio si aplica)

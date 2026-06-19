@@ -1,15 +1,15 @@
 # Microservicio Project Manager — InnovaTech
 
-## Technical specification
+## Especificación técnica
 
-| Aspect | Detail |
-|--------|--------|
-| **Language** | TypeScript (Node.js 20+) |
+| Aspecto | Detalle |
+|---------|---------|
+| **Lenguaje** | TypeScript (Node.js 20+) |
 | **Framework** | Express.js 4.18 |
-| **Libraries** | pg, prom-client, @elastic/elasticsearch, jsonwebtoken, cors, dotenv, swagger-jsdoc, swagger-ui-express |
-| **Design patterns** | Repository, service layer, DTO + validation, thin controller, RBAC, circuit breaker (Opossum), database per service |
-| **Database** | PostgreSQL (`innovatech_pm` / `pm-db`) |
-| **Testing** | Jest 29 + Supertest 7 + ts-jest |
+| **Librerías** | pg, prom-client, @elastic/elasticsearch, jsonwebtoken, cors, dotenv, swagger-jsdoc, swagger-ui-express |
+| **Patrones de diseño** | Repository, capa de servicio, DTO + validación, controlador delgado, RBAC, circuit breaker (Opossum), database per service |
+| **Base de datos** | PostgreSQL (`innovatech_pm` / `pm-db`) |
+| **Pruebas** | Jest 29 + Supertest 7 + ts-jest |
 
 ## Descripción
 

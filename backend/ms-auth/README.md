@@ -1,15 +1,15 @@
 # Microservicio Auth - InnovaTech
 
-## Technical specification
+## Especificación técnica
 
-| Aspect | Detail |
-|--------|--------|
-| **Language** | TypeScript (Node.js 20+) |
+| Aspecto | Detalle |
+|---------|---------|
+| **Lenguaje** | TypeScript (Node.js 20+) |
 | **Framework** | Express.js 4.18 |
-| **Libraries** | bcrypt, pg, jsonwebtoken, winston, prom-client, opossum, cors, dotenv, swagger-jsdoc, swagger-ui-express, @elastic/elasticsearch |
-| **Design patterns** | Service layer, thin controller, RBAC, JWT RS256, circuit breaker, token blacklist, JWKS |
-| **Database** | PostgreSQL (Neon Cloud o local; datos de usuario delegados a ms-users) |
-| **Testing** | Jest 30 + Supertest 7 + ts-jest (119+ tests) |
+| **Librerías** | bcrypt, pg, jsonwebtoken, winston, prom-client, opossum, cors, dotenv, swagger-jsdoc, swagger-ui-express, @elastic/elasticsearch |
+| **Patrones de diseño** | Capa de servicio, controlador delgado, RBAC, JWT RS256, circuit breaker, blacklist de tokens, JWKS |
+| **Base de datos** | PostgreSQL (Neon Cloud o local; datos de usuario delegados a ms-users) |
+| **Pruebas** | Jest 30 + Supertest 7 + ts-jest (119+ tests) |
 
 > **Guía de estudio (presentación / aprendizaje):** [README-ESTUDIO.md](./README-ESTUDIO.md)  
 > **Documentación del backend completo:** [../../README.md](../../README.md)

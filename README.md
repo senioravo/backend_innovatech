@@ -1,19 +1,19 @@
 # InnovaTech
 
-Full-stack microservices platform for authentication, user management, and project/task administration.
+Plataforma full-stack de microservicios para autenticación, gestión de usuarios y administración de proyectos/tareas.
 
-## Structure
+## Estructura
 
-| Path | Description |
+| Ruta | Descripción |
 |------|-------------|
-| [`backend/`](backend/) | BFF, microservices, API Gateway (KrakenD), Docker Compose, Kubernetes |
-| [`frontend/`](frontend/) | React + TypeScript SPA (Vite) |
-| [`docs/`](docs/) | Technical report, presentation, case study, architecture diagrams |
+| [`backend/`](backend/) | BFF, microservicios, API Gateway (KrakenD), Docker Compose, Kubernetes |
+| [`frontend/`](frontend/) | SPA React + TypeScript (Vite) — ver [README del frontend](frontend/README.md) |
+| [`docs/`](docs/) | Informe técnico, presentación, caso de estudio, diagramas de arquitectura |
 
-## Quick start
+## Inicio rápido
 
-See [`INSTRUCCIONES-INICIO.md`](INSTRUCCIONES-INICIO.md) for local setup (Docker, frontend, tests).
+Consulta [`INSTRUCCIONES-INICIO.md`](INSTRUCCIONES-INICIO.md) para levantar el entorno local (Docker, frontend, pruebas).
 
-## GitHub workflow
+## Flujo de trabajo en GitHub
 
-Use feature branches and Pull Requests into `main`.
+Usar ramas de feature y Pull Requests hacia `main`.
