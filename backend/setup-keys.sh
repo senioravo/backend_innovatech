@@ -2,7 +2,7 @@
 # Script para copiar la clave pública de ms-auth a ms-users
 # Uso: ./setup-keys.sh (desde el directorio backend/)
 
-echo "🔑 Copiando clave pública JWT de ms-auth a ms-users..."
+echo "🔑 Copiando clave pública JWT de ms-auth a ms-users y ms-kpi..."
 
 # Verificar que existe la clave pública en ms-auth
 if [ ! -f "ms-auth/keys/public.key" ]; then
@@ -11,13 +11,14 @@ if [ ! -f "ms-auth/keys/public.key" ]; then
   exit 1
 fi
 
-# Crear directorio keys en ms-users si no existe
-mkdir -p ms-users/keys
+# Crear directorios keys si no existen
+mkdir -p ms-users/keys ms-kpi/keys
 
 # Copiar clave pública
 cp ms-auth/keys/public.key ms-users/keys/jwt_public.pem
+cp ms-auth/keys/public.key ms-kpi/keys/public.key
 
-echo "✅ Clave pública copiada exitosamente a ms-users/keys/jwt_public.pem"
+echo "✅ Clave pública copiada a ms-users/keys/jwt_public.pem y ms-kpi/keys/public.key"
 echo ""
 echo "Próximos pasos:"
 echo "1. Configurar DATABASE_URL_USERS en .env.docker"

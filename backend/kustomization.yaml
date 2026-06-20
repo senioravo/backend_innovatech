@@ -9,3 +9,4 @@ resources:
   - bff/k8s
   - ms-auth/k8s
   - ms-project-manager/k8s
+  - ms-kpi/k8s

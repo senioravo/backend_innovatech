@@ -30,9 +30,9 @@
         
             
             <div class='fl pad1y space-right2'>
-                <span class="strong">61.53% </span>
+                <span class="strong">67.3% </span>
                 <span class="quiet">Branches</span>
-                <span class='fraction'>32/52</span>
+                <span class='fraction'>35/52</span>
             </div>
         
             
@@ -163,8 +163,8 @@
 <span class="cline-any cline-yes">1x</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-yes">2x</span>
-<span class="cline-any cline-yes">2x</span>
+<span class="cline-any cline-yes">4x</span>
+<span class="cline-any cline-yes">4x</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
@@ -181,11 +181,11 @@
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-yes">1x</span>
-<span class="cline-any cline-yes">1x</span>
-<span class="cline-any cline-yes">1x</span>
+<span class="cline-any cline-yes">3x</span>
+<span class="cline-any cline-yes">3x</span>
+<span class="cline-any cline-yes">3x</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-yes">1x</span>
+<span class="cline-any cline-yes">3x</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
@@ -278,15 +278,15 @@ function toResponsable(userId, userMap) {
 &nbsp;
 function buildUsuarioSesion(req, rolesCatalog) {
   const roleKey = normalizeRoleKey(req.user?.role);
-  const roles = Array.isArray(rolesCatalog) ? rolesCatalog : <span class="branch-1 cbranch-no" title="branch not covered" >[];</span>
+  const roles = Array.isArray(rolesCatalog) ? rolesCatalog : [];
   const match = roles.find((r) =&gt; normalizeRoleKey(r.nombre) === roleKey);
 &nbsp;
   return {
     id: req.user?.id != null ? String(req.user.id) : <span class="branch-1 cbranch-no" title="branch not covered" >null,</span>
     email: req.user?.email ?? <span class="branch-1 cbranch-no" title="branch not covered" >null,</span>
     rol: roleKey,
-    descripcionRol: match?.descripcion ?? <span class="branch-1 cbranch-no" title="branch not covered" >null,</span>
-    permisos: match?.permisos ?? <span class="branch-1 cbranch-no" title="branch not covered" >null</span>
+    descripcionRol: match?.descripcion ?? null,
+    permisos: match?.permisos ?? null
   };
 }
 &nbsp;

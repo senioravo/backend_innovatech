@@ -29,6 +29,13 @@ describe('BFF - Integración HTTP (Supertest)', () => {
       expect(response.body).toHaveProperty('error', 'Unauthorized');
     });
 
+    it('GET /api/v1/kpis/dashboard sin headers devuelve 401', async () => {
+      const response = await request(app).get('/api/v1/kpis/dashboard');
+
+      expect(response.status).toBe(401);
+      expect(response.body).toHaveProperty('error', 'Unauthorized');
+    });
+
     it('GET /api/v1/projects con headers KrakenD no devuelve 401 por auth', async () => {
       const response = await request(app)
         .get('/api/v1/projects')
