@@ -57,13 +57,16 @@
       "endpoint": "/api/v1/projects",
       "method": "GET",
       "output_encoding": "json",
+      "input_headers": ["Authorization", "Content-Type"],
       "extra_config": {
         "auth/validator": {
           "alg": "RS256",
-          "jwk_url": "http://api-gateway:8080/.well-known/jwks.json",
+          "jwk_url": "http://ms-auth:3001/.well-known/jwks.json",
           "cache": true,
           "cache_duration": 300,
           "disable_jwk_security": true,
+          "issuer": "innovatech-auth",
+          "key_identify_strategy": "kid",
           "propagate_claims": [
             ["id", "x-user-id"],
             ["email", "x-user-email"],
@@ -85,13 +88,16 @@
       "endpoint": "/api/v1/projects",
       "method": "POST",
       "output_encoding": "json",
+      "input_headers": ["Authorization", "Content-Type"],
       "extra_config": {
         "auth/validator": {
           "alg": "RS256",
-          "jwk_url": "http://api-gateway:8080/.well-known/jwks.json",
+          "jwk_url": "http://ms-auth:3001/.well-known/jwks.json",
           "cache": true,
           "cache_duration": 300,
           "disable_jwk_security": true,
+          "issuer": "innovatech-auth",
+          "key_identify_strategy": "kid",
           "propagate_claims": [
             ["id", "x-user-id"],
             ["email", "x-user-email"],
@@ -115,13 +121,16 @@
       "endpoint": "/api/v1/projects/{id}",
       "method": "GET",
       "output_encoding": "json",
+      "input_headers": ["Authorization", "Content-Type"],
       "extra_config": {
         "auth/validator": {
           "alg": "RS256",
-          "jwk_url": "http://api-gateway:8080/.well-known/jwks.json",
+          "jwk_url": "http://ms-auth:3001/.well-known/jwks.json",
           "cache": true,
           "cache_duration": 300,
           "disable_jwk_security": true,
+          "issuer": "innovatech-auth",
+          "key_identify_strategy": "kid",
           "propagate_claims": [
             ["id", "x-user-id"],
             ["email", "x-user-email"],
@@ -143,13 +152,16 @@
       "endpoint": "/api/v1/projects/{id}",
       "method": "PUT",
       "output_encoding": "json",
+      "input_headers": ["Authorization", "Content-Type"],
       "extra_config": {
         "auth/validator": {
           "alg": "RS256",
-          "jwk_url": "http://api-gateway:8080/.well-known/jwks.json",
+          "jwk_url": "http://ms-auth:3001/.well-known/jwks.json",
           "cache": true,
           "cache_duration": 300,
           "disable_jwk_security": true,
+          "issuer": "innovatech-auth",
+          "key_identify_strategy": "kid",
           "propagate_claims": [
             ["id", "x-user-id"],
             ["email", "x-user-email"],
@@ -173,13 +185,16 @@
       "endpoint": "/api/v1/projects/{id}",
       "method": "DELETE",
       "output_encoding": "json",
+      "input_headers": ["Authorization", "Content-Type"],
       "extra_config": {
         "auth/validator": {
           "alg": "RS256",
-          "jwk_url": "http://api-gateway:8080/.well-known/jwks.json",
+          "jwk_url": "http://ms-auth:3001/.well-known/jwks.json",
           "cache": true,
           "cache_duration": 300,
           "disable_jwk_security": true,
+          "issuer": "innovatech-auth",
+          "key_identify_strategy": "kid",
           "propagate_claims": [
             ["id", "x-user-id"],
             ["email", "x-user-email"],
@@ -203,13 +218,16 @@
       "endpoint": "/api/v1/projects/{id}/tasks",
       "method": "GET",
       "output_encoding": "json",
+      "input_headers": ["Authorization", "Content-Type"],
       "extra_config": {
         "auth/validator": {
           "alg": "RS256",
-          "jwk_url": "http://api-gateway:8080/.well-known/jwks.json",
+          "jwk_url": "http://ms-auth:3001/.well-known/jwks.json",
           "cache": true,
           "cache_duration": 300,
           "disable_jwk_security": true,
+          "issuer": "innovatech-auth",
+          "key_identify_strategy": "kid",
           "propagate_claims": [
             ["id", "x-user-id"],
             ["email", "x-user-email"],
@@ -231,13 +249,16 @@
       "endpoint": "/api/v1/projects/{id}/tasks",
       "method": "POST",
       "output_encoding": "json",
+      "input_headers": ["Authorization", "Content-Type"],
       "extra_config": {
         "auth/validator": {
           "alg": "RS256",
-          "jwk_url": "http://api-gateway:8080/.well-known/jwks.json",
+          "jwk_url": "http://ms-auth:3001/.well-known/jwks.json",
           "cache": true,
           "cache_duration": 300,
           "disable_jwk_security": true,
+          "issuer": "innovatech-auth",
+          "key_identify_strategy": "kid",
           "propagate_claims": [
             ["id", "x-user-id"],
             ["email", "x-user-email"],
@@ -273,17 +294,20 @@
       "endpoint": "/api/v1/proyectos",
       "method": "GET",
       "output_encoding": "json",
+      "input_headers": ["Authorization", "Content-Type"],
       "extra_config": {
         "auth/validator": {
           "alg": "RS256",
-          "jwk_url": "http://api-gateway:8080/.well-known/jwks.json",
+          "jwk_url": "http://ms-auth:3001/.well-known/jwks.json",
           "cache": true,
           "cache_duration": 300,
           "disable_jwk_security": true,
+          "issuer": "innovatech-auth",
+          "key_identify_strategy": "kid",
           "propagate_claims": [
             ["id", "x-user-id"],
             ["email", "x-user-email"],
-            ["rol", "x-user-role"]
+            ["role", "x-user-role"]
           ]
         }
       },
@@ -301,17 +325,20 @@
       "endpoint": "/api/v1/proyectos/{id}/tareas",
       "method": "GET",
       "output_encoding": "json",
+      "input_headers": ["Authorization", "Content-Type"],
       "extra_config": {
         "auth/validator": {
           "alg": "RS256",
-          "jwk_url": "http://api-gateway:8080/.well-known/jwks.json",
+          "jwk_url": "http://ms-auth:3001/.well-known/jwks.json",
           "cache": true,
           "cache_duration": 300,
           "disable_jwk_security": true,
+          "issuer": "innovatech-auth",
+          "key_identify_strategy": "kid",
           "propagate_claims": [
             ["id", "x-user-id"],
             ["email", "x-user-email"],
-            ["rol", "x-user-role"]
+            ["role", "x-user-role"]
           ]
         }
       },
@@ -329,17 +356,20 @@
       "endpoint": "/api/v1/kpis/dashboard",
       "method": "GET",
       "output_encoding": "json",
+      "input_headers": ["Authorization", "Content-Type"],
       "extra_config": {
         "auth/validator": {
           "alg": "RS256",
-          "jwk_url": "http://api-gateway:8080/.well-known/jwks.json",
+          "jwk_url": "http://ms-auth:3001/.well-known/jwks.json",
           "cache": true,
           "cache_duration": 300,
           "disable_jwk_security": true,
+          "issuer": "innovatech-auth",
+          "key_identify_strategy": "kid",
           "propagate_claims": [
             ["id", "x-user-id"],
             ["email", "x-user-email"],
-            ["rol", "x-user-role"]
+            ["role", "x-user-role"]
           ]
         }
       },
@@ -376,7 +406,7 @@
           "url_pattern": "/.well-known/jwks.json",
           "encoding": "json",
           "method": "GET",
-          "host": ["http://auth:3001"]
+          "host": ["http://ms-auth:3001"]
         }
       ]
     }
