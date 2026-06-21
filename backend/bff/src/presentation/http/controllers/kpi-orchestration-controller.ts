@@ -1,5 +1,5 @@
-export {};
-const kpiOrchestrationService = require('../../../application/kpi/kpiOrchestrationService');
+// @ts-nocheck
+import kpiOrchestrationService from '../../../application/kpi/kpiOrchestrationService.js';
 
 const kpiOrchestrationController = {
   async getDashboard(req, res, next) {
@@ -12,4 +12,4 @@ const kpiOrchestrationController = {
   }
 };
 
-module.exports = kpiOrchestrationController;
+export default kpiOrchestrationController;

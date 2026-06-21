@@ -16,27 +16,26 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [token, setToken] = useState<string | null>(() => getToken());
 
   const logout = useCallback(async () => {
-    try {
-      await apiLogout();
-    } finally {
-      setUser(null);
-      setToken(null);
-    }
+    await apiLogout();
+    setUser(null);
+    setToken(null);
+  }, []);
+
+  const login = useCallback(async (email: string, password: string) => {
+    const data = await apiLogin(email, password);
+    setUser(data.user ?? getStoredUser());
+    setToken(data.token);
+    return data;
   }, []);
 
   const value = useMemo(
     () => ({
       user,
       isAuthenticated: Boolean(token),
-      async login(email: string, password: string) {
-        const data = await apiLogin(email, password);
-        setUser(data.user ?? null);
-        setToken(data.token);
-        return data;
-      },
+      login,
       logout
     }),
-    [user, token, logout]
+    [user, token, login, logout]
   );
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;

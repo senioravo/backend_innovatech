@@ -18,4 +18,4 @@ const projectManagerOrchestrationController = {
   }
 };
 
-export default projectManagerOrchestrationController;;
+export default projectManagerOrchestrationController;

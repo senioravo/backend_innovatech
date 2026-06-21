@@ -198,7 +198,14 @@ export default function DashboardPage() {
 
   const role = (sessionUser?.role || user?.role || '').toLowerCase();
   const canCreateProject = role === 'gestor';
+  const canCreateTask = role === 'gestor' || role === 'profesional';
   const canSeeAnalytics = role === 'directivo' || role === 'gestor';
+
+  const roleHint: Record<string, string> = {
+    gestor: 'Puedes crear, editar y eliminar proyectos y tareas.',
+    profesional: 'Puedes ver todos los proyectos y actualizar tareas asignadas. No puedes crear proyectos.',
+    directivo: 'Puedes ver todos los proyectos, KPIs y exportar reportes. No puedes crear proyectos.'
+  };
 
   const loadTasks = useCallback(async (projectId: string) => {
     setSelectedProject(projectId);
@@ -260,6 +267,12 @@ export default function DashboardPage() {
 
   async function handleLogout() {
     sessionStorage.removeItem(SELECTED_PROJECT_KEY);
+    setSessionUser(null);
+    setProjects([]);
+    setSelectedProject(null);
+    setTasksData(null);
+    setKpis(null);
+    setNotifications([]);
     await logout();
     navigate('/login', { replace: true });
   }
@@ -347,6 +360,12 @@ export default function DashboardPage() {
         </p>
       )}
 
+      {role && roleHint[role] && (
+        <p style={{ padding: 8, background: '#f5f5f5', border: '1px solid #ddd', fontSize: 14 }}>
+          {roleHint[role]}
+        </p>
+      )}
+
       {error && (
         <p style={{ color: 'crimson', padding: 8, border: '1px solid crimson' }}>{error}</p>
       )}
@@ -397,10 +416,11 @@ export default function DashboardPage() {
               style={{ width: '100%', padding: 6, marginBottom: 8 }}
             />
             <textarea
-              placeholder="Descripción"
+              placeholder="Descripción (mínimo 10 caracteres)"
               value={newProject.description}
               onChange={(e) => setNewProject((s) => ({ ...s, description: e.target.value }))}
               required
+              minLength={10}
               rows={2}
               style={{ width: '100%', marginBottom: 8 }}
             />
@@ -490,6 +510,7 @@ export default function DashboardPage() {
             </div>
           )}
 
+          {canCreateTask && (
           <form onSubmit={handleCreateTask} style={{ marginBottom: 16 }}>
             <h3>Nueva tarea</h3>
             <input
@@ -507,6 +528,7 @@ export default function DashboardPage() {
             />
             <button type="submit">Crear tarea</button>
           </form>
+          )}
 
           <table border={1} cellPadding={6} style={{ width: '100%', borderCollapse: 'collapse' }}>
             <thead>
@@ -531,7 +553,8 @@ export default function DashboardPage() {
             </tbody>
           </table>
 
-          {(tasksData?.tasks ?? []).map((task) => (
+          {canCreateProject &&
+            (tasksData?.tasks ?? []).map((task) => (
             <p key={`del-${task.id}`}>
               <button type="button" onClick={() => handleDeleteTask(task.id)}>
                 Eliminar tarea: {task.title}

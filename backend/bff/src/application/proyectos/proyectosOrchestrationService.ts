@@ -77,4 +77,4 @@ const proyectosOrchestrationService = {
   }
 };
 
-export default proyectosOrchestrationService;;
+export default proyectosOrchestrationService;

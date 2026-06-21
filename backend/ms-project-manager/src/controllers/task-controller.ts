@@ -6,7 +6,11 @@ import { auditFromRequest } from '../utils/auditLog.js';
 const taskController = {
   async listTasksForProject(req, res, next) {
     try {
-      const tasks = await taskService.listTasksByProject(req.params.projectId, req.user.id);
+      const tasks = await taskService.listTasksByProject(
+        req.params.projectId,
+        req.user.id,
+        req.user.role
+      );
       res.json({ tasks: tasks.map(taskToDto) });
     } catch (error) {
       next(error);

@@ -6,7 +6,7 @@ import { auditFromRequest } from '../utils/auditLog.js';
 const projectController = {
   async listProjects(req, res, next) {
     try {
-      const projects = await projectService.listProjects(req.user.id);
+      const projects = await projectService.listProjects(req.user.id, req.user.role);
       res.json({ projects: projects.map(projectToDto) });
     } catch (error) {
       next(error);

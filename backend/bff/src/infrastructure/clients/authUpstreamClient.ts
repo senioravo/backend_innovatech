@@ -58,4 +58,4 @@ const authUpstreamClient = {
   }
 };
 
-export default authUpstreamClient;;
+export default authUpstreamClient;

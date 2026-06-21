@@ -1,9 +1,8 @@
-"use strict";
-Object.defineProperty(exports, "__esModule", { value: true });
-const express = require('express');
-const jwtAuthMiddleware = require('../middlewares/jwtAuthMiddleware');
-const requireRole = require('../middlewares/requireRoleMiddleware');
-const kpiOrchestrationController = require('../controllers/kpi-orchestration-controller');
+// @ts-nocheck
+import express from 'express';
+import jwtAuthMiddleware from '../middlewares/jwtAuthMiddleware.js';
+import requireRole from '../middlewares/requireRoleMiddleware.js';
+import kpiOrchestrationController from '../controllers/kpi-orchestration-controller.js';
 const router = express.Router();
 router.use(jwtAuthMiddleware);
 /**
@@ -14,4 +13,4 @@ router.use(jwtAuthMiddleware);
  *     summary: Dashboard de progreso (contrato frontend)
  */
 router.get('/kpis/dashboard', requireRole('Gestor', 'Profesional', 'Directivo'), kpiOrchestrationController.getDashboard);
-module.exports = router;
+export default router;

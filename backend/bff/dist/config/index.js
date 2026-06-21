@@ -9,6 +9,8 @@ const config = {
     authServiceBaseUrl: trimBase(process.env.AUTH_SERVICE_BASE_URL, 'http://localhost:3001'),
     authApiPrefix: (process.env.AUTH_API_PREFIX || '/api/auth').trim() || '/api/auth',
     projectManagerBaseUrl: trimBase(process.env.PROJECT_MANAGER_BASE_URL, 'http://localhost:3002'),
-    projectManagerApiPrefix: (process.env.PROJECT_MANAGER_API_PREFIX || '/api/v1').trim() || '/api/v1'
+    projectManagerApiPrefix: (process.env.PROJECT_MANAGER_API_PREFIX || '/api/v1').trim() || '/api/v1',
+    kpiBaseUrl: trimBase(process.env.KPI_SERVICE_BASE_URL, 'http://localhost:3004'),
+    kpiApiPrefix: (process.env.KPI_API_PREFIX || '/api/v1').trim() || '/api/v1'
 };
 export default config;

@@ -34,9 +34,17 @@ router.use(jwtAuthMiddleware);
  *     summary: Eliminar proyecto
  */
 router.get('/consultations/dashboard', requireRole('Gestor', 'Profesional', 'Directivo'), forward);
+router.get('/consultations/kpis', requireRole('Gestor', 'Profesional', 'Directivo'), forward);
+router.get('/consultations/reports/export', requireRole('Gestor', 'Directivo'), forward);
+router.get('/notifications', requireRole('Gestor', 'Profesional', 'Directivo'), forward);
+router.patch('/notifications/:id/read', requireRole('Gestor', 'Profesional', 'Directivo'), forward);
 router.get('/projects/:projectId/tasks/:taskId/availability', requireRole('Gestor', 'Profesional', 'Directivo'), forward);
 router.get('/projects/:projectId/tasks/:taskId', requireRole('Gestor', 'Profesional', 'Directivo'), forward);
 router.patch('/projects/:projectId/tasks/:taskId/status', requireRole('Gestor', 'Profesional', 'Directivo'), forward);
+router.get('/projects/:projectId/tasks/:taskId/comments', requireRole('Gestor', 'Profesional', 'Directivo'), forward);
+router.post('/projects/:projectId/tasks/:taskId/comments', requireRole('Gestor', 'Profesional', 'Directivo'), forward);
+router.get('/projects/:projectId/tasks/:taskId/attachments', requireRole('Gestor', 'Profesional', 'Directivo'), forward);
+router.post('/projects/:projectId/tasks/:taskId/attachments', requireRole('Gestor', 'Profesional', 'Directivo'), forward);
 router.get('/projects/:projectId/tasks', requireRole('Gestor', 'Profesional', 'Directivo'), forward);
 router.post('/projects/:projectId/tasks', requireRole('Gestor', 'Profesional'), forward);
 router.get('/projects/:id/availability', requireRole('Gestor', 'Profesional', 'Directivo'), forward);
@@ -44,6 +52,7 @@ router.get('/projects/:id', requireRole('Gestor', 'Profesional', 'Directivo'), f
 router.get('/projects', requireRole('Gestor', 'Profesional', 'Directivo'), forward);
 router.post('/projects', requireRole('Gestor'), forward);
 router.put('/projects/:id', requireRole('Gestor', 'Profesional'), forward);
+router.patch('/projects/:id/status', requireRole('Gestor', 'Profesional'), forward);
 router.patch('/projects/:id/assignee', requireRole('Gestor', 'Profesional'), forward);
 router.delete('/projects/:id', requireRole('Gestor'), forward);
 router.get('/tasks/:id/availability', requireRole('Gestor', 'Profesional', 'Directivo'), forward);

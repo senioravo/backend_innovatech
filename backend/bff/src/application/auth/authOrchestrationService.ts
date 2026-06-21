@@ -38,4 +38,4 @@ const authOrchestrationService = {
   }
 };
 
-export default authOrchestrationService;;
+export default authOrchestrationService;

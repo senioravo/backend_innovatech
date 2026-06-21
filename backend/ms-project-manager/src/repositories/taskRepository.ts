@@ -77,6 +77,20 @@ class TaskRepository {
     }));
   }
 
+  async findAllForDashboard() {
+    const pool = getPool();
+    const { rows } = await pool.query(
+      `SELECT t.*, p.name AS project_name
+       FROM "TASK" t
+       INNER JOIN "PROJECT" p ON t.project_id = p.id
+       ORDER BY t.updated_at DESC NULLS LAST, t.created_at DESC`
+    );
+    return rows.map((row) => ({
+      task: mapTaskRow(row),
+      projectName: row.project_name
+    }));
+  }
+
   async create(data) {
     if (!data?.projectId || !data?.title) {
       throw new Error('projectId and title are required');

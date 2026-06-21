@@ -1,6 +1,5 @@
-"use strict";
-Object.defineProperty(exports, "__esModule", { value: true });
-const kpiOrchestrationService = require('../../../application/kpi/kpiOrchestrationService');
+// @ts-nocheck
+import kpiOrchestrationService from '../../../application/kpi/kpiOrchestrationService.js';
 const kpiOrchestrationController = {
     async getDashboard(req, res, next) {
         try {
@@ -12,4 +11,4 @@ const kpiOrchestrationController = {
         }
     }
 };
-module.exports = kpiOrchestrationController;
+export default kpiOrchestrationController;

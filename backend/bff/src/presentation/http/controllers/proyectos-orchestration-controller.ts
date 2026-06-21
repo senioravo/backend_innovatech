@@ -21,4 +21,4 @@ const proyectosOrchestrationController = {
   }
 };
 
-export default proyectosOrchestrationController;;
+export default proyectosOrchestrationController;

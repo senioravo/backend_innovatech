@@ -1,6 +1,6 @@
-export {};
-const config = require('../../config');
-const { joinUrl, upstreamJson } = require('../http/httpUpstream');
+// @ts-nocheck
+import config from '../../config/index.js';
+import { joinUrl, upstreamJson } from '../http/httpUpstream.js';
 
 function pickForwardHeaders(req) {
   const out: Record<string, string> = {};
@@ -23,4 +23,4 @@ const kpiUpstreamClient = {
   }
 };
 
-module.exports = kpiUpstreamClient;
+export default kpiUpstreamClient;
