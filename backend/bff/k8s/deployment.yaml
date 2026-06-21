@@ -20,7 +20,7 @@ spec:
     spec:
       containers:
         - name: bff
-          image: innovatech/bff:1.0.0
+          image: innovatech/bff:1.0.1
           imagePullPolicy: IfNotPresent
           ports:
             - name: http
@@ -28,6 +28,11 @@ spec:
           envFrom:
             - configMapRef:
                 name: bff-config
+          volumeMounts:
+            - name: jwt-public-key
+              mountPath: /app/keys/public.key
+              subPath: public.key
+              readOnly: true
           readinessProbe:
             httpGet:
               path: /health
@@ -47,3 +52,10 @@ spec:
             limits:
               cpu: 500m
               memory: 512Mi
+      volumes:
+        - name: jwt-public-key
+          secret:
+            secretName: innovatech-jwt-keys
+            items:
+              - key: public.key
+                path: public.key
