@@ -98,6 +98,8 @@ services:
       AUTH_API_PREFIX: /api/auth
       PROJECT_MANAGER_BASE_URL: http://project-manager:3002
       PROJECT_MANAGER_API_PREFIX: /api/v1
+      KPI_SERVICE_BASE_URL: http://kpi:3004
+      KPI_API_PREFIX: /api/v1
     volumes:
       - ./ms-auth/keys/public.key:/app/keys/public.key:ro
     expose:

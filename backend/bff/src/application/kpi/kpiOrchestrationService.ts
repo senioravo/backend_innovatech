@@ -1,6 +1,6 @@
-export {};
-const kpiUpstreamClient = require('../../infrastructure/clients/kpiUpstreamClient');
-const { buildUsuarioSesion } = require('../transformers/frontendResponseTransformers');
+// @ts-nocheck
+import kpiUpstreamClient from '../../infrastructure/clients/kpiUpstreamClient.js';
+import { buildUsuarioSesion } from '../transformers/frontendResponseTransformers.js';
 
 function toProyectoResumen(p) {
   return {
@@ -42,4 +42,4 @@ const kpiOrchestrationService = {
   }
 };
 
-module.exports = kpiOrchestrationService;
+export default kpiOrchestrationService;

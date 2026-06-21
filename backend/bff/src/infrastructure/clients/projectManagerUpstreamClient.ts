@@ -70,4 +70,4 @@ const projectManagerUpstreamClient = {
   }
 };
 
-export default projectManagerUpstreamClient;;
+export default projectManagerUpstreamClient;

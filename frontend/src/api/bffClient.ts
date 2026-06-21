@@ -35,6 +35,50 @@ type RequestOptions = {
   auth?: boolean;
 };
 
+async function requestWithToken<T = unknown>(
+  path: string,
+  token: string,
+  { method = 'GET', body }: Omit<RequestOptions, 'auth'> = {}
+) {
+  const headers: Record<string, string> = {
+    Accept: 'application/json',
+    Authorization: `Bearer ${token}`
+  };
+  if (body !== undefined) {
+    headers['Content-Type'] = 'application/json';
+  }
+
+  const res = await fetch(`${API_BASE}${path}`, {
+    method,
+    headers,
+    body: body !== undefined ? JSON.stringify(body) : undefined
+  });
+
+  const text = await res.text();
+  let data: Record<string, unknown> | undefined;
+  if (text) {
+    try {
+      data = JSON.parse(text) as Record<string, unknown>;
+    } catch {
+      data = { raw: text };
+    }
+  }
+
+  if (!res.ok) {
+    const msg =
+      (data?.message as string) ||
+      (data?.error as string) ||
+      (Array.isArray(data?.errors) ? (data.errors as string[]).join(', ') : null) ||
+      `Error HTTP ${res.status}`;
+    const err = new Error(msg) as Error & { status?: number; data?: unknown };
+    err.status = res.status;
+    err.data = data;
+    throw err;
+  }
+
+  return data as T;
+}
+
 async function request<T = unknown>(path: string, { method = 'GET', body, auth = true }: RequestOptions = {}) {
   const headers: Record<string, string> = { Accept: 'application/json' };
   if (body !== undefined) {
@@ -80,6 +124,7 @@ async function request<T = unknown>(path: string, { method = 'GET', body, auth =
 }
 
 export async function login(email: string, password: string) {
+  clearSession();
   const data = await request<{ data?: { token?: string; user?: UserSession } }>('/auth/login', {
     method: 'POST',
     body: { email, password },
@@ -97,14 +142,12 @@ export async function login(email: string, password: string) {
 
 export async function logout() {
   const token = getToken();
+  clearSession();
+  if (!token) return;
   try {
-    if (token) {
-      await request('/auth/logout', { method: 'POST' });
-    }
+    await requestWithToken('/auth/logout', token, { method: 'POST' });
   } catch {
-    // Always clear local session
-  } finally {
-    clearSession();
+    // Sesión local ya limpiada
   }
 }
 

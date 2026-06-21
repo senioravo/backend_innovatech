@@ -78,9 +78,9 @@ class TaskService {
     return this.assignAssignee(taskId, userId, String(body.assigneeId).trim());
   }
 
-  async listTasksByProject(projectId, userId) {
+  async listTasksByProject(projectId, userId, role) {
     if (!projectId || !userId) throw new Error('projectId and userId are required');
-    await resourceAvailabilityService.assertProjectAvailable(projectId, userId);
+    await resourceAvailabilityService.assertProjectAvailable(projectId, userId, role);
     return taskRepository.findByProjectId(projectId);
   }
 

@@ -21,4 +21,3 @@ const proyectosOrchestrationController = {
     }
 };
 export default proyectosOrchestrationController;
-;

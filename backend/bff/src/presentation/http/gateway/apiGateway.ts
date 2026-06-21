@@ -4,6 +4,7 @@ import publicSessionRoutes from '../routes/publicSessionRoutes.js';
 import authPublicOrchestrationRoutes from '../routes/authPublicOrchestrationRoutes.js';
 import authProtectedOrchestrationRoutes from '../routes/authProtectedOrchestrationRoutes.js';
 import frontendProyectosRoutes from '../routes/frontendProyectosRoutes.js';
+import frontendKpiRoutes from '../routes/frontendKpiRoutes.js';
 import protectedProjectManagerRoutes from '../routes/protectedProjectManagerRoutes.js';
 export {};
 
@@ -20,4 +21,4 @@ gatewayRouter.use(frontendProyectosRoutes);
 gatewayRouter.use(frontendKpiRoutes);
 gatewayRouter.use(protectedProjectManagerRoutes);
 
-export default gatewayRouter;;z
+export default gatewayRouter;

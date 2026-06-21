@@ -76,4 +76,4 @@ const authOrchestrationController = {
   }
 };
 
-export default authOrchestrationController;;
+export default authOrchestrationController;

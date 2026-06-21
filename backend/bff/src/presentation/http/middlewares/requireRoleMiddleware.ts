@@ -24,4 +24,4 @@ function requireRole(...allowedRoles) {
   };
 }
 
-export default requireRole;;
+export default requireRole;

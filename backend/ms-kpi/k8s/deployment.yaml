@@ -1,7 +1,7 @@
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: kpi
+  name: ms-kpi
   labels:
     app.kubernetes.io/name: ms-kpi
     app.kubernetes.io/part-of: innovatech
@@ -10,18 +10,17 @@ spec:
   replicas: 1
   selector:
     matchLabels:
-      app: kpi
+      app.kubernetes.io/name: ms-kpi
   template:
     metadata:
       labels:
-        app: kpi
         app.kubernetes.io/name: ms-kpi
         app.kubernetes.io/part-of: innovatech
         app.kubernetes.io/component: microservice
     spec:
       containers:
-        - name: kpi
-          image: kpi:1.1
+        - name: ms-kpi
+          image: innovatech/ms-kpi:1.0.0
           imagePullPolicy: IfNotPresent
           ports:
             - name: http
@@ -58,7 +57,7 @@ spec:
       volumes:
         - name: jwt-public-key
           secret:
-            secretName: auth-jwt-keys
+            secretName: innovatech-jwt-keys
             items:
               - key: public.key
                 path: public.key

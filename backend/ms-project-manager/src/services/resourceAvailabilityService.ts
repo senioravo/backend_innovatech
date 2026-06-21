@@ -2,10 +2,16 @@
 import projectRepository from '../repositories/projectRepository.js';
 import taskRepository from '../repositories/taskRepository.js';
 import { NotFoundError, ForbiddenError } from '../utils/errorHandler.js';
+import { canViewAllProjects } from '../utils/roleAccess.js';
 
 const resourceAvailabilityService = {
-  async assertProjectAvailable(projectId, userId) {
+  async assertProjectAvailable(projectId, userId, role) {
     if (!projectId || !userId) throw new Error('projectId and userId are required');
+    if (canViewAllProjects(role)) {
+      const project = await projectRepository.findById(projectId);
+      if (!project) throw new NotFoundError('Project not found');
+      return project;
+    }
     const project = await projectRepository.findByIdAndUserId(projectId, userId);
     if (!project) throw new NotFoundError('Project not found');
     return project;

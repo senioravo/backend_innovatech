@@ -1,8 +1,8 @@
-export {};
-const express = require('express');
-const jwtAuthMiddleware = require('../middlewares/jwtAuthMiddleware');
-const requireRole = require('../middlewares/requireRoleMiddleware');
-const kpiOrchestrationController = require('../controllers/kpi-orchestration-controller');
+// @ts-nocheck
+import express from 'express';
+import jwtAuthMiddleware from '../middlewares/jwtAuthMiddleware.js';
+import requireRole from '../middlewares/requireRoleMiddleware.js';
+import kpiOrchestrationController from '../controllers/kpi-orchestration-controller.js';
 
 const router = express.Router();
 
@@ -21,4 +21,4 @@ router.get(
   kpiOrchestrationController.getDashboard
 );
 
-module.exports = router;
+export default router;

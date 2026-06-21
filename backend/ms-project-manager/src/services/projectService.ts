@@ -5,14 +5,18 @@ import resourceAvailabilityService from './resourceAvailabilityService.js';
 import ValidationService from './validationService.js';
 import { createProjectDto, pickProjectScheduleFields } from '../dtos/projectDto.js';
 import { NotFoundError, ValidationError } from '../utils/errorHandler.js';
+import { canViewAllProjects } from '../utils/roleAccess.js';
 
 class ProjectService {
   constructor(repository = projectRepository) {
     this.repository = repository;
   }
 
-  async listProjects(userId) {
+  async listProjects(userId, role) {
     if (!userId) throw new Error('userId is required');
+    if (canViewAllProjects(role)) {
+      return this.repository.findAll();
+    }
     return this.repository.findByUserId(userId);
   }
 

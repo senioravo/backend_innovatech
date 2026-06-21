@@ -30,6 +30,12 @@ class ProjectRepository extends IProjectRepository {
     return rows.map(mapProjectRow);
   }
 
+  async findAll() {
+    const pool = getPool();
+    const { rows } = await pool.query(`SELECT * FROM "PROJECT" ORDER BY created_at DESC`);
+    return rows.map(mapProjectRow);
+  }
+
   async findByIdAndUserId(id, userId) {
     if (!id || !userId) throw new Error('id and userId are required');
     const pool = getPool();

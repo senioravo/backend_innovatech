@@ -9,5 +9,6 @@ resources:
   - ../ms-users/k8s
   - ../ms-auth/k8s
   - ../ms-project-manager/k8s
+  - ../ms-kpi/k8s
   - ../bff/k8s
   - ../api-gateway/k8s

@@ -10,4 +10,4 @@ const projectManagerOrchestrationService = {
   }
 };
 
-export default projectManagerOrchestrationService;;
+export default projectManagerOrchestrationService;

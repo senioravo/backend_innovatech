@@ -86,17 +86,12 @@ if (process.env.NODE_ENV !== 'test') {
       });
     })
     .catch((err) => {
-<<<<<<< HEAD
       // Caso 2: Error en la conexión, pero el servidor IGUAL arranca
       console.warn('⚠️ Advertencia: Project Manager iniciará sin verificación de PostgreSQL:', err.message);
-=======
-      // If DB verification fails, log a warning but still start the server
-      console.warn('Proyecto Manager iniciará sin verificación de PostgreSQL:', err.message);
->>>>>>> feature/kpi-service
       app.listen(PORT, () => {
         console.log(`🚀 Project Manager ejecutándose en puerto ${PORT}`);
       });
     });
 }
 
-export default app;;
+export default app;

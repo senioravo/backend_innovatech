@@ -1,7 +1,6 @@
-"use strict";
-Object.defineProperty(exports, "__esModule", { value: true });
-const config = require('../../config');
-const { joinUrl, upstreamJson } = require('../http/httpUpstream');
+// @ts-nocheck
+import config from '../../config/index.js';
+import { joinUrl, upstreamJson } from '../http/httpUpstream.js';
 function pickForwardHeaders(req) {
     const out = {};
     if (req.headers.authorization)
@@ -26,4 +25,4 @@ const kpiUpstreamClient = {
         });
     }
 };
-module.exports = kpiUpstreamClient;
+export default kpiUpstreamClient;
