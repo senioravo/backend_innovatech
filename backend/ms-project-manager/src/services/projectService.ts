@@ -122,7 +122,8 @@ class ProjectService {
     if (!projectId || !userId) throw new Error('projectId and userId are required');
     await resourceAvailabilityService.assertProjectAvailable(projectId, userId);
     await taskRepository.deleteByProjectId(projectId);
-    await this.repository.delete(projectId, userId);
+    const deleted = await this.repository.delete(projectId, userId);
+    if (!deleted) throw new NotFoundError('Project not found');
     return true;
   }
 }

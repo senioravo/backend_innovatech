@@ -20,7 +20,7 @@ spec:
     spec:
       containers:
         - name: bff
-          image: innovatech/bff:1.0.1
+          image: innovatech/bff:1.0.3
           imagePullPolicy: IfNotPresent
           ports:
             - name: http

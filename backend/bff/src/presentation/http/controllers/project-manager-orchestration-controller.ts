@@ -6,7 +6,7 @@ const projectManagerOrchestrationController = {
     try {
       const { status, data } = await projectManagerOrchestrationService.forward(req);
       if (status === 204) {
-        return res.status(204).send();
+        return res.status(200).json({ ok: true });
       }
       if (data === undefined) {
         return res.status(status).end();

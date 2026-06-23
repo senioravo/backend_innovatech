@@ -5,8 +5,18 @@ namespace: innovatech
 
 resources:
   - k8s
-  - api-gateway/k8s
-  - bff/k8s
-  - ms-auth/k8s
-  - ms-project-manager/k8s
-  - ms-kpi/k8s
+
+# Flyway SQL lives in each microservice repo; generate ConfigMaps from backend/ so
+# kustomize load restrictions are satisfied (paths must stay under this directory).
+configMapGenerator:
+  - name: ms-users-flyway-sql
+    files:
+      - V1__schema.sql=ms-users/db/flyway/V1__schema.sql
+      - V2__user_profiles.sql=ms-users/db/flyway/V2__user_profiles.sql
+      - V3__seed_users.sql=ms-users/db/flyway/V3__seed_users.sql
+  - name: ms-project-manager-flyway-sql
+    files:
+      - V1__schema.sql=ms-project-manager/db/flyway/V1__schema.sql
+      - V2__task_status.sql=ms-project-manager/db/flyway/V2__task_status.sql
+      - V3__project_status.sql=ms-project-manager/db/flyway/V3__project_status.sql
+      - V4__collaboration_analytics.sql=ms-project-manager/db/flyway/V4__collaboration_analytics.sql

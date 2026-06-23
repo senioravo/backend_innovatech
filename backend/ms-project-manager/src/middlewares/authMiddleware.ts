@@ -38,7 +38,7 @@ function authMiddleware(req, res, next) {
 
   if (userId && userEmail && userRole) {
     req.user = {
-      id: parseInt(String(userId), 10),
+      id: String(userId),
       email: String(userEmail),
       role: String(userRole)
     };
@@ -61,7 +61,7 @@ function authMiddleware(req, res, next) {
       issuer: 'innovatech-auth' // Verificar emisor
     });
     req.user = {
-      id: decoded.id,
+      id: String(decoded.id),
       email: decoded.email,
       role: decoded.role ?? decoded.rol
     };

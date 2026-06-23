@@ -5,6 +5,7 @@ namespace: innovatech
 
 resources:
   - namespace.yaml
+  - postgres
   - ingress.yaml
   - ../ms-users/k8s
   - ../ms-auth/k8s

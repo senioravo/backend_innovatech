@@ -61,7 +61,7 @@ class ProjectRepository extends IProjectRepository {
        VALUES ($1, $2, $3, $4, $5, $6)
        RETURNING *`,
       [
-        data.userId,
+        String(data.userId),
         data.name,
         data.description,
         data.assigneeId ?? null,

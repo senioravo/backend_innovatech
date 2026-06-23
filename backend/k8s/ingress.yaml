@@ -20,4 +20,4 @@ spec:
               service:
                 name: api-gateway
                 port:
-                  number: 8080
+                  number: 8010

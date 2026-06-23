@@ -181,7 +181,7 @@
       ]
     },
     {
-      "@comment": "Proyectos: Eliminar (requiere JWT + rol directivo)",
+      "@comment": "Proyectos: Eliminar (JWT en gateway; rol Gestor valida el BFF)",
       "endpoint": "/api/v1/projects/{id}",
       "method": "DELETE",
       "output_encoding": "json",
@@ -199,9 +199,7 @@
             ["id", "x-user-id"],
             ["email", "x-user-email"],
             ["role", "x-user-role"]
-          ],
-          "roles_key": "role",
-          "roles": ["directivo"]
+          ]
         }
       },
       "backend": [

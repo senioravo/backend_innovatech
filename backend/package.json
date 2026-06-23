@@ -10,6 +10,9 @@
     "dev:users": "npm run dev --prefix ms-users",
     "dev:project-manager": "npm run dev --prefix ms-project-manager",
     "dev:bff": "npm run dev --prefix bff",
-    "smoke": "node scripts/smoke-e2e.mjs"
+    "smoke": "node scripts/smoke-e2e.mjs",
+    "k8s:dev": "powershell -ExecutionPolicy Bypass -File scripts/k8s-dev-up.ps1",
+    "k8s:validate": "kubectl kustomize .",
+    "k8s:validate:infra": "kubectl kustomize k8s"
   }
 }

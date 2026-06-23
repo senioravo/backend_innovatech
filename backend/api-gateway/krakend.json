@@ -194,10 +194,10 @@
       ]
     },
     {
-      "@comment": "Proyectos: Eliminar (requiere JWT + rol directivo)",
+      "@comment": "Proyectos: Eliminar (JWT en gateway; rol Gestor valida el BFF)",
       "endpoint": "/api/v1/projects/{id}",
       "method": "DELETE",
-      "output_encoding": "json",
+      "output_encoding": "no-op",
       "input_headers": ["Authorization", "Content-Type"],
       "extra_config": {
         "auth/validator": {
@@ -212,15 +212,13 @@
             ["id", "x-user-id"],
             ["email", "x-user-email"],
             ["role", "x-user-role"]
-          ],
-          "roles_key": "role",
-          "roles": ["gestor"]
+          ]
         }
       },
       "backend": [
         {
           "url_pattern": "/api/v1/projects/{id}",
-          "encoding": "json",
+          "encoding": "no-op",
           "method": "DELETE",
           "host": ["http://bff:3010"]
         }
@@ -553,7 +551,7 @@
       "@comment": "Eliminar tarea",
       "endpoint": "/api/v1/tasks/{id}",
       "method": "DELETE",
-      "output_encoding": "json",
+      "output_encoding": "no-op",
       "input_headers": ["Authorization"],
       "extra_config": {
         "auth/validator": {
@@ -566,7 +564,7 @@
           "propagate_claims": [["id", "x-user-id"], ["email", "x-user-email"], ["role", "x-user-role"]]
         }
       },
-      "backend": [{ "url_pattern": "/api/v1/tasks/{id}", "method": "DELETE", "host": ["http://bff:3010"] }]
+      "backend": [{ "url_pattern": "/api/v1/tasks/{id}", "encoding": "no-op", "method": "DELETE", "host": ["http://bff:3010"] }]
     },
     {
       "@comment": "Health check - sin autenticación",

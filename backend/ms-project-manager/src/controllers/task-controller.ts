@@ -122,7 +122,7 @@ const taskController = {
         resourceId: req.params.id
       });
 
-      res.status(204).send();
+      res.status(200).json({ ok: true });
     } catch (error) {
       next(error);
     }

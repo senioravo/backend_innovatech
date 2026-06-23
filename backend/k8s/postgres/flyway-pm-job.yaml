@@ -1,16 +1,13 @@
-# Reference only — not included in ms-users/k8s/kustomization.yaml.
-# Dev all-in-K8s Flyway job: k8s/postgres/flyway-users-job.yaml (via backend/kustomization.yaml).
 apiVersion: batch/v1
 kind: Job
 metadata:
-  name: ms-users-flyway
-  namespace: innovatech
+  name: ms-project-manager-flyway
   labels:
-    app.kubernetes.io/name: ms-users
+    app.kubernetes.io/name: ms-project-manager
     app.kubernetes.io/component: migration
 spec:
   ttlSecondsAfterFinished: 300
-  backoffLimit: 3
+  backoffLimit: 6
   template:
     spec:
       restartPolicy: OnFailure
@@ -18,10 +15,10 @@ spec:
         - name: flyway
           image: flyway/flyway:10
           args:
-            - -url=jdbc:postgresql://users-db:5432/innovatech_users
+            - -url=jdbc:postgresql://pm-db:5432/innovatech_pm
             - -user=postgres
             - -password=$(POSTGRES_PASSWORD)
-            - -connectRetries=10
+            - -connectRetries=30
             - -baselineOnMigrate=true
             - migrate
           env:
@@ -37,4 +34,4 @@ spec:
       volumes:
         - name: flyway-sql
           configMap:
-            name: ms-users-flyway-sql
+            name: ms-project-manager-flyway-sql

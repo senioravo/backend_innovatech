@@ -32,7 +32,7 @@ const projectController = {
         resourceId: project.id
       });
 
-      res.status(201).json(projectToDto(project));
+      res.status(200).json(projectToDto(project));
     } catch (error) {
       next(error);
     }
@@ -111,7 +111,7 @@ const projectController = {
         resourceId: req.params.id
       });
 
-      res.status(204).send();
+      res.status(200).json({ ok: true });
     } catch (error) {
       next(error);
     }

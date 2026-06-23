@@ -20,7 +20,7 @@ spec:
     spec:
       containers:
         - name: ms-project-manager
-          image: innovatech/ms-project-manager:1.0.0
+          image: innovatech/ms-project-manager:1.0.1
           imagePullPolicy: IfNotPresent
           ports:
             - name: http

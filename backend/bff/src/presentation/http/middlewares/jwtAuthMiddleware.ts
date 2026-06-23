@@ -25,7 +25,7 @@ function userFromGatewayHeaders(req) {
   const userRole = headerValue(req, 'x-user-role') ?? headerValue(req, 'rol');
   if (!userId || !userEmail || !userRole) return null;
   return {
-    id: parseInt(userId, 10),
+    id: String(userId),
     email: userEmail,
     role: userRole
   };
@@ -43,7 +43,7 @@ function userFromBearerToken(req) {
     });
     if (!decoded?.id || !decoded?.email || !(decoded?.role ?? decoded?.rol)) return null;
     return {
-      id: parseInt(String(decoded.id), 10),
+      id: String(decoded.id),
       email: String(decoded.email),
       role: String(decoded.role ?? decoded.rol)
     };

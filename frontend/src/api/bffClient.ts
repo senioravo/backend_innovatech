@@ -51,6 +51,7 @@ async function requestWithToken<T = unknown>(
   const res = await fetch(`${API_BASE}${path}`, {
     method,
     headers,
+    cache: 'no-store',
     body: body !== undefined ? JSON.stringify(body) : undefined
   });
 
@@ -67,8 +68,8 @@ async function requestWithToken<T = unknown>(
   if (!res.ok) {
     const msg =
       (data?.message as string) ||
-      (data?.error as string) ||
       (Array.isArray(data?.errors) ? (data.errors as string[]).join(', ') : null) ||
+      (data?.error as string) ||
       `Error HTTP ${res.status}`;
     const err = new Error(msg) as Error & { status?: number; data?: unknown };
     err.status = res.status;
@@ -95,6 +96,7 @@ async function request<T = unknown>(path: string, { method = 'GET', body, auth =
   const res = await fetch(`${API_BASE}${path}`, {
     method,
     headers,
+    cache: 'no-store',
     body: body !== undefined ? JSON.stringify(body) : undefined
   });
 
@@ -111,8 +113,8 @@ async function request<T = unknown>(path: string, { method = 'GET', body, auth =
   if (!res.ok) {
     const msg =
       (data?.message as string) ||
-      (data?.error as string) ||
       (Array.isArray(data?.errors) ? (data.errors as string[]).join(', ') : null) ||
+      (data?.error as string) ||
       `Error HTTP ${res.status}`;
     const err = new Error(msg) as Error & { status?: number; data?: unknown };
     err.status = res.status;

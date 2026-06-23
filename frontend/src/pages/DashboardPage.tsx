@@ -222,8 +222,10 @@ export default function DashboardPage() {
     }
   }, []);
 
-  const loadProjects = useCallback(async () => {
-    setLoading(true);
+  const loadProjects = useCallback(async (options?: { background?: boolean }) => {
+    if (!options?.background) {
+      setLoading(true);
+    }
     setError('');
     try {
       const data = await fetchProjects();
@@ -237,7 +239,9 @@ export default function DashboardPage() {
         navigate('/login', { replace: true });
       }
     } finally {
-      setLoading(false);
+      if (!options?.background) {
+        setLoading(false);
+      }
     }
   }, [logout, navigate]);
 
@@ -281,9 +285,15 @@ export default function DashboardPage() {
     e.preventDefault();
     setError('');
     try {
-      await createProject(newProject);
+      const created = (await createProject(newProject)) as Project;
       setNewProject({ name: '', description: '', startDate: '', endDate: '' });
-      await loadProjects();
+      if (created?.id) {
+        setProjects((prev) => {
+          if (prev.some((p) => p.id === created.id)) return prev;
+          return [created, ...prev];
+        });
+      }
+      await loadProjects({ background: true });
     } catch (err) {
       setError((err as Error).message);
     }
@@ -323,13 +333,29 @@ export default function DashboardPage() {
 
   async function handleDeleteProject(id: string) {
     if (!window.confirm('¿Eliminar proyecto?')) return;
+    setError('');
     try {
       await deleteProject(id);
-      if (selectedProject === id) setSelectedProject(null);
-      await loadProjects();
     } catch (err) {
+      const status = (err as Error & { status?: number }).status;
+      if (status === 500) {
+        try {
+          const data = await fetchProjects();
+          if (!data.projects?.some((p) => p.id === id)) {
+            if (selectedProject === id) setSelectedProject(null);
+            setProjects(data.projects ?? []);
+            return;
+          }
+        } catch {
+          // fall through to show original error
+        }
+      }
       setError((err as Error).message);
+      return;
     }
+    if (selectedProject === id) setSelectedProject(null);
+    setProjects((prev) => prev.filter((p) => p.id !== id));
+    await loadProjects({ background: true });
   }
 
   async function handleDeleteTask(taskId: string) {
@@ -409,10 +435,11 @@ export default function DashboardPage() {
           <form onSubmit={handleCreateProject} style={{ marginBottom: 16, padding: 12, border: '1px solid #ccc' }}>
             <h3>Nuevo proyecto</h3>
             <input
-              placeholder="Nombre"
+              placeholder="Nombre (mínimo 3 caracteres)"
               value={newProject.name}
               onChange={(e) => setNewProject((s) => ({ ...s, name: e.target.value }))}
               required
+              minLength={3}
               style={{ width: '100%', padding: 6, marginBottom: 8 }}
             />
             <textarea
