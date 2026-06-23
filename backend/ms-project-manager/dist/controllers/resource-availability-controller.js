@@ -1,6 +1,5 @@
-"use strict";
-Object.defineProperty(exports, "__esModule", { value: true });
-const resourceAvailabilityService = require('../services/resourceAvailabilityService');
+// @ts-nocheck
+import resourceAvailabilityService from '../services/resourceAvailabilityService.js';
 const resourceAvailabilityController = {
     async checkProject(req, res, next) {
         try {
@@ -44,4 +43,5 @@ const resourceAvailabilityController = {
         }
     }
 };
-module.exports = resourceAvailabilityController;
+export default resourceAvailabilityController;
+;

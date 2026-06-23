@@ -1,6 +1,6 @@
 // Test básico de autenticación
-const request = require('supertest');
-const app = require('../src/app');
+import request from 'supertest';
+import app from '../src/app.js';
 
 describe('Autenticación - Register y Login', () => {
 
@@ -21,7 +21,7 @@ describe('Autenticación - Register y Login', () => {
     
     if (response.status === 201) {
       expect(response.body).toHaveProperty('success', true);
-      expect(response.body.data).toHaveProperty('id');
+      expect(response.body.data.user).toHaveProperty('id');
     }
   });
 

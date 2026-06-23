@@ -163,6 +163,6 @@ Los tests de integración pueden requerir **BD configurada** en `.env`. Para est
 
 ## Referencias cruzadas
 
-- [README backend](../../README.md) — arquitectura global y Git Flow
+- [README del proyecto](../../docs/README.md) — arquitectura global y Git Flow
 - [BFF README-ESTUDIO](../bff/README-ESTUDIO.md) — orquestación de login
 - [PM README-ESTUDIO](../ms-project-manager/README-ESTUDIO.md) — validación del mismo JWT

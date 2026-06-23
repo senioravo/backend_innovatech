@@ -1,6 +1,5 @@
-"use strict";
-Object.defineProperty(exports, "__esModule", { value: true });
-const authOrchestrationService = require('../../../application/auth/authOrchestrationService');
+// @ts-nocheck
+import authOrchestrationService from '../../../application/auth/authOrchestrationService.js';
 function sendUpstream(res, { status, data }) {
     if (status === 204) {
         return res.status(204).send();
@@ -75,4 +74,4 @@ const authOrchestrationController = {
         }
     }
 };
-module.exports = authOrchestrationController;
+export default authOrchestrationController;

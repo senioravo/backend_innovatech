@@ -1,8 +1,8 @@
-"use strict";
-Object.defineProperty(exports, "__esModule", { value: true });
+// @ts-nocheck
 // AS-TASK-03: Servicio protegido con Circuit Breaker
 // Ejemplo de integración con AuthService y ProjectManager
-const { createCircuitBreaker } = require('../utils/circuitBreaker');
+// @ts-nocheck
+import { createCircuitBreaker, getBreakerStats } from '../utils/circuitBreaker.js';
 /**
  * Simular llamada al servicio de autenticación interno
  * En producción, esto haría una llamada HTTP real a otro microservicio
@@ -87,17 +87,10 @@ async function getProjectWithBreaker(projectId) {
  * Obtener estadísticas de todos los Circuit Breakers
  */
 function getAllBreakerStats() {
-    const { getBreakerStats } = require('../utils/circuitBreaker');
     return {
         authService: getBreakerStats(authServiceBreaker),
         projectManager: getBreakerStats(projectManagerBreaker),
         taskId: 'AS-TASK-03'
     };
 }
-module.exports = {
-    validateUserWithBreaker,
-    getProjectWithBreaker,
-    getAllBreakerStats,
-    authServiceBreaker,
-    projectManagerBreaker
-};
+export { validateUserWithBreaker, getProjectWithBreaker, getAllBreakerStats, authServiceBreaker, projectManagerBreaker };

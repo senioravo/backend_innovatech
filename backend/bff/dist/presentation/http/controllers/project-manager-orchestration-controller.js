@@ -1,6 +1,5 @@
-"use strict";
-Object.defineProperty(exports, "__esModule", { value: true });
-const projectManagerOrchestrationService = require('../../../application/projectManager/projectManagerOrchestrationService');
+// @ts-nocheck
+import projectManagerOrchestrationService from '../../../application/projectManager/projectManagerOrchestrationService.js';
 const projectManagerOrchestrationController = {
     async forward(req, res, next) {
         try {
@@ -18,4 +17,4 @@ const projectManagerOrchestrationController = {
         }
     }
 };
-module.exports = projectManagerOrchestrationController;
+export default projectManagerOrchestrationController;

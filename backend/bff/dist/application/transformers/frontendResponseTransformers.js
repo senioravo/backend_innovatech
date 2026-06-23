@@ -1,103 +1,95 @@
-"use strict";
-Object.defineProperty(exports, "__esModule", { value: true });
+// @ts-nocheck
 const TASK_STATUSES = ['PENDING', 'IN_PROGRESS', 'IN_REVIEW', 'DONE'];
 function normalizeRoleKey(role) {
     if (role == null || role === '')
         return null;
     return String(role).trim().toLowerCase();
 }
-function toResponsable(userId, userMap) {
+function toAssignee(userId, userMap) {
     if (userId == null || userId === '')
         return null;
     const key = String(userId);
-    const u = userMap.get(key);
-    if (!u)
+    const user = userMap.get(key);
+    if (!user)
         return { id: key };
     return {
-        id: String(u.id),
-        nombre: u.nombre ?? null,
-        email: u.email ?? null,
-        rol: u.rol ?? null
+        id: String(user.id),
+        name: user.name ?? user.nombre ?? null,
+        email: user.email ?? null,
+        role: user.role ?? user.rol ?? null
     };
 }
-function buildUsuarioSesion(req, rolesCatalog) {
+function buildSessionUser(req, rolesCatalog) {
     const roleKey = normalizeRoleKey(req.user?.role);
     const roles = Array.isArray(rolesCatalog) ? rolesCatalog : [];
-    const match = roles.find((r) => normalizeRoleKey(r.nombre) === roleKey);
+    const match = roles.find((r) => normalizeRoleKey(r.name ?? r.nombre) === roleKey);
     return {
         id: req.user?.id != null ? String(req.user.id) : null,
         email: req.user?.email ?? null,
-        rol: roleKey,
-        descripcionRol: match?.descripcion ?? null,
-        permisos: match?.permisos ?? null
+        role: roleKey,
+        roleDescription: match?.description ?? match?.descripcion ?? null,
+        permissions: match?.permissions ?? match?.permisos ?? null
     };
 }
-/**
- * BFF-TASK-10: proyecto simplificado para el front.
- */
-function toProyecto(project, userMap) {
+function toProject(project, userMap) {
     if (!project)
         return null;
     return {
         id: project.id,
-        nombre: project.name,
-        descripcion: project.description,
-        responsable: toResponsable(project.assigneeId, userMap),
-        fechaInicio: project.startDate ?? null,
-        fechaFin: project.endDate ?? null,
-        creadoEn: project.createdAt ?? null,
-        actualizadoEn: project.updatedAt ?? null
+        name: project.name,
+        description: project.description,
+        assignee: toAssignee(project.assigneeId, userMap),
+        startDate: project.startDate ?? null,
+        endDate: project.endDate ?? null,
+        createdAt: project.createdAt ?? null,
+        updatedAt: project.updatedAt ?? null
     };
 }
-/**
- * BFF-TASK-10: tarea simplificada para el front.
- */
-function toTarea(task, userMap) {
+function toTask(task, userMap) {
     if (!task)
         return null;
     return {
         id: task.id,
-        proyectoId: task.projectId,
-        titulo: task.title,
-        descripcion: task.description ?? '',
-        estado: task.status ?? 'PENDING',
-        completada: Boolean(task.completed),
-        responsable: toResponsable(task.assigneeId, userMap),
-        fechaInicio: task.startDate ?? null,
-        fechaFin: task.endDate ?? null,
-        creadoEn: task.createdAt ?? null,
-        actualizadoEn: task.updatedAt ?? null
+        projectId: task.projectId,
+        title: task.title,
+        description: task.description ?? '',
+        status: task.status ?? 'PENDING',
+        completed: Boolean(task.completed),
+        assignee: toAssignee(task.assigneeId, userMap),
+        startDate: task.startDate ?? null,
+        endDate: task.endDate ?? null,
+        createdAt: task.createdAt ?? null,
+        updatedAt: task.updatedAt ?? null
     };
 }
-function buildResumenTareas(tareas) {
-    const porEstado = Object.fromEntries(TASK_STATUSES.map((s) => [s, 0]));
-    for (const t of tareas) {
-        const s = t.estado ?? 'PENDING';
-        if (Object.prototype.hasOwnProperty.call(porEstado, s)) {
-            porEstado[s] += 1;
+function buildTaskSummary(tasks) {
+    const byStatus = Object.fromEntries(TASK_STATUSES.map((s) => [s, 0]));
+    for (const task of tasks) {
+        const status = task.status ?? 'PENDING';
+        if (Object.prototype.hasOwnProperty.call(byStatus, status)) {
+            byStatus[status] += 1;
         }
     }
     return {
-        total: tareas.length,
-        porEstado
+        total: tasks.length,
+        byStatus
     };
 }
 function extractAuthUser(payload) {
     if (!payload?.data)
         return null;
-    return payload.data;
+    const user = payload.data.user ?? payload.data;
+    if (!user)
+        return null;
+    return {
+        ...user,
+        name: user.name ?? user.nombre,
+        role: user.role ?? user.rol
+    };
 }
 function extractRolesCatalog(payload) {
     if (!payload?.data)
         return [];
     return Array.isArray(payload.data) ? payload.data : [];
 }
-module.exports = {
-    normalizeRoleKey,
-    buildUsuarioSesion,
-    toProyecto,
-    toTarea,
-    buildResumenTareas,
-    extractAuthUser,
-    extractRolesCatalog
-};
+export { normalizeRoleKey, buildSessionUser, toProject, toTask, buildTaskSummary, extractAuthUser, extractRolesCatalog, buildSessionUser as buildUsuarioSesion, toProject as toProyecto, toTask as toTarea, buildTaskSummary as buildResumenTareas };

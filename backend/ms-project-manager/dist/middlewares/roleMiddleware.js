@@ -1,5 +1,4 @@
-"use strict";
-Object.defineProperty(exports, "__esModule", { value: true });
+// @ts-nocheck
 function requireRole(...allowedRoles) {
     return (req, res, next) => {
         const userRole = req.user?.role;
@@ -18,4 +17,5 @@ function requireRole(...allowedRoles) {
         next();
     };
 }
-module.exports = requireRole;
+export default requireRole;
+;

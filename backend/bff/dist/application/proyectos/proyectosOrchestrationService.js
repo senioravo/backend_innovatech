@@ -1,9 +1,8 @@
-"use strict";
-Object.defineProperty(exports, "__esModule", { value: true });
-const authOrchestrationService = require('../auth/authOrchestrationService');
-const projectManagerUpstreamClient = require('../../infrastructure/clients/projectManagerUpstreamClient');
-const { UpstreamError } = require('../../utils/errorHandler');
-const { buildUsuarioSesion, toProyecto, toTarea, buildResumenTareas, extractAuthUser, extractRolesCatalog } = require('../transformers/frontendResponseTransformers');
+// @ts-nocheck
+import authOrchestrationService from '../auth/authOrchestrationService.js';
+import projectManagerUpstreamClient from '../../infrastructure/clients/projectManagerUpstreamClient.js';
+import { UpstreamError } from '../../utils/errorHandler.js';
+import { buildSessionUser, toProject, toTask, buildTaskSummary, extractAuthUser, extractRolesCatalog } from '../transformers/frontendResponseTransformers.js';
 async function loadUserMap(assigneeIds, req) {
     const map = new Map();
     const unique = [...new Set(assigneeIds.filter((id) => id != null && String(id).trim() !== ''))];
@@ -41,8 +40,8 @@ const proyectosOrchestrationService = {
         const userMap = await loadUserMap(collectAssigneeIdsFromProjects(projects), req);
         const rolesCatalog = extractRolesCatalog(rolesResult.data?.data ?? rolesResult.data);
         return {
-            usuario: buildUsuarioSesion(req, rolesCatalog),
-            proyectos: projects.map((p) => toProyecto(p, userMap))
+            user: buildSessionUser(req, rolesCatalog),
+            projects: projects.map((p) => toProject(p, userMap))
         };
     },
     /**
@@ -50,14 +49,14 @@ const proyectosOrchestrationService = {
      */
     async listTareasByProyecto(proyectoId, req) {
         const { data } = await projectManagerUpstreamClient.listTasksByProject(proyectoId, req);
-        const tasks = data?.tasks ?? [];
-        const userMap = await loadUserMap(collectAssigneeIdsFromTasks(tasks), req);
-        const tareas = tasks.map((t) => toTarea(t, userMap));
+        const tasksRaw = data?.tasks ?? [];
+        const userMap = await loadUserMap(collectAssigneeIdsFromTasks(tasksRaw), req);
+        const tasks = tasksRaw.map((t) => toTask(t, userMap));
         return {
-            proyectoId: String(proyectoId),
-            tareas,
-            resumen: buildResumenTareas(tareas)
+            projectId: String(proyectoId),
+            tasks,
+            summary: buildTaskSummary(tasks)
         };
     }
 };
-module.exports = proyectosOrchestrationService;
+export default proyectosOrchestrationService;

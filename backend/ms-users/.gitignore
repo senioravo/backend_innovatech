@@ -1,0 +1,11 @@
+node_modules/
+dist/
+*.log
+.env
+logs/
+coverage/
+.DS_Store
+keys/*.pem
+keys/*.key
+!keys/.gitkeep
+tests/test-report.html

@@ -1,5 +1,4 @@
 // @ts-nocheck
-export {};
 /**
  * Contract for project repository implementations.
  */
@@ -12,6 +11,10 @@ class IProjectRepository {
     throw new Error('Método findByIdAndUserId no implementado');
   }
 
+  findById(id) {
+    throw new Error('Método findById no implementado');
+  }
+
   create(data) {
     throw new Error('Método create no implementado');
   }
@@ -20,9 +23,13 @@ class IProjectRepository {
     throw new Error('Método update no implementado');
   }
 
+  updateStatusByAssignee(id, assigneeId, status) {
+    throw new Error('Método updateStatusByAssignee no implementado');
+  }
+
   delete(id, userId) {
     throw new Error('Método delete no implementado');
   }
 }
 
-module.exports = IProjectRepository;
+export default IProjectRepository;;

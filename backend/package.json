@@ -4,14 +4,15 @@
   "type": "module",
   "description": "Monorepo scripts for InnovaTech microservices",
   "scripts": {
-    "test": "npm test --prefix ms-auth && npm test --prefix ms-users && npm test --prefix ms-project-manager && npm test --prefix bff",
-    "test:ci": "npm run test:ci --prefix ms-auth && npm run test:ci --prefix ms-users && npm run test:ci --prefix ms-project-manager && npm run test:ci --prefix bff",
+    "test": "npm test --prefix ms-auth && npm test --prefix ms-users && npm test --prefix ms-project-manager && npm test --prefix ms-kpi && npm test --prefix bff",
+    "test:ci": "npm run test:ci --prefix ms-auth && npm run test:ci --prefix ms-users && npm run test:ci --prefix ms-project-manager && npm run test:ci --prefix ms-kpi && npm run test:ci --prefix bff",
     "dev:auth": "npm run dev --prefix ms-auth",
     "dev:users": "npm run dev --prefix ms-users",
     "dev:project-manager": "npm run dev --prefix ms-project-manager",
     "dev:bff": "npm run dev --prefix bff",
     "smoke": "node scripts/smoke-e2e.mjs",
-    "test": "npm test --prefix ms-auth && npm test --prefix ms-project-manager && npm test --prefix ms-kpi && npm test --prefix bff",
-    "test:ci": "npm run test:ci --prefix ms-auth && npm run test:ci --prefix ms-project-manager && npm run test:ci --prefix ms-kpi && npm run test:ci --prefix bff"
+    "k8s:dev": "powershell -ExecutionPolicy Bypass -File scripts/k8s-dev-up.ps1",
+    "k8s:validate": "kubectl kustomize .",
+    "k8s:validate:infra": "kubectl kustomize k8s"
   }
 }

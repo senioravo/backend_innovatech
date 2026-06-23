@@ -1,10 +1,9 @@
-"use strict";
-Object.defineProperty(exports, "__esModule", { value: true });
+// @ts-nocheck
 // AS-TASK-09: Middleware de autorizaci�n por rol
 // Responsabilidad: Verificar que el usuario tenga el rol adecuado para acceder a un endpoint
 // Principio SOLID: Single Responsibility - Solo valida autorizaci�n por rol
-const jwt = require('jsonwebtoken');
-const { ROLES, hasPermission } = require('../config/roles');
+import jwt from 'jsonwebtoken';
+import { ROLES, hasPermission } from '../config/roles.js';
 /**
  * Middleware de autorizaci�n por rol
  * Extrae el token JWT, lo verifica y valida permisos del rol
@@ -186,11 +185,4 @@ const checkAuthentication = () => {
         }
     };
 };
-module.exports = {
-    checkRole,
-    checkRoleGestor,
-    checkRoleProfesional,
-    checkRoleDirectivo,
-    checkAuthentication,
-    getRequiredRolesForAction
-};
+export { checkRole, checkRoleGestor, checkRoleProfesional, checkRoleDirectivo, checkAuthentication, getRequiredRolesForAction };

@@ -1,5 +1,4 @@
 // @ts-nocheck
-export {};
 class ProjectModel {
   constructor({
     id,
@@ -10,7 +9,8 @@ class ProjectModel {
     updatedAt,
     assigneeId,
     startDate,
-    endDate
+    endDate,
+    status
   }) {
     this.id = id;
     this.userId = userId;
@@ -21,7 +21,8 @@ class ProjectModel {
     this.assigneeId = assigneeId ?? null;
     this.startDate = startDate ?? null;
     this.endDate = endDate ?? null;
+    this.status = status ?? 'active';
   }
 }
 
-module.exports = ProjectModel;
+export default ProjectModel;;

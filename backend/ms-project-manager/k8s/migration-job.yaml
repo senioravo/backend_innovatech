@@ -1,0 +1,32 @@
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: ms-project-manager-migrate
+  namespace: innovatech
+  labels:
+    app.kubernetes.io/name: ms-project-manager
+    app.kubernetes.io/component: migration
+    app.kubernetes.io/part-of: innovatech-backend
+spec:
+  ttlSecondsAfterFinished: 300
+  backoffLimit: 3
+  template:
+    metadata:
+      labels:
+        app.kubernetes.io/name: ms-project-manager
+        app.kubernetes.io/component: migration
+    spec:
+      restartPolicy: OnFailure
+      containers:
+        - name: migrate
+          image: innovatech/ms-project-manager:latest
+          imagePullPolicy: IfNotPresent
+          command: ["node", "scripts/apply-migration.js"]
+          env:
+            - name: NODE_ENV
+              value: production
+            - name: DATABASE_URL
+              valueFrom:
+                secretKeyRef:
+                  name: innovatech-db-secrets
+                  key: DATABASE_URL_PM

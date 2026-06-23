@@ -1,13 +1,27 @@
-"use strict";
-Object.defineProperty(exports, "__esModule", { value: true });
-const config = require('../../config');
-const { joinUrl, upstreamJson } = require('../http/httpUpstream');
+// @ts-nocheck
+import config from '../../config/index.js';
+import { joinUrl, upstreamJson } from '../http/httpUpstream.js';
 function pickForwardHeaders(req) {
     const out = {};
-    if (req.headers.authorization) {
-        out.Authorization = req.headers.authorization;
-    }
-    const ct = req.headers['content-type'];
+    const pick = (name) => {
+        const v = req.headers[name];
+        if (v == null)
+            return undefined;
+        return Array.isArray(v) ? String(v[0]) : String(v);
+    };
+    const auth = pick('authorization');
+    if (auth)
+        out.Authorization = auth;
+    const userId = pick('x-user-id') ?? pick('id') ?? (req.user?.id != null ? String(req.user.id) : undefined);
+    const userEmail = pick('x-user-email') ?? pick('email') ?? req.user?.email;
+    const userRole = pick('x-user-role') ?? pick('rol') ?? req.user?.role;
+    if (userId)
+        out['X-User-Id'] = userId;
+    if (userEmail)
+        out['X-User-Email'] = userEmail;
+    if (userRole)
+        out['X-User-Role'] = userRole;
+    const ct = pick('content-type');
     if (ct)
         out['Content-Type'] = ct;
     return out;
@@ -54,4 +68,4 @@ const projectManagerUpstreamClient = {
         });
     }
 };
-module.exports = projectManagerUpstreamClient;
+export default projectManagerUpstreamClient;

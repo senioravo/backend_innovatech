@@ -1,42 +1,75 @@
-export {};
+// @ts-nocheck
+import fs from 'fs';
+import path from 'path';
+import jwt from 'jsonwebtoken';
+
+const publicKeyPath = path.join(process.cwd(), 'keys', 'public.key');
+
+let cachedPublicKey: string | null = null;
+
+function loadPublicKey() {
+  if (cachedPublicKey) return cachedPublicKey;
+  cachedPublicKey = fs.readFileSync(publicKeyPath, 'utf8');
+  return cachedPublicKey;
+}
+
+function headerValue(req, name) {
+  const v = req.headers[name];
+  if (v == null) return undefined;
+  return Array.isArray(v) ? String(v[0]) : String(v);
+}
+
+function userFromGatewayHeaders(req) {
+  const userId = headerValue(req, 'x-user-id') ?? headerValue(req, 'id');
+  const userEmail = headerValue(req, 'x-user-email') ?? headerValue(req, 'email');
+  const userRole = headerValue(req, 'x-user-role') ?? headerValue(req, 'rol');
+  if (!userId || !userEmail || !userRole) return null;
+  return {
+    id: String(userId),
+    email: userEmail,
+    role: userRole
+  };
+}
+
+function userFromBearerToken(req) {
+  const authHeader = headerValue(req, 'authorization');
+  if (!authHeader?.startsWith('Bearer ')) return null;
+
+  try {
+    const token = authHeader.slice(7);
+    const decoded = jwt.verify(token, loadPublicKey(), {
+      algorithms: ['RS256'],
+      issuer: process.env.JWT_ISSUER || 'innovatech-auth'
+    });
+    if (!decoded?.id || !decoded?.email || !(decoded?.role ?? decoded?.rol)) return null;
+    return {
+      id: String(decoded.id),
+      email: String(decoded.email),
+      role: String(decoded.role ?? decoded.rol)
+    };
+  } catch (error) {
+    console.warn('[BFF-JWT-MIDDLEWARE] Token Bearer inválido:', error.message);
+    return null;
+  }
+}
 
 /**
- * BFF-TASK-06: Middleware de autenticación simplificado
- * 
- * ARQUITECTURA CON KRAKEND:
- * - KrakenD ya validó el JWT con la clave pública RSA
- * - KrakenD inyecta headers X-User-Id, X-User-Email, X-User-Role
- * - Este middleware solo lee esos headers (confía en el gateway)
- * 
- * SEGURIDAD:
- * - Este middleware SOLO debe usarse detrás de KrakenD
- * - Nunca exponer el BFF directamente al público
- * - KrakenD es la única fuente de verdad para autenticación
+ * Autenticación detrás de KrakenD:
+ * 1) headers X-User-* propagados por el gateway
+ * 2) fallback: verificar Authorization Bearer con la clave pública RSA
  */
 function jwtAuthMiddleware(req, res, next) {
-  // Leer headers que KrakenD ya validó
-  const userId = req.headers['x-user-id'];
-  const userEmail = req.headers['x-user-email'];
-  const userRole = req.headers['x-user-role'];
+  const user = userFromGatewayHeaders(req) ?? userFromBearerToken(req);
 
-  // Verificar que los headers existan (protección básica)
-  if (!userId || !userEmail || !userRole) {
-    console.warn('[BFF-JWT-MIDDLEWARE] ⚠️  Headers de usuario no encontrados - ¿BFF expuesto directamente?');
-    return res.status(401).json({ 
+  if (!user) {
+    return res.status(401).json({
       error: 'Unauthorized',
-      message: 'Authentication headers missing. This service must be accessed through the API Gateway.'
+      message: 'Authentication required. Access through the API Gateway with a valid JWT.'
     });
   }
 
-  // Poblar req.user con los datos validados por KrakenD
-  req.user = {
-    id: parseInt(userId as string, 10),
-    email: userEmail as string,
-    role: userRole as string
-  };
-  
-  console.log(`[BFF-JWT-MIDDLEWARE] ✅ Usuario autenticado por KrakenD - UserID: ${req.user.id} - Role: ${req.user.role}`);
+  req.user = user;
   next();
 }
 
-module.exports = jwtAuthMiddleware;
+export default jwtAuthMiddleware;

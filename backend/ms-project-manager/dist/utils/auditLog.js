@@ -1,6 +1,5 @@
-"use strict";
-Object.defineProperty(exports, "__esModule", { value: true });
-const { sendAuditToElasticsearch } = require('../clients/elasticAuditClient');
+// @ts-nocheck
+import { sendAuditToElasticsearch } from '../clients/elasticAuditClient.js';
 /**
  * Auditoría básica: consola (JSON) + Elasticsearch opcional (ELASTICSEARCH_NODE).
  */
@@ -25,4 +24,4 @@ function auditFromRequest(req, partial) {
         path: req.originalUrl || req.url || ''
     });
 }
-module.exports = { auditLog, auditFromRequest };
+export { auditLog, auditFromRequest };

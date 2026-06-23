@@ -1,30 +1,70 @@
-"use strict";
-Object.defineProperty(exports, "__esModule", { value: true });
-const jwt = require('jsonwebtoken');
-const config = require('../../../config');
-/**
- * BFF-TASK-06: Valida JWT (mismo secreto que emite Auth) y rellena req.user.
- */
-function jwtAuthMiddleware(req, res, next) {
-    const authHeader = req.headers.authorization;
-    if (!authHeader || !authHeader.startsWith('Bearer ')) {
-        return res.status(401).json({
-            error: 'Missing or invalid Authorization header (Bearer token required)'
-        });
-    }
-    const token = authHeader.slice(7);
+// @ts-nocheck
+import fs from 'fs';
+import path from 'path';
+import jwt from 'jsonwebtoken';
+const publicKeyPath = path.join(process.cwd(), 'keys', 'public.key');
+let cachedPublicKey = null;
+function loadPublicKey() {
+    if (cachedPublicKey)
+        return cachedPublicKey;
+    cachedPublicKey = fs.readFileSync(publicKeyPath, 'utf8');
+    return cachedPublicKey;
+}
+function headerValue(req, name) {
+    const v = req.headers[name];
+    if (v == null)
+        return undefined;
+    return Array.isArray(v) ? String(v[0]) : String(v);
+}
+function userFromGatewayHeaders(req) {
+    const userId = headerValue(req, 'x-user-id') ?? headerValue(req, 'id');
+    const userEmail = headerValue(req, 'x-user-email') ?? headerValue(req, 'email');
+    const userRole = headerValue(req, 'x-user-role') ?? headerValue(req, 'rol');
+    if (!userId || !userEmail || !userRole)
+        return null;
+    return {
+        id: parseInt(userId, 10),
+        email: userEmail,
+        role: userRole
+    };
+}
+function userFromBearerToken(req) {
+    const authHeader = headerValue(req, 'authorization');
+    if (!authHeader?.startsWith('Bearer '))
+        return null;
     try {
-        const decoded = jwt.verify(token, config.JWT_SECRET);
-        const role = decoded.role ?? decoded.rol;
-        req.user = {
-            id: decoded.id,
-            email: decoded.email,
-            role
+        const token = authHeader.slice(7);
+        const decoded = jwt.verify(token, loadPublicKey(), {
+            algorithms: ['RS256'],
+            issuer: process.env.JWT_ISSUER || 'innovatech-auth'
+        });
+        if (!decoded?.id || !decoded?.email || !(decoded?.role ?? decoded?.rol))
+            return null;
+        return {
+            id: parseInt(String(decoded.id), 10),
+            email: String(decoded.email),
+            role: String(decoded.role ?? decoded.rol)
         };
-        next();
     }
     catch (error) {
-        return res.status(401).json({ error: 'Invalid or expired token' });
+        console.warn('[BFF-JWT-MIDDLEWARE] Token Bearer inválido:', error.message);
+        return null;
     }
 }
-module.exports = jwtAuthMiddleware;
+/**
+ * Autenticación detrás de KrakenD:
+ * 1) headers X-User-* propagados por el gateway
+ * 2) fallback: verificar Authorization Bearer con la clave pública RSA
+ */
+function jwtAuthMiddleware(req, res, next) {
+    const user = userFromGatewayHeaders(req) ?? userFromBearerToken(req);
+    if (!user) {
+        return res.status(401).json({
+            error: 'Unauthorized',
+            message: 'Authentication required. Access through the API Gateway with a valid JWT.'
+        });
+    }
+    req.user = user;
+    next();
+}
+export default jwtAuthMiddleware;

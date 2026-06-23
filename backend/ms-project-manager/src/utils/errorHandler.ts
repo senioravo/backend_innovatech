@@ -1,5 +1,4 @@
 // @ts-nocheck
-export {};
 class ApplicationError extends Error {
   constructor(message, status = 500) {
     super(message);
@@ -27,9 +26,10 @@ class UnauthorizedError extends ApplicationError {
   }
 }
 
-module.exports = {
-  ApplicationError,
-  ValidationError,
-  NotFoundError,
-  UnauthorizedError
-};
+class ForbiddenError extends ApplicationError {
+  constructor(message = 'Forbidden') {
+    super(message, 403);
+  }
+}
+
+export { ApplicationError, ValidationError, NotFoundError, UnauthorizedError, ForbiddenError };

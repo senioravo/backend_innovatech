@@ -1,0 +1,40 @@
+# Reference only — not included in ms-project-manager/k8s/kustomization.yaml.
+# Dev all-in-K8s Flyway job: k8s/postgres/flyway-pm-job.yaml (via backend/kustomization.yaml).
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: ms-project-manager-flyway
+  namespace: innovatech
+  labels:
+    app.kubernetes.io/name: ms-project-manager
+    app.kubernetes.io/component: migration
+spec:
+  ttlSecondsAfterFinished: 300
+  backoffLimit: 3
+  template:
+    spec:
+      restartPolicy: OnFailure
+      containers:
+        - name: flyway
+          image: flyway/flyway:10
+          args:
+            - -url=jdbc:postgresql://pm-db:5432/innovatech_pm
+            - -user=postgres
+            - -password=$(POSTGRES_PASSWORD)
+            - -connectRetries=10
+            - -baselineOnMigrate=true
+            - migrate
+          env:
+            - name: POSTGRES_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: innovatech-db-secrets
+                  key: POSTGRES_PASSWORD
+          volumeMounts:
+            - name: flyway-sql
+              mountPath: /flyway/sql
+              readOnly: true
+      volumes:
+        - name: flyway-sql
+          configMap:
+            name: ms-project-manager-flyway-sql

@@ -1,14 +1,13 @@
-"use strict";
-Object.defineProperty(exports, "__esModule", { value: true });
+// @ts-nocheck
 // AS-TASK-02: Integrar con API Gateway
 // Rutas de autenticación y autorización
-const express = require('express');
+import express from 'express';
 const router = express.Router();
-const authController = require('../controllers/auth.controller');
+import * as authController from '../controllers/auth.controller.js';
 // AS-TASK-07: Importar middleware de autenticación
-const { verifyToken } = require('../middleware/auth.middleware');
+import { verifyToken } from '../middleware/auth.middleware.js';
 // AS-TASK-12: Importar middleware de auditoría
-const { auditMiddleware, auditCriticalOperation } = require('../middleware/auditMiddleware');
+import { auditMiddleware, auditCriticalOperation } from '../middleware/auditMiddleware.js';
 // AS-TASK-12: Aplicar auditoría a todas las rutas (excepto health check)
 router.use((req, res, next) => {
     if (req.path !== '/health') {
@@ -16,114 +15,90 @@ router.use((req, res, next) => {
     }
     next();
 });
-// Endpoints de autenticación
-router.post('/register', auditCriticalOperation('REGISTER'), authController.register);
-
+// Endpoints de autenticación (SOLO autenticación)
+// NOTA: /register fue movido a ms-users (POST /api/users)
 /**
- * @swagger
+ * @openapi
  * /api/auth/login:
  *   post:
+ *     tags: [Auth]
  *     summary: Iniciar sesión
- *     tags: [Autenticación]
- *     security: []
- *     requestBody:
- *       required: true
- *       content:
- *         application/json:
- *           schema:
- *             $ref: '#/components/schemas/LoginRequest'
- *     responses:
- *       200:
- *         description: Login exitoso
- *         content:
- *           application/json:
- *             schema:
- *               $ref: '#/components/schemas/LoginResponse'
- *       401:
- *         description: Credenciales inválidas
- *         content:
- *           application/json:
- *             schema:
- *               $ref: '#/components/schemas/Error'
- */
-router.post('/login', auditCriticalOperation('LOGIN'), authController.login);
-// AS-TASK-07: Logout requiere token válido
-router.post('/logout', verifyToken, auditCriticalOperation('LOGOUT'), authController.logout);
-// Endpoints de roles
-router.get('/roles', authController.getRoles);
-
-/**
- * @swagger
- * /api/auth/roles/simple:
- *   get:
- *     summary: Obtener lista simple de nombres de roles
- *     tags: [Roles]
- *     security: []
- *     responses:
- *       200:
- *         description: Lista de nombres de roles
- *         content:
- *           application/json:
- *             schema:
- *               type: array
- *               items:
- *                 type: string
- *               example: ["gestor", "profesional", "directivo"]
- */
-//  Endpoint simplificado que retorna solo nombres de roles
-router.get('/roles/simple', authController.getRolesSimple);
-
-/**
- * @swagger
- * /api/auth/usuarios/{id}/rol:
- *   put:
- *     summary: Actualizar el rol de un usuario
- *     tags: [Roles]
- *     parameters:
- *       - in: path
- *         name: id
- *         required: true
- *         schema:
- *           type: integer
- *         description: ID del usuario
  *     requestBody:
  *       required: true
  *       content:
  *         application/json:
  *           schema:
  *             type: object
- *             required: [rol]
+ *             required: [email, password]
  *             properties:
- *               rol:
+ *               email:
  *                 type: string
- *                 enum: [gestor, profesional, directivo]
- *                 example: "profesional"
+ *                 example: juan@innovatech.cl
+ *               password:
+ *                 type: string
+ *                 example: Secret123!
  *     responses:
  *       200:
- *         description: Rol actualizado exitosamente
+ *         description: Login exitoso, retorna JWT
  *         content:
  *           application/json:
  *             schema:
  *               type: object
  *               properties:
- *                 mensaje:
+ *                 token:
  *                   type: string
  *                 usuario:
- *                   $ref: '#/components/schemas/Usuario'
- *       400:
- *         description: Rol inválido
- *         content:
- *           application/json:
- *             schema:
- *               $ref: '#/components/schemas/Error'
- *       404:
- *         description: Usuario no encontrado
- *         content:
- *           application/json:
- *             schema:
- *               $ref: '#/components/schemas/Error'
+ *                   type: object
+ *       401:
+ *         description: Credenciales inválidas
  */
-router.put('/usuarios/:id/rol', auditCriticalOperation('ROLE_CHANGE'), authController.updateUserRole);
-// Health check
+router.post('/login', auditCriticalOperation('LOGIN'), authController.login);
+/**
+ * @openapi
+ * /api/auth/logout:
+ *   post:
+ *     tags: [Auth]
+ *     summary: Cerrar sesión
+ *     security:
+ *       - bearerAuth: []
+ *     responses:
+ *       200:
+ *         description: Sesión cerrada
+ *       401:
+ *         description: Token inválido
+ */
+router.post('/logout', verifyToken, auditCriticalOperation('LOGOUT'), authController.logout);
+/**
+ * @openapi
+ * /api/auth/roles:
+ *   get:
+ *     tags: [Auth]
+ *     summary: Obtener todos los roles disponibles
+ *     responses:
+ *       200:
+ *         description: Lista de roles
+ * /api/auth/roles/simple:
+ *   get:
+ *     tags: [Auth]
+ *     summary: Obtener nombres de roles (versión simple)
+ *     responses:
+ *       200:
+ *         description: Lista simple de roles
+ */
+router.get('/roles', authController.getRoles);
+router.get('/roles/simple', authController.getRolesSimple);
+// NOTA: Endpoints de gestión de usuarios fueron movidos a ms-users:
+// - GET /usuarios/:id → ms-users: GET /api/users/:id
+// - PUT /usuarios/:id/rol → ms-users: PUT /api/users/:id/role
+/**
+ * @openapi
+ * /api/auth/health:
+ *   get:
+ *     tags: [Health]
+ *     summary: Health check del microservicio auth
+ *     responses:
+ *       200:
+ *         description: Servicio operativo
+ */
 router.get('/health', authController.health);
-module.exports = router;
+export default router;

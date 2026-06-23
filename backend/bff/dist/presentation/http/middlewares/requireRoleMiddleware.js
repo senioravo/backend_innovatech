@@ -1,5 +1,4 @@
-"use strict";
-Object.defineProperty(exports, "__esModule", { value: true });
+// @ts-nocheck
 /**
  * BFF-TASK-07: Autorización por rol (mismos nombres que Project-manager).
  */
@@ -21,4 +20,4 @@ function requireRole(...allowedRoles) {
         next();
     };
 }
-module.exports = requireRole;
+export default requireRole;

@@ -1,6 +1,5 @@
-"use strict";
-Object.defineProperty(exports, "__esModule", { value: true });
-const { UpstreamError } = require('../../utils/errorHandler');
+// @ts-nocheck
+import { UpstreamError } from '../../utils/errorHandler.js';
 function joinUrl(base, pathWithQuery) {
     const b = String(base).replace(/\/$/, '');
     const p = String(pathWithQuery).startsWith('/') ? pathWithQuery : `/${pathWithQuery}`;
@@ -42,4 +41,4 @@ async function upstreamJson(url, { method = 'GET', headers = {}, body } = {}) {
     }
     return { status: res.status, data };
 }
-module.exports = { joinUrl, upstreamJson };
+export { joinUrl, upstreamJson };

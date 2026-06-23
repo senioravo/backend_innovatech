@@ -1,7 +1,6 @@
 // @ts-nocheck
-export {};
-const { Client } = require('@elastic/elasticsearch');
-const config = require('../config/environment');
+import { Client } from '@elastic/elasticsearch';
+import config from '../config/environment.js';
 
 let esClient;
 let initAttempted;
@@ -68,6 +67,4 @@ async function sendAuditToElasticsearch(doc) {
   await client.index({ index, document });
 }
 
-module.exports = {
-  sendAuditToElasticsearch
-};
+export { sendAuditToElasticsearch };

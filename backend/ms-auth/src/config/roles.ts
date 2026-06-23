@@ -1,5 +1,4 @@
 // @ts-nocheck
-export {};
 // AS-TASK-08: Configuración de roles del sistema
 // Responsabilidad: Definir y exportar roles y permisos
 // Principio SOLID: Single Responsibility - Solo gestiona roles
@@ -92,10 +91,14 @@ const getRoleInfo = (rol) => {
  * @returns {Array} - Array de objetos con información de roles
  */
 const getAllRolesInfo = () => {
-  return getAllRoles().map(rol => ({
-    nombre: rol,
-    descripcion: ROLE_DESCRIPTIONS[rol],
-    permisos: ROLE_PERMISSIONS[rol]
+  return getAllRoles().map((roleKey) => ({
+    name: roleKey,
+    description: ROLE_DESCRIPTIONS[roleKey],
+    permissions: ROLE_PERMISSIONS[roleKey],
+    // Legacy keys for backward compatibility
+    nombre: roleKey,
+    descripcion: ROLE_DESCRIPTIONS[roleKey],
+    permisos: ROLE_PERMISSIONS[roleKey]
   }));
 };
 
@@ -129,16 +132,4 @@ const getRoleDescription = (rol) => {
   return ROLE_DESCRIPTIONS[rol] || 'Rol desconocido';
 };
 
-module.exports = {
-  ROLES,
-  DEFAULT_ROLE,
-  ROLE_DESCRIPTIONS,
-  ROLE_PERMISSIONS,
-  isValidRole,
-  getAllRoles,
-  getRoleInfo,
-  getAllRolesInfo,
-  hasPermission,
-  getRoleDescription
-};
-
+export { ROLES, DEFAULT_ROLE, ROLE_DESCRIPTIONS, ROLE_PERMISSIONS, isValidRole, getAllRoles, getRoleInfo, getAllRolesInfo, hasPermission, getRoleDescription };

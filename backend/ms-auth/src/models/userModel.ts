@@ -1,6 +1,4 @@
 // @ts-nocheck
-export {};
-
 /**
  * UserModel - Entidad de Usuario
  * Representa la estructura de datos de un usuario tal como existe en la base de datos
@@ -60,4 +58,4 @@ class UserModel {
   }
 }
 
-module.exports = UserModel;
+export default UserModel;;

@@ -1,5 +1,5 @@
 // Test básico de bcrypt
-const bcrypt = require('bcrypt');
+import bcrypt from 'bcrypt';
 
 describe('Bcrypt - Hash de contraseñas', () => {
   

@@ -1,12 +1,11 @@
-"use strict";
-Object.defineProperty(exports, "__esModule", { value: true });
+// @ts-nocheck
 // AS-TASK-07: Middleware de Autenticación
 // Responsabilidad: Extraer y validar tokens JWT del header Authorization
 // Principio SOLID: Single Responsibility - Solo valida tokens
-const jwtHelper = require('../utils/jwt.helper');
-const tokenBlacklistService = require('../services/token.blacklist.service');
+import jwtHelper from '../utils/jwt.helper.js';
+import tokenBlacklistService from '../services/token.blacklist.service.js';
 // AS-TASK-08: Importar configuración de roles y permisos
-const { ROLES, hasPermission } = require('../config/roles');
+import { ROLES, hasPermission } from '../config/roles.js';
 /**
  * Extraer token del header Authorization
  * Formato esperado: "Bearer <token>"
@@ -192,13 +191,4 @@ const requireDirectivo = (req, res, next) => {
 const allowRoles = (roles) => {
     return verifyRole(roles);
 };
-module.exports = {
-    extractToken,
-    verifyToken,
-    verifyRole,
-    requirePermission,
-    requireGestor,
-    requireProfesional,
-    requireDirectivo,
-    allowRoles
-};
+export { extractToken, verifyToken, verifyRole, requirePermission, requireGestor, requireProfesional, requireDirectivo, allowRoles };

@@ -1,17 +1,14 @@
 // @ts-nocheck
-export {};
 // AS-TASK-09: Rutas de ejemplo para demostrar middleware de autorización
 // Estas rutas son ejemplos de cómo usar checkRole en endpoints protegidos
 
-const express = require('express');
+import express from 'express';
 const router = express.Router();
-const { 
-  checkRole, 
+import { checkRole, 
   checkRoleGestor, 
   checkRoleProfesional, 
   checkRoleDirectivo,
-  checkAuthentication 
-} = require('../middleware/checkRole');
+  checkAuthentication } from '../middleware/checkRole.js';
 
 /**
  * Endpoints de ejemplo para proyectos
@@ -210,5 +207,4 @@ router.get('/test/public', (req, res) => {
   });
 });
 
-module.exports = router;
-
+export default router;

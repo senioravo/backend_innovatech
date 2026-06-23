@@ -1,8 +1,7 @@
 // @ts-nocheck
-export {};
-const ProjectModel = require('../models/projectModel');
-const IProjectRepository = require('../interfaces/IProjectRepository');
-const { getPool } = require('../db/pool');
+import ProjectModel from '../models/projectModel.js';
+import IProjectRepository from '../interfaces/IProjectRepository.js';
+import { getPool } from '../db/pool.js';
 
 function mapProjectRow(row) {
   if (!row) return null;
@@ -14,6 +13,7 @@ function mapProjectRow(row) {
     assigneeId: row.responsable_id,
     startDate: row.fecha_inicio,
     endDate: row.fecha_termino,
+    status: row.status ?? 'active',
     createdAt: row.created_at ? new Date(row.created_at).toISOString() : null,
     updatedAt: row.updated_at ? new Date(row.updated_at).toISOString() : null
   });
@@ -30,6 +30,12 @@ class ProjectRepository extends IProjectRepository {
     return rows.map(mapProjectRow);
   }
 
+  async findAll() {
+    const pool = getPool();
+    const { rows } = await pool.query(`SELECT * FROM "PROJECT" ORDER BY created_at DESC`);
+    return rows.map(mapProjectRow);
+  }
+
   async findByIdAndUserId(id, userId) {
     if (!id || !userId) throw new Error('id and userId are required');
     const pool = getPool();
@@ -37,6 +43,13 @@ class ProjectRepository extends IProjectRepository {
       `SELECT * FROM "PROJECT" WHERE id = $1 AND owner_user_id = $2`,
       [id, userId]
     );
+    return rows[0] ? mapProjectRow(rows[0]) : null;
+  }
+
+  async findById(id) {
+    if (!id) throw new Error('id is required');
+    const pool = getPool();
+    const { rows } = await pool.query(`SELECT * FROM "PROJECT" WHERE id = $1`, [id]);
     return rows[0] ? mapProjectRow(rows[0]) : null;
   }
 
@@ -48,7 +61,7 @@ class ProjectRepository extends IProjectRepository {
        VALUES ($1, $2, $3, $4, $5, $6)
        RETURNING *`,
       [
-        data.userId,
+        String(data.userId),
         data.name,
         data.description,
         data.assigneeId ?? null,
@@ -99,6 +112,20 @@ class ProjectRepository extends IProjectRepository {
     return rows[0] ? mapProjectRow(rows[0]) : null;
   }
 
+  async updateStatusByAssignee(id, assigneeId, status) {
+    if (!id || !assigneeId || !status) {
+      throw new Error('id, assigneeId and status are required');
+    }
+    const pool = getPool();
+    const { rows } = await pool.query(
+      `UPDATE "PROJECT" SET status = $3, updated_at = now()
+       WHERE id = $1 AND responsable_id = $2
+       RETURNING *`,
+      [id, assigneeId, status]
+    );
+    return rows[0] ? mapProjectRow(rows[0]) : null;
+  }
+
   async delete(id, userId) {
     if (!id || !userId) throw new Error('id and userId are required');
     const pool = getPool();
@@ -110,4 +137,4 @@ class ProjectRepository extends IProjectRepository {
   }
 }
 
-module.exports = new ProjectRepository();
+export default new ProjectRepository();;

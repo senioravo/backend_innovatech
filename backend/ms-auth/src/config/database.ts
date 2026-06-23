@@ -1,21 +1,27 @@
 // @ts-nocheck
-export {};
-
-// AS-TASK-21: Configuracin de base de datos production-ready
-// Mejoras: SSL seguro, graceful shutdown, retry logic, Winston logging, mtricas Prometheus
-const { Pool } = require('pg');
-const { Gauge } = require('prom-client');
-require('dotenv').config();
-
+import dotenv from 'dotenv';
+// AS-TASK-21: Configuraciï¿½n de base de datos production-ready
+// Mejoras: SSL seguro, graceful shutdown, retry logic, Winston logging, mï¿½tricas Prometheus
+import { Pool } from 'pg';
+import { Gauge } from 'prom-client';
+dotenv.config();
 // AS-TASK-21: Importar Winston logger en vez de console.log
-const logger = require('../utils/logger');
+import logger from '../utils/logger.js';
 
 // AS-TASK-21: Validar variables de entorno requeridas
-if (!process.env.DATABASE_URL && !process.env.DB_PASSWORD) {
-  throw new Error('DATABASE_URL o DB_PASSWORD es requerido. Verifica tu archivo .env');
+// Acepta dos modos:
+// 1) DATABASE_URL (Neon/Cloud)
+// 2) Variables locales (DB_HOST/DB_PORT/DB_USER/DB_NAME[/DB_PASSWORD])
+const hasDatabaseUrl = Boolean(process.env.DATABASE_URL);
+const hasLocalDbConfig = Boolean(process.env.DB_HOST || process.env.DB_USER || process.env.DB_NAME || process.env.DB_PASSWORD);
+
+if (!hasDatabaseUrl && !hasLocalDbConfig) {
+  logger.warn('[Database] No se encontrÃ³ configuraciÃ³n explÃ­cita de DB. Se usarÃ¡n valores locales por defecto (localhost:5432/postgres).', {
+    taskId: 'AS-TASK-21'
+  });
 }
 
-// AS-TASK-21: SSL seguro - rejectUnauthorized: true en produccin
+// AS-TASK-21: SSL seguro - rejectUnauthorized: true en producciï¿½n
 const sslConfig = process.env.DATABASE_URL
   ? {
       // Neon y otros Postgres gestionados suelen requerir SSL sin verificar CA en contenedores.
@@ -23,7 +29,7 @@ const sslConfig = process.env.DATABASE_URL
     }
   : false; // Sin SSL para PostgreSQL local
 
-// Configuracin del pool - soporta DATABASE_URL o variables separadas
+// Configuraciï¿½n del pool - soporta DATABASE_URL o variables separadas
 const poolConfig = process.env.DATABASE_URL
   ? {
       connectionString: process.env.DATABASE_URL,
@@ -46,7 +52,7 @@ const poolConfig = process.env.DATABASE_URL
 // Pool de conexiones para PostgreSQL
 const pool = new Pool(poolConfig);
 
-// AS-TASK-21: Mtricas de Prometheus para monitoreo del pool
+// AS-TASK-21: Mï¿½tricas de Prometheus para monitoreo del pool
 const dbConnectionsGauge = new Gauge({
   name: 'db_connections_total',
   help: 'Total de conexiones activas en el pool de PostgreSQL'
@@ -57,15 +63,15 @@ const dbIdleConnectionsGauge = new Gauge({
   help: 'Conexiones idle disponibles en el pool de PostgreSQL'
 });
 
-// AS-TASK-21: Actualizar mtricas cada 10 segundos
+// AS-TASK-21: Actualizar mï¿½tricas cada 10 segundos
 setInterval(() => {
   dbConnectionsGauge.set(pool.totalCount || 0);
   dbIdleConnectionsGauge.set(pool.idleCount || 0);
 }, 10000);
 
-// Evento de conexin exitosa
+// Evento de conexiï¿½n exitosa
 pool.on('connect', () => {
-  logger.info('[Database] Conexin establecida con PostgreSQL', {
+  logger.info('[Database] Conexiï¿½n establecida con PostgreSQL', {
     taskId: 'AS-TASK-21',
     pool: 'main'
   });
@@ -83,7 +89,7 @@ pool.on('error', (err) => {
 
 // AS-TASK-21: Graceful shutdown - Cerrar pool correctamente al finalizar
 process.on('SIGTERM', async () => {
-  logger.info('[Database] Seal SIGTERM recibida - Cerrando pool de conexiones...');
+  logger.info('[Database] Seï¿½al SIGTERM recibida - Cerrando pool de conexiones...');
   try {
     await pool.end();
     logger.info('[Database] Pool cerrado exitosamente');
@@ -95,7 +101,7 @@ process.on('SIGTERM', async () => {
 });
 
 process.on('SIGINT', async () => {
-  logger.info('[Database] Seal SIGINT recibida - Cerrando pool de conexiones...');
+  logger.info('[Database] Seï¿½al SIGINT recibida - Cerrando pool de conexiones...');
   try {
     await pool.end();
     logger.info('[Database] Pool cerrado exitosamente');
@@ -106,7 +112,7 @@ process.on('SIGINT', async () => {
   }
 });
 
-// AS-TASK-21: Retry logic - Reintentar conexin hasta 3 veces
+// AS-TASK-21: Retry logic - Reintentar conexiï¿½n hasta 3 veces
 const checkConnection = async (retries = 3) => {
   for (let i = 0; i < retries; i++) {
     try {
@@ -118,7 +124,7 @@ const checkConnection = async (retries = 3) => {
       client.release();
       return true;
     } catch (error) {
-      logger.error(`[Database] Intento ${i + 1}/${retries} de conexin fall`, {
+      logger.error(`[Database] Intento ${i + 1}/${retries} de conexiï¿½n fallï¿½`, {
         error: error.message,
         taskId: 'AS-TASK-21'
       });
@@ -130,14 +136,10 @@ const checkConnection = async (retries = 3) => {
     }
   }
   
-  logger.error('[Database] [ERROR] No se pudo conectar a PostgreSQL despus de todos los reintentos');
+  logger.error('[Database] [ERROR] No se pudo conectar a PostgreSQL despuï¿½s de todos los reintentos');
   return false;
 };
 
-module.exports = {
-  pool,
-  checkConnection,
-  query: (text, params) => pool.query(text, params)
-};
+const query = (text: string, params?: unknown[]) => pool.query(text, params);
 
-
+export { pool, checkConnection, query };

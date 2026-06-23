@@ -1,9 +1,8 @@
-"use strict";
-Object.defineProperty(exports, "__esModule", { value: true });
-const projectRepository = require('../repositories/projectRepository');
-const taskRepository = require('../repositories/taskRepository');
-const resourceAvailabilityService = require('./resourceAvailabilityService');
-const { NotFoundError } = require('../utils/errorHandler');
+// @ts-nocheck
+import projectRepository from '../repositories/projectRepository.js';
+import taskRepository from '../repositories/taskRepository.js';
+import resourceAvailabilityService from './resourceAvailabilityService.js';
+import { NotFoundError } from '../utils/errorHandler.js';
 class ProjectService {
     constructor(repository = projectRepository) {
         this.repository = repository;
@@ -55,6 +54,16 @@ class ProjectService {
             throw new NotFoundError('Project not found');
         return project;
     }
+    async updateProjectStatus(projectId, userId, status) {
+        if (!projectId || !userId || !status) {
+            throw new Error('projectId, userId and status are required');
+        }
+        await resourceAvailabilityService.assertProjectResponsable(projectId, userId);
+        const project = await this.repository.updateStatusByAssignee(projectId, userId, status);
+        if (!project)
+            throw new NotFoundError('Project not found');
+        return project;
+    }
     async assignAssignee(projectId, ownerUserId, assigneeId) {
         if (!projectId || !ownerUserId || !assigneeId) {
             throw new Error('projectId, ownerUserId and assigneeId are required');
@@ -71,4 +80,5 @@ class ProjectService {
         return true;
     }
 }
-module.exports = new ProjectService();
+export default new ProjectService();
+;

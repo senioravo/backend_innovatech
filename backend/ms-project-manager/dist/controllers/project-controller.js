@@ -1,10 +1,9 @@
-"use strict";
-Object.defineProperty(exports, "__esModule", { value: true });
-const projectService = require('../services/projectService');
-const ValidationService = require('../services/validationService');
-const { createProjectDto, projectToDto, pickProjectScheduleFields } = require('../dtos/projectDto');
-const { ValidationError } = require('../utils/errorHandler');
-const { auditFromRequest } = require('../utils/auditLog');
+// @ts-nocheck
+import projectService from '../services/projectService.js';
+import ValidationService from '../services/validationService.js';
+import { createProjectDto, projectToDto, pickProjectScheduleFields } from '../dtos/projectDto.js';
+import { ValidationError } from '../utils/errorHandler.js';
+import { auditFromRequest } from '../utils/auditLog.js';
 const projectController = {
     async listProjects(req, res, next) {
         try {
@@ -75,6 +74,25 @@ const projectController = {
             next(error);
         }
     },
+    async patchProjectStatus(req, res, next) {
+        try {
+            const validation = ValidationService.validateProjectStatusInput(req.body);
+            if (!validation.isValid) {
+                throw new ValidationError(validation.errors);
+            }
+            const project = await projectService.updateProjectStatus(req.params.id, req.user.id, validation.normalized);
+            auditFromRequest(req, {
+                action: 'PROJECT_STATUS_UPDATE',
+                resource: 'project',
+                resourceId: req.params.id,
+                meta: { status: validation.normalized }
+            });
+            res.json(projectToDto(project));
+        }
+        catch (error) {
+            next(error);
+        }
+    },
     async assignAssignee(req, res, next) {
         try {
             const validation = ValidationService.validateAssigneeInput(req.body);
@@ -110,4 +128,5 @@ const projectController = {
         }
     }
 };
-module.exports = projectController;
+export default projectController;
+;

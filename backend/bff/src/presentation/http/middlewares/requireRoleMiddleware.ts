@@ -1,4 +1,4 @@
-export {};
+// @ts-nocheck
 /**
  * BFF-TASK-07: Autorización por rol (mismos nombres que Project-manager).
  */
@@ -24,4 +24,4 @@ function requireRole(...allowedRoles) {
   };
 }
 
-module.exports = requireRole;
+export default requireRole;

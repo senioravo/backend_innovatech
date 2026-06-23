@@ -1,9 +1,10 @@
-# Stack local: API Gateway (KrakenD) → BFF → auth | project-manager
+# Stack local: API Gateway (KrakenD) → BFF → auth | project-manager | kpi
 # Uso:
 #   1. Genera claves RSA: cd ms-auth && node scripts/generate-keys.js
 #   2. Copia public.key al BFF: cp ms-auth/keys/public.key bff/keys/public.key
 #   3. Copia .env.docker.example a .env.docker y rellena DATABASE_URL
 #   4. docker compose --env-file .env.docker up --build
+# Migraciones: Flyway (flyway-users, flyway-pm) antes de levantar los microservicios.
 # Entrada HTTP: http://localhost:8010/api/v1/…
 # 
 # SEGURIDAD JWT (RS256) con KrakenD:
@@ -12,16 +13,74 @@
 #   - BFF: confía en headers X-User-* que KrakenD ya validó (NO valida tokens)
 
 services:
+  users-db:
+    image: postgres:16-alpine
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+      POSTGRES_DB: innovatech_users
+    ports:
+      - "5433:5432"
+    volumes:
+      - users_db_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres -d innovatech_users"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+  flyway-users:
+    image: flyway/flyway:10
+    depends_on:
+      users-db:
+        condition: service_healthy
+    volumes:
+      - ./ms-users/db/flyway:/flyway/sql:ro
+    command: >
+      -url=jdbc:postgresql://users-db:5432/innovatech_users
+      -user=postgres
+      -password=postgres
+      -connectRetries=10
+      -baselineOnMigrate=true
+      migrate
+
+  pm-db:
+    image: postgres:16-alpine
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+      POSTGRES_DB: innovatech_pm
+    ports:
+      - "5434:5432"
+    volumes:
+      - pm_db_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres -d innovatech_pm"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+  flyway-pm:
+    image: flyway/flyway:10
+    depends_on:
+      pm-db:
+        condition: service_healthy
+    volumes:
+      - ./ms-project-manager/db/flyway:/flyway/sql:ro
+    command: >
+      -url=jdbc:postgresql://pm-db:5432/innovatech_pm
+      -user=postgres
+      -password=postgres
+      -connectRetries=10
+      -baselineOnMigrate=true
+      migrate
+
   api-gateway:
     image: devopsfaith/krakend:2.7
     ports:
       - "8010:8080"
     volumes:
       - ./api-gateway/krakend.json:/etc/krakend/krakend.json:ro
-    environment:
-      FC_ENABLE: "1"
-      FC_SETTINGS: "/etc/krakend/settings"
-      FC_TEMPLATES: "/etc/krakend/templates"
     command: ["run", "-c", "/etc/krakend/krakend.json"]
     depends_on:
       - bff
@@ -33,16 +92,22 @@ services:
     environment:
       PORT: "3010"
       API_GATEWAY_PREFIX: /api/v1
+      JWT_ISSUER: innovatech-auth
       # Ya NO valida JWT - confía en headers de KrakenD (X-User-*)
       AUTH_SERVICE_BASE_URL: http://auth:3001
       AUTH_API_PREFIX: /api/auth
       PROJECT_MANAGER_BASE_URL: http://project-manager:3002
       PROJECT_MANAGER_API_PREFIX: /api/v1
+      KPI_SERVICE_BASE_URL: http://kpi:3004
+      KPI_API_PREFIX: /api/v1
+    volumes:
+      - ./ms-auth/keys/public.key:/app/keys/public.key:ro
     expose:
       - "3010"
     depends_on:
       - auth
       - project-manager
+      - kpi
 
   auth:
     build:
@@ -53,6 +118,10 @@ services:
       # Ya NO necesita JWT_SECRET - usa clave privada RSA
       JWT_EXPIRES_IN: "1h"
       JWT_ISSUER: "innovatech-auth"
+      # URL del microservicio de usuarios para consultar datos durante login
+      USERS_SERVICE_URL: ${USERS_SERVICE_URL:-http://users:3003}
+      # Token de seguridad para comunicación interna entre servicios
+      INTERNAL_SERVICE_TOKEN: ${INTERNAL_SERVICE_TOKEN:-development-token}
     volumes:
       # Clave PRIVADA RSA para firmar tokens (solo lectura)
       - ./ms-auth/keys/private.key:/app/keys/private.key:ro
@@ -60,17 +129,78 @@ services:
       - ./ms-auth/keys/public.key:/app/keys/public.key:ro
     expose:
       - "3001"
+    depends_on:
+      - users
 
   project-manager:
     build:
       context: ./ms-project-manager
     environment:
       PORT: "3002"
-      DATABASE_URL: ${DATABASE_URL_PM:-}
+      DATABASE_URL: postgresql://postgres:postgres@pm-db:5432/innovatech_pm?sslmode=disable
       # Ya NO necesita JWT_SECRET - usa clave pública RSA
       API_GATEWAY_PREFIX: /api/v1
     volumes:
       # Clave PÚBLICA RSA para verificar tokens (solo lectura)
-      - ./ms-project-manager/keys/public.key:/app/keys/public.key:ro
+      - ./ms-auth/keys/public.key:/app/keys/public.key:ro
     expose:
       - "3002"
+    depends_on:
+      flyway-pm:
+        condition: service_completed_successfully
+      pm-db:
+        condition: service_healthy
+
+  kpi:
+    build:
+      context: ./ms-kpi
+    environment:
+      PORT: "3004"
+      API_GATEWAY_PREFIX: /api/v1
+      PROJECT_MANAGER_BASE_URL: http://project-manager:3002
+      PROJECT_MANAGER_API_PREFIX: /api/v1
+    volumes:
+      - ./ms-auth/keys/public.key:/app/keys/public.key:ro
+    expose:
+      - "3004"
+
+  users:
+    build:
+      context: ./ms-users
+    environment:
+      PORT: "3003"
+      # Docker local: Postgres del servicio users-db (ignora Neon del .env.docker)
+      DATABASE_URL: postgresql://postgres:postgres@users-db:5432/innovatech_users?sslmode=disable
+      # Verifica tokens JWT con clave pública RSA
+      JWT_PUBLIC_KEY_PATH: /app/keys/jwt_public.pem
+      JWT_ISSUER: "innovatech-auth"
+      LOG_LEVEL: "info"
+      # Token de seguridad para validar llamadas internas de otros servicios
+      INTERNAL_SERVICE_TOKEN: ${INTERNAL_SERVICE_TOKEN:-development-token}
+    volumes:
+      # Clave PÚBLICA RSA para verificar tokens (solo lectura)
+      - ./ms-auth/keys/public.key:/app/keys/jwt_public.pem:ro
+    expose:
+      - "3003"
+    depends_on:
+      flyway-users:
+        condition: service_completed_successfully
+      users-db:
+        condition: service_healthy
+
+  prometheus:
+    image: prom/prometheus:v2.54.1
+    ports:
+      - "9090:9090"
+    volumes:
+      - ./observability/prometheus.yml:/etc/prometheus/prometheus.yml:ro
+      - prometheus_data:/prometheus
+    depends_on:
+      - auth
+      - users
+      - project-manager
+
+volumes:
+  users_db_data:
+  pm_db_data:
+  prometheus_data:

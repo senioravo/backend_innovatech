@@ -1,5 +1,4 @@
 // @ts-nocheck
-export {};
 class CircuitBreakerOpenError extends Error {
   constructor(serviceName) {
     super(`Circuit breaker abierto: ${serviceName}`);
@@ -91,4 +90,4 @@ class CircuitBreaker {
   }
 }
 
-module.exports = { CircuitBreaker, CircuitBreakerOpenError };
+export { CircuitBreaker, CircuitBreakerOpenError };

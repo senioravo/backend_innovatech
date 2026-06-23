@@ -1,14 +1,25 @@
 {
   "compilerOptions": {
-    "target": "ES2020",
-    "module": "CommonJS",
+    "target": "ES2022",
+    "module": "NodeNext",
     "rootDir": "src",
     "outDir": "dist",
     "strict": false,
     "esModuleInterop": true,
     "skipLibCheck": true,
-    "types": ["node", "express", "jest"]
+    "types": [
+      "node",
+      "express",
+      "jest"
+    ],
+    "moduleResolution": "NodeNext"
   },
-  "include": ["src/**/*.ts"],
-  "exclude": ["node_modules", "dist", "tests"]
+  "include": [
+    "src/**/*.ts"
+  ],
+  "exclude": [
+    "node_modules",
+    "dist",
+    "tests"
+  ]
 }

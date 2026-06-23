@@ -1,0 +1,94 @@
+// @ts-nocheck
+import usersClient from '../clients/usersClient.js';
+import userService from './user.service.js';
+import jwtHelper from '../utils/jwt.helper.js';
+import tokenBlacklistService from '../services/token.blacklist.service.js';
+import { getAllRolesInfo, getAllRoles } from '../config/roles.js';
+import { ValidationError, UnauthorizedError } from '../utils/appError.js';
+import {
+  createRegisterDto,
+  createLoginDto,
+  validateUserData,
+  validateLoginData
+} from '../dtos/userDto.js';
+
+class AuthService {
+  async register(body) {
+    const userData = createRegisterDto(body);
+
+    if (!userData.role) {
+      userData.role = userService.getDefaultRole();
+    }
+
+    if (!userData.name || !userData.email || !userData.password) {
+      throw new ValidationError(['Campos obligatorios faltantes: name, email, password']);
+    }
+
+    const validation = validateUserData(userData);
+    if (!validation.valid) {
+      throw new ValidationError(validation.errors);
+    }
+
+    return usersClient.createUser(userData);
+  }
+
+  async login(body) {
+    const { email, password } = createLoginDto(body);
+
+    const loginValidation = validateLoginData({ email, password });
+    if (!loginValidation.valid) {
+      throw new ValidationError(loginValidation.errors);
+    }
+
+    const user = await usersClient.findByEmailWithPassword(email);
+    if (!user) {
+      throw new UnauthorizedError();
+    }
+
+    const isPasswordValid = await userService.verifyPassword(password, user.password);
+    if (!isPasswordValid) {
+      throw new UnauthorizedError();
+    }
+
+    const token = jwtHelper.generateToken({
+      id: user.id,
+      email: user.email,
+      role: user.role ?? user.rol
+    });
+
+    return { user, token, expiresIn: jwtHelper.getConfig().expiresIn };
+  }
+
+  logout(token, user) {
+    const blacklisted = tokenBlacklistService.addToBlacklist(token, {
+      id: user.id,
+      email: user.email,
+      role: user.role ?? user.rol
+    });
+
+    if (!blacklisted) {
+      throw new Error('Error al invalidar token');
+    }
+
+    return {
+      userId: user.id,
+      email: user.email,
+      logoutAt: new Date().toISOString()
+    };
+  }
+
+  getRoles() {
+    return getAllRolesInfo().map((role, index) => ({
+      id: index + 1,
+      name: role.name ?? role.nombre,
+      description: role.description ?? role.descripcion,
+      permissions: role.permissions ?? role.permisos
+    }));
+  }
+
+  getRolesSimple() {
+    return getAllRoles();
+  }
+}
+
+export default new AuthService();

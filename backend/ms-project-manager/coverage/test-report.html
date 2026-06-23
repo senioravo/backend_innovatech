@@ -1,0 +1,277 @@
+<html><head><meta charset="utf-8"/><title>Project Manager Service - Test Report</title><style type="text/css">:root {
+  --text-primary: #111;
+  --text-secondary: #4f4f4f;
+  --success: #006633;
+  --success-bright: #80ffbf;
+  --danger: #cc071e;
+  --danger-bright: #fbdfe0;
+  --warning: #995c00;
+  --warning-bright: #ffeea8;
+  --panel: #eee;
+  --border: #949494;
+  --disabled: #6b6b6b;
+}
+
+html,
+body {
+  font-family: Arial, Helvetica, sans-serif;
+  font-size: 16px;
+  margin: 0;
+  padding: 0;
+  color: var(--text-primary);
+}
+body {
+  padding: 2rem 1rem;
+}
+.jesthtml-content {
+  margin: 0 auto;
+  max-width: 70rem;
+}
+header {
+  display: flex;
+  align-items: center;
+}
+#title {
+  margin: 0;
+  flex-grow: 1;
+}
+#logo {
+  height: 4rem;
+}
+#timestamp {
+  color: var(--text-secondary);
+  margin-top: 0.5rem;
+}
+
+#metadata-container {
+  display: flex;
+  flex-direction: column;
+  gap: 2rem;
+  margin-bottom: 2rem;
+}
+
+.additional-information-container {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  color: var(--text-secondary);
+}
+
+/** SUMMARY */
+#summary {
+  color: var(--text-primary);
+  display: flex;
+  font-family: monospace;
+  font-size: 1rem;
+}
+#summary > div {
+  margin-right: 0.5rem;
+  background: var(--panel);
+  padding: 1rem;
+  min-width: 15rem;
+}
+#summary > div:last-child {
+  margin-right: 0;
+}
+@media only screen and (max-width: 720px) {
+  #summary {
+    flex-direction: column;
+  }
+  #summary > div {
+    margin-right: 0;
+    margin-top: 1rem;
+  }
+  #summary > div:first-child {
+    margin-top: 0;
+  }
+}
+
+.summary-total {
+  font-weight: bold;
+  margin-bottom: 0.5rem;
+}
+.summary-passed {
+  color: var(--success);
+  border-left: 0.4rem solid var(--success);
+  padding-left: 0.5rem;
+  margin-bottom: 0.15rem;
+}
+.summary-failed,
+.summary-obsolete-snapshots {
+  color: var(--danger);
+  border-left: 0.4rem solid var(--danger);
+  padding-left: 0.5rem;
+  margin-bottom: 0.15rem;
+}
+.summary-pending {
+  color: var(--warning);
+  border-left: 0.4rem solid var(--warning);
+  padding-left: 0.5rem;
+  margin-bottom: 0.15rem;
+}
+.summary-empty {
+  color: var(--disabled);
+  border-left: 0.4rem solid var(--disabled);
+  margin-bottom: 0.15rem;
+}
+
+.test-result {
+  padding: 1rem;
+  margin-bottom: 0.25rem;
+}
+.test-result:last-child {
+  border: 0;
+}
+.test-result.passed {
+  background-color: var(--success-bright);
+  color: var(--success);
+}
+.test-result.failed {
+  background-color: var(--danger-bright);
+  color: var(--danger);
+}
+.test-result.pending {
+  background-color: var(--warning-bright);
+  color: var(--warning);
+}
+
+.test-info {
+  display: flex;
+  justify-content: space-between;
+}
+.test-suitename {
+  width: 20%;
+  text-align: left;
+  font-weight: bold;
+  word-break: break-word;
+}
+.test-title {
+  width: 40%;
+  text-align: left;
+  font-style: italic;
+}
+.test-status {
+  width: 20%;
+  text-align: right;
+}
+.test-duration {
+  width: 10%;
+  text-align: right;
+  font-size: 0.85rem;
+}
+
+.failureMessages {
+  padding: 0 1rem;
+  margin-top: 1rem;
+  border-top: 1px dashed var(--danger);
+}
+.failureMessages.suiteFailure {
+  border-top: none;
+}
+.failureMsg {
+  white-space: pre-wrap;
+  white-space: -moz-pre-wrap;
+  white-space: -pre-wrap;
+  white-space: -o-pre-wrap;
+  word-wrap: break-word;
+}
+
+.suite-container {
+  margin-bottom: 1rem;
+}
+.suite-info {
+  padding: 1rem;
+  background-color: var(--panel);
+  color: var(--text-secondary);
+  border: 0.15rem solid;
+  border-color: var(--panel);
+  display: flex;
+  align-items: center;
+  margin-bottom: 0.25rem;
+}
+.suite-info:hover {
+  border-color: var(--border);
+  cursor: pointer;
+}
+.suite-info .suite-path {
+  word-break: break-all;
+  flex-grow: 1;
+  font-family: monospace;
+  font-size: 1rem;
+}
+.suite-info .suite-time {
+  margin-left: 1rem;
+  padding: 0.2rem 0.3rem;
+  font-size: 0.85rem;
+}
+.suite-info .suite-time.warn {
+  background-color: var(--danger);
+  color: #fff;
+}
+.suite-info:before {
+  content: "\2303";
+  display: inline-block;
+  margin-right: 1rem;
+  transform: rotate(180deg) translateY(0.15rem);
+}
+.suite-container[open] .suite-info:before {
+  transform: rotate(0deg) translateY(0.15rem);
+}
+
+/* CONSOLE LOGS */
+.suite-consolelog {
+  margin-bottom: 0.25rem;
+  padding: 1rem;
+  background-color: var(--panel);
+}
+.suite-consolelog-header {
+  font-weight: bold;
+}
+.suite-consolelog-item {
+  padding: 0.5rem;
+}
+.suite-consolelog-item pre {
+  margin: 0.5rem 0;
+  white-space: pre-wrap;
+  white-space: -moz-pre-wrap;
+  white-space: -pre-wrap;
+  white-space: -o-pre-wrap;
+  word-wrap: break-word;
+}
+.suite-consolelog-item-origin {
+  color: var(--text-secondary);
+  font-weight: bold;
+}
+.suite-consolelog-item-message {
+  color: var(--text-primary);
+  font-size: 1rem;
+  padding: 0 0.5rem;
+}
+
+/* OBSOLETE SNAPSHOTS */
+.suite-obsolete-snapshots {
+  margin-bottom: 0.25rem;
+  padding: 1rem;
+  background-color: var(--danger-bright);
+  color: var(--danger);
+}
+.suite-obsolete-snapshots-header {
+  font-weight: bold;
+}
+.suite-obsolete-snapshots-item {
+  padding: 0.5rem;
+}
+.suite-obsolete-snapshots-item pre {
+  margin: 0.5rem 0;
+  white-space: pre-wrap;
+  white-space: -moz-pre-wrap;
+  white-space: -pre-wrap;
+  white-space: -o-pre-wrap;
+  word-wrap: break-word;
+}
+.suite-obsolete-snapshots-item-message {
+  color: var(--text-primary);
+  font-size: 1rem;
+  padding: 0 0.5rem;
+}
+</style></head><body><main class="jesthtml-content"><header><h1 id="title">Project Manager Service - Test Report</h1></header><section id="metadata-container"><div id="timestamp">Started: 2026-06-13 11:34:54</div><div id="summary"><div id="suite-summary"><div class="summary-total">Suites (14)</div><div class="summary-passed ">14 passed</div><div class="summary-failed  summary-empty">0 failed</div><div class="summary-pending  summary-empty">0 pending</div></div><div id="test-summary"><div class="summary-total">Tests (61)</div><div class="summary-passed ">61 passed</div><div class="summary-failed  summary-empty">0 failed</div><div class="summary-pending  summary-empty">0 pending</div></div></div></section><details id="suite-1" class="suite-container" open=""><summary class="suite-info"><div class="suite-path">C:\Users\diego\OneDrive\Documentos\backend\backend_innovatech\backend\ms-project-manager\tests\taskService.test.js</div><div class="suite-time warn">5.165s</div></summary><div class="suite-tests"><div class="test-result passed"><div class="test-info"><div class="test-suitename">taskService</div><div class="test-title">listTasksByProject delega en repositorio</div><div class="test-status">passed</div><div class="test-duration">0.016s</div></div></div><div class="test-result passed"><div class="test-info"><div class="test-suitename">taskService</div><div class="test-title">listTasksByProject exige projectId y userId</div><div class="test-status">passed</div><div class="test-duration">0.041s</div></div></div><div class="test-result passed"><div class="test-info"><div class="test-suitename">taskService</div><div class="test-title">createTask exige projectId y userId</div><div class="test-status">passed</div><div class="test-duration">0.002s</div></div></div><div class="test-result passed"><div class="test-info"><div class="test-suitename">taskService</div><div class="test-title">updateTaskStatus avanza estado válido</div><div class="test-status">passed</div><div class="test-duration">0.004s</div></div></div><div class="test-result passed"><div class="test-info"><div class="test-suitename">taskService</div><div class="test-title">updateTaskStatus rechaza transición inválida</div><div class="test-status">passed</div><div class="test-duration">0.022s</div></div></div><div class="test-result passed"><div class="test-info"><div class="test-suitename">taskService</div><div class="test-title">deleteTask elimina cuando existe</div><div class="test-status">passed</div><div class="test-duration">0.001s</div></div></div><div class="test-result passed"><div class="test-info"><div class="test-suitename">taskService</div><div class="test-title">deleteTask lanza NotFoundError</div><div class="test-status">passed</div><div class="test-duration">0.001s</div></div></div><div class="test-result passed"><div class="test-info"><div class="test-suitename">taskService</div><div class="test-title">createTask delega en repositorio</div><div class="test-status">passed</div><div class="test-duration">0.001s</div></div></div><div class="test-result passed"><div class="test-info"><div class="test-suitename">taskService</div><div class="test-title">updateTask rechaza transición inválida</div><div class="test-status">passed</div><div class="test-duration">0.001s</div></div></div><div class="test-result passed"><div class="test-info"><div class="test-suitename">taskService</div><div class="test-title">assignAssignee actualiza responsable</div><div class="test-status">passed</div><div class="test-duration">0.001s</div></div></div></div></details><details id="suite-2" class="suite-container" open=""><summary class="suite-info"><div class="suite-path">C:\Users\diego\OneDrive\Documentos\backend\backend_innovatech\backend\ms-project-manager\tests\roleMiddleware.test.js</div><div class="suite-time warn">5.238s</div></summary><div class="suite-tests"><div class="test-result passed"><div class="test-info"><div class="test-suitename">roleMiddleware</div><div class="test-title">permite rol autorizado</div><div class="test-status">passed</div><div class="test-duration">0.014s</div></div></div><div class="test-result passed"><div class="test-info"><div class="test-suitename">roleMiddleware</div><div class="test-title">rechaza sin rol</div><div class="test-status">passed</div><div class="test-duration">0.003s</div></div></div><div class="test-result passed"><div class="test-info"><div class="test-suitename">roleMiddleware</div><div class="test-title">rechaza rol no permitido</div><div class="test-status">passed</div><div class="test-duration">0.001s</div></div></div></div></details><details id="suite-3" class="suite-container" open=""><summary class="suite-info"><div class="suite-path">C:\Users\diego\OneDrive\Documentos\backend\backend_innovatech\backend\ms-project-manager\tests\consultationService.test.js</div><div class="suite-time warn">5.684s</div></summary><div class="suite-tests"><div class="test-result passed"><div class="test-info"><div class="test-suitename">consultationService</div><div class="test-title">getTaskDashboardForUser agrega tareas y conteos</div><div class="test-status">passed</div><div class="test-duration">0.065s</div></div></div><div class="test-result passed"><div class="test-info"><div class="test-suitename">consultationService</div><div class="test-title">getTaskDashboardForUser exige userId</div><div class="test-status">passed</div><div class="test-duration">0.018s</div></div></div></div></details><details id="suite-4" class="suite-container" open=""><summary class="suite-info"><div class="suite-path">C:\Users\diego\OneDrive\Documentos\backend\backend_innovatech\backend\ms-project-manager\tests\authServiceClient.test.js</div><div class="suite-time warn">5.609s</div></summary><div class="suite-tests"><div class="test-result passed"><div class="test-info"><div class="test-suitename">authServiceClient</div><div class="test-title">getAuthDependencyStatus sin URL configurada</div><div class="test-status">passed</div><div class="test-duration">0.013s</div></div></div></div></details><details id="suite-5" class="suite-container" open=""><summary class="suite-info"><div class="suite-path">C:\Users\diego\OneDrive\Documentos\backend\backend_innovatech\backend\ms-project-manager\tests\taskStatuses.test.js</div><div class="suite-time warn">5.675s</div></summary><div class="suite-tests"><div class="test-result passed"><div class="test-info"><div class="test-suitename">taskStatuses</div><div class="test-title">normalizeTaskStatus convierte a mayúsculas</div><div class="test-status">passed</div><div class="test-duration">0.039s</div></div></div><div class="test-result passed"><div class="test-info"><div class="test-suitename">taskStatuses</div><div class="test-title">isValidTaskStatus acepta estados válidos</div><div class="test-status">passed</div><div class="test-duration">0.025s</div></div></div><div class="test-result passed"><div class="test-info"><div class="test-suitename">taskStatuses</div><div class="test-title">isAllowedTaskStatusTransition permite solo el siguiente paso</div><div class="test-status">passed</div><div class="test-duration">0.004s</div></div></div></div></details><details id="suite-6" class="suite-container" open=""><summary class="suite-info"><div class="suite-path">C:\Users\diego\OneDrive\Documentos\backend\backend_innovatech\backend\ms-project-manager\tests\resourceAvailabilityService.test.js</div><div class="suite-time warn">5.867s</div></summary><div class="suite-tests"><div class="test-result passed"><div class="test-info"><div class="test-suitename">resourceAvailabilityService</div><div class="test-title">assertProjectAvailable devuelve proyecto existente</div><div class="test-status">passed</div><div class="test-duration">0.013s</div></div></div><div class="test-result passed"><div class="test-info"><div class="test-suitename">resourceAvailabilityService</div><div class="test-title">assertProjectAvailable lanza NotFoundError</div><div class="test-status">passed</div><div class="test-duration">0.002s</div></div></div><div class="test-result passed"><div class="test-info"><div class="test-suitename">resourceAvailabilityService</div><div class="test-title">assertTaskInProject lanza si no existe</div><div class="test-status">passed</div><div class="test-duration">0.001s</div></div></div></div></details><details id="suite-7" class="suite-container" open=""><summary class="suite-info"><div class="suite-path">C:\Users\diego\OneDrive\Documentos\backend\backend_innovatech\backend\ms-project-manager\tests\validationService.extra.test.js</div><div class="suite-time warn">5.8s</div></summary><div class="suite-tests"><div class="test-result passed"><div class="test-info"><div class="test-suitename">validationService - casos adicionales</div><div class="test-title">validateTaskStatusInput rechaza status vacío</div><div class="test-status">passed</div><div class="test-duration">0.057s</div></div></div><div class="test-result passed"><div class="test-info"><div class="test-suitename">validationService - casos adicionales</div><div class="test-title">validateProjectInput rechaza fechas con formato inválido</div><div class="test-status">passed</div><div class="test-duration">0.002s</div></div></div><div class="test-result passed"><div class="test-info"><div class="test-suitename">validationService - casos adicionales</div><div class="test-title">validateUpdateInput exige al menos un campo</div><div class="test-status">passed</div><div class="test-duration">0.002s</div></div></div><div class="test-result passed"><div class="test-info"><div class="test-suitename">validationService - casos adicionales</div><div class="test-title">validateAssigneeInput rechaza assigneeId vacío</div><div class="test-status">passed</div><div class="test-duration">0.001s</div></div></div><div class="test-result passed"><div class="test-info"><div class="test-suitename">validationService - casos adicionales</div><div class="test-title">validateTaskUpdateInput exige al menos un campo</div><div class="test-status">passed</div><div class="test-duration">0.001s</div></div></div><div class="test-result passed"><div class="test-info"><div class="test-suitename">validationService - casos adicionales</div><div class="test-title">validateTaskUpdateInput rechaza completed no booleano</div><div class="test-status">passed</div><div class="test-duration">0.001s</div></div></div><div class="test-result passed"><div class="test-info"><div class="test-suitename">validationService - casos adicionales</div><div class="test-title">validateTaskInput acepta fechas opcionales válidas</div><div class="test-status">passed</div><div class="test-duration">0.052s</div></div></div><div class="test-result passed"><div class="test-info"><div class="test-suitename">validationService - casos adicionales</div><div class="test-title">optionalIsoDate acepta null y cadena vacía</div><div class="test-status">passed</div><div class="test-duration">0.001s</div></div></div></div></details><details id="suite-8" class="suite-container" open=""><summary class="suite-info"><div class="suite-path">C:\Users\diego\OneDrive\Documentos\backend\backend_innovatech\backend\ms-project-manager\tests\projectService.test.js</div><div class="suite-time warn">5.953s</div></summary><div class="suite-tests"><div class="test-result passed"><div class="test-info"><div class="test-suitename">projectService</div><div class="test-title">listProjects delega en el repositorio</div><div class="test-status">passed</div><div class="test-duration">0.012s</div></div></div><div class="test-result passed"><div class="test-info"><div class="test-suitename">projectService</div><div class="test-title">listProjects exige userId</div><div class="test-status">passed</div><div class="test-duration">0.018s</div></div></div><div class="test-result passed"><div class="test-info"><div class="test-suitename">projectService</div><div class="test-title">createProject crea con datos normalizados</div><div class="test-status">passed</div><div class="test-duration">0.032s</div></div></div><div class="test-result passed"><div class="test-info"><div class="test-suitename">projectService</div><div class="test-title">updateProject lanza NotFoundError si no existe</div><div class="test-status">passed</div><div class="test-duration">0.002s</div></div></div><div class="test-result passed"><div class="test-info"><div class="test-suitename">projectService</div><div class="test-title">deleteProject elimina tareas y proyecto</div><div class="test-status">passed</div><div class="test-duration">0.005s</div></div></div></div></details><details id="suite-9" class="suite-container" open=""><summary class="suite-info"><div class="suite-path">C:\Users\diego\OneDrive\Documentos\backend\backend_innovatech\backend\ms-project-manager\tests\errorHandler.test.js</div><div class="suite-time warn">5.949s</div></summary><div class="suite-tests"><div class="test-result passed"><div class="test-info"><div class="test-suitename">errorHandler</div><div class="test-title">ValidationError tiene status 400 y errors</div><div class="test-status">passed</div><div class="test-duration">0.014s</div></div></div><div class="test-result passed"><div class="test-info"><div class="test-suitename">errorHandler</div><div class="test-title">NotFoundError tiene status 404</div><div class="test-status">passed</div><div class="test-duration">0.007s</div></div></div><div class="test-result passed"><div class="test-info"><div class="test-suitename">errorHandler</div><div class="test-title">UnauthorizedError usa mensaje por defecto</div><div class="test-status">passed</div><div class="test-duration">0.001s</div></div></div></div></details><details id="suite-10" class="suite-container" open=""><summary class="suite-info"><div class="suite-path">C:\Users\diego\OneDrive\Documentos\backend\backend_innovatech\backend\ms-project-manager\tests\responseUtil.test.js</div><div class="suite-time warn">5.987s</div></summary><div class="suite-tests"><div class="test-result passed"><div class="test-info"><div class="test-suitename">responseUtil (PM)</div><div class="test-title">handleNotFound responde 404</div><div class="test-status">passed</div><div class="test-duration">0.026s</div></div></div><div class="test-result passed"><div class="test-info"><div class="test-suitename">responseUtil (PM)</div><div class="test-title">handleError con ValidationError</div><div class="test-status">passed</div><div class="test-duration">0.106s</div></div></div><div class="test-result passed"><div class="test-info"><div class="test-suitename">responseUtil (PM)</div><div class="test-title">handleError con NotFoundError</div><div class="test-status">passed</div><div class="test-duration">0.005s</div></div></div><div class="test-result passed"><div class="test-info"><div class="test-suitename">responseUtil (PM)</div><div class="test-title">handleError genérico 500</div><div class="test-status">passed</div><div class="test-duration">0.003s</div></div></div></div></details><details id="suite-11" class="suite-container" open=""><summary class="suite-info"><div class="suite-path">C:\Users\diego\OneDrive\Documentos\backend\backend_innovatech\backend\ms-project-manager\tests\validationService.test.js</div><div class="suite-time warn">6.063s</div></summary><div class="suite-tests"><div class="test-result passed"><div class="test-info"><div class="test-suitename">ValidationService</div><div class="test-title">validateProjectInput rechaza nombre corto</div><div class="test-status">passed</div><div class="test-duration">0.019s</div></div></div><div class="test-result passed"><div class="test-info"><div class="test-suitename">ValidationService</div><div class="test-title">validateProjectInput acepta datos válidos</div><div class="test-status">passed</div><div class="test-duration">0.028s</div></div></div><div class="test-result passed"><div class="test-info"><div class="test-suitename">ValidationService</div><div class="test-title">validateProjectInput rechaza endDate antes de startDate</div><div class="test-status">passed</div><div class="test-duration">0.001s</div></div></div><div class="test-result passed"><div class="test-info"><div class="test-suitename">ValidationService</div><div class="test-title">validateTaskStatusInput normaliza status válido</div><div class="test-status">passed</div><div class="test-duration">0.006s</div></div></div><div class="test-result passed"><div class="test-info"><div class="test-suitename">ValidationService</div><div class="test-title">validateTaskInput exige title mínimo 3 caracteres</div><div class="test-status">passed</div><div class="test-duration">0.001s</div></div></div><div class="test-result passed"><div class="test-info"><div class="test-suitename">ValidationService</div><div class="test-title">validateUpdateInput acepta actualización parcial</div><div class="test-status">passed</div><div class="test-duration">0.001s</div></div></div><div class="test-result passed"><div class="test-info"><div class="test-suitename">ValidationService</div><div class="test-title">validateTaskUpdateInput acepta cambio de status</div><div class="test-status">passed</div><div class="test-duration">0.001s</div></div></div><div class="test-result passed"><div class="test-info"><div class="test-suitename">ValidationService</div><div class="test-title">validateAssigneeInput acepta assigneeId válido</div><div class="test-status">passed</div><div class="test-duration">0.001s</div></div></div></div></details><details id="suite-12" class="suite-container" open=""><summary class="suite-info"><div class="suite-path">C:\Users\diego\OneDrive\Documentos\backend\backend_innovatech\backend\ms-project-manager\tests\projectDto.test.js</div><div class="suite-time warn">6.159s</div></summary><div class="suite-tests"><div class="test-result passed"><div class="test-info"><div class="test-suitename">projectDto</div><div class="test-title">createProjectDto recorta name y description</div><div class="test-status">passed</div><div class="test-duration">0.006s</div></div></div><div class="test-result passed"><div class="test-info"><div class="test-suitename">projectDto</div><div class="test-title">projectToDto mapea fechas a string YYYY-MM-DD</div><div class="test-status">passed</div><div class="test-duration">0.001s</div></div></div></div></details><details id="suite-13" class="suite-container" open=""><summary class="suite-info"><div class="suite-path">C:\Users\diego\OneDrive\Documentos\backend\backend_innovatech\backend\ms-project-manager\tests\taskDto.test.js</div><div class="suite-time warn">5.989s</div></summary><div class="suite-tests"><div class="test-result passed"><div class="test-info"><div class="test-suitename">taskDto</div><div class="test-title">createTaskDto normaliza título y descripción</div><div class="test-status">passed</div><div class="test-duration">0.006s</div></div></div><div class="test-result passed"><div class="test-info"><div class="test-suitename">taskDto</div><div class="test-title">taskToDto mapea fechas y estado por defecto</div><div class="test-status">passed</div><div class="test-duration">0.001s</div></div></div><div class="test-result passed"><div class="test-info"><div class="test-suitename">taskDto</div><div class="test-title">pickTaskScheduleFields extrae fechas opcionales</div><div class="test-status">passed</div><div class="test-duration"> </div></div></div></div></details><details id="suite-14" class="suite-container" open=""><summary class="suite-info"><div class="suite-path">C:\Users\diego\OneDrive\Documentos\backend\backend_innovatech\backend\ms-project-manager\tests\http.integration.test.js</div><div class="suite-time warn">6.963s</div></summary><div class="suite-tests"><div class="test-result passed"><div class="test-info"><div class="test-suitename">Project Manager - Integración HTTP (Supertest) &gt; GET /health</div><div class="test-title">responde 200 con estado OK</div><div class="test-status">passed</div><div class="test-duration">0.032s</div></div></div><div class="test-result passed"><div class="test-info"><div class="test-suitename">Project Manager - Integración HTTP (Supertest) &gt; GET /metrics</div><div class="test-title">expone métricas Prometheus</div><div class="test-status">passed</div><div class="test-duration">0.008s</div></div></div><div class="test-result passed"><div class="test-info"><div class="test-suitename">Project Manager - Integración HTTP (Supertest) &gt; Rutas protegidas JWT</div><div class="test-title">GET /api/v1/projects sin token devuelve 401</div><div class="test-status">passed</div><div class="test-duration">0.005s</div></div></div><div class="test-result passed"><div class="test-info"><div class="test-suitename">Project Manager - Integración HTTP (Supertest) &gt; Rutas protegidas JWT</div><div class="test-title">GET /api/v1/projects con token inválido devuelve 401</div><div class="test-status">passed</div><div class="test-duration">0.022s</div></div></div><div class="test-result passed"><div class="test-info"><div class="test-suitename">Project Manager - Integración HTTP (Supertest) &gt; Rutas protegidas JWT</div><div class="test-title">GET /api/v1/projects con JWT RS256 válido no devuelve 401</div><div class="test-status">passed</div><div class="test-duration">0.014s</div></div></div><div class="test-result passed"><div class="test-info"><div class="test-suitename">Project Manager - Integración HTTP (Supertest) &gt; Rutas no encontradas</div><div class="test-title">GET ruta inexistente devuelve 404</div><div class="test-status">passed</div><div class="test-duration">0.004s</div></div></div></div></details></main></body></html>

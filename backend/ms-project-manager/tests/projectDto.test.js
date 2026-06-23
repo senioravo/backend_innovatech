@@ -1,28 +1,38 @@
-const { projectToDto, createProjectDto } = require('../src/dtos/projectDto');
+import {
+  createProjectDto,
+  pickProjectScheduleFields,
+  projectToDto,
+  projectsToDto
+} from '../src/dtos/projectDto.js';
 
 describe('projectDto', () => {
-  test('createProjectDto recorta name y description', () => {
-    const dto = createProjectDto({
-      name: '  Proyecto  ',
-      description: '  Texto largo  '
+  test('createProjectDto recorta strings', () => {
+    expect(createProjectDto({ name: '  Alpha  ', description: ' Desc ' })).toEqual({
+      name: 'Alpha',
+      description: 'Desc'
     });
-    expect(dto.name).toBe('Proyecto');
-    expect(dto.description).toBe('Texto largo');
   });
 
-  test('projectToDto mapea fechas a string YYYY-MM-DD', () => {
+  test('projectToDto formatea fechas', () => {
     const dto = projectToDto({
-      id: 'uuid-1',
-      name: 'N',
-      description: 'D',
-      assigneeId: null,
-      startDate: new Date('2026-05-10T12:00:00.000Z'),
-      endDate: null,
-      createdAt: '2026-05-01T00:00:00.000Z',
-      updatedAt: null
+      id: 'p1',
+      name: 'Proyecto',
+      description: 'X',
+      startDate: new Date('2026-06-01T12:00:00Z'),
+      endDate: '2026-12-01'
     });
-    expect(dto.id).toBe('uuid-1');
-    expect(dto.startDate).toBe('2026-05-10');
-    expect(dto.endDate).toBeNull();
+    expect(dto.startDate).toBe('2026-06-01');
+    expect(dto.status).toBe('active');
+  });
+
+  test('projectsToDto devuelve arreglo vacío si input inválido', () => {
+    expect(projectsToDto(null)).toEqual([]);
+  });
+
+  test('pickProjectScheduleFields normaliza fechas vacías', () => {
+    expect(pickProjectScheduleFields({ startDate: '', endDate: null })).toEqual({
+      startDate: null,
+      endDate: null
+    });
   });
 });

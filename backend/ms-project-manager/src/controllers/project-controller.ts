@@ -1,19 +1,12 @@
 // @ts-nocheck
-export {};
-const projectService = require('../services/projectService');
-const ValidationService = require('../services/validationService');
-const {
-  createProjectDto,
-  projectToDto,
-  pickProjectScheduleFields
-} = require('../dtos/projectDto');
-const { ValidationError } = require('../utils/errorHandler');
-const { auditFromRequest } = require('../utils/auditLog');
+import projectService from '../services/projectService.js';
+import { projectToDto } from '../dtos/projectDto.js';
+import { auditFromRequest } from '../utils/auditLog.js';
 
 const projectController = {
   async listProjects(req, res, next) {
     try {
-      const projects = await projectService.listProjects(req.user.id);
+      const projects = await projectService.listProjects(req.user.id, req.user.role);
       res.json({ projects: projects.map(projectToDto) });
     } catch (error) {
       next(error);
@@ -31,19 +24,7 @@ const projectController = {
 
   async createProject(req, res, next) {
     try {
-      const validation = ValidationService.validateProjectInput(req.body);
-      if (!validation.isValid) {
-        throw new ValidationError(validation.errors);
-      }
-
-      const data = createProjectDto(req.body);
-      const schedule = pickProjectScheduleFields(req.body);
-
-      const project = await projectService.createProject({
-        ...data,
-        ...schedule,
-        userId: req.user.id
-      });
+      const project = await projectService.createProjectFromRequest(req.body, req.user.id);
 
       auditFromRequest(req, {
         action: 'PROJECT_CREATE',
@@ -51,7 +32,7 @@ const projectController = {
         resourceId: project.id
       });
 
-      res.status(201).json(projectToDto(project));
+      res.status(200).json(projectToDto(project));
     } catch (error) {
       next(error);
     }
@@ -59,27 +40,38 @@ const projectController = {
 
   async updateProject(req, res, next) {
     try {
-      const validation = ValidationService.validateUpdateInput(req.body);
-      if (!validation.isValid) {
-        throw new ValidationError(validation.errors);
-      }
-
-      const updates = {};
-      if (Object.prototype.hasOwnProperty.call(req.body, 'name')) {
-        updates.name = String(req.body.name).trim();
-      }
-      if (Object.prototype.hasOwnProperty.call(req.body, 'description')) {
-        updates.description = String(req.body.description).trim();
-      }
-      Object.assign(updates, pickProjectScheduleFields(req.body));
-
-      const project = await projectService.updateProject(req.params.id, req.user.id, updates);
+      const project = await projectService.updateProjectFromRequest(
+        req.params.id,
+        req.user.id,
+        req.body
+      );
 
       auditFromRequest(req, {
         action: 'PROJECT_UPDATE',
         resource: 'project',
         resourceId: req.params.id,
-        meta: { fields: Object.keys(updates) }
+        meta: { fields: Object.keys(req.body) }
+      });
+
+      res.json(projectToDto(project));
+    } catch (error) {
+      next(error);
+    }
+  },
+
+  async patchProjectStatus(req, res, next) {
+    try {
+      const project = await projectService.updateProjectStatusFromRequest(
+        req.params.id,
+        req.user.id,
+        req.body
+      );
+
+      auditFromRequest(req, {
+        action: 'PROJECT_STATUS_UPDATE',
+        resource: 'project',
+        resourceId: req.params.id,
+        meta: { status: req.body.status }
       });
 
       res.json(projectToDto(project));
@@ -90,18 +82,17 @@ const projectController = {
 
   async assignAssignee(req, res, next) {
     try {
-      const validation = ValidationService.validateAssigneeInput(req.body);
-      if (!validation.isValid) {
-        throw new ValidationError(validation.errors);
-      }
-      const assigneeId = String(req.body.assigneeId).trim();
-      const project = await projectService.assignAssignee(req.params.id, req.user.id, assigneeId);
+      const project = await projectService.assignAssigneeFromRequest(
+        req.params.id,
+        req.user.id,
+        req.body
+      );
 
       auditFromRequest(req, {
         action: 'PROJECT_ASSIGNEE',
         resource: 'project',
         resourceId: req.params.id,
-        meta: { assigneeId }
+        meta: { assigneeId: req.body.assigneeId }
       });
 
       res.json(projectToDto(project));
@@ -120,11 +111,11 @@ const projectController = {
         resourceId: req.params.id
       });
 
-      res.status(204).send();
+      res.status(200).json({ ok: true });
     } catch (error) {
       next(error);
     }
   }
 };
 
-module.exports = projectController;
+export default projectController;

@@ -1,6 +1,5 @@
-"use strict";
-Object.defineProperty(exports, "__esModule", { value: true });
-const consultationService = require('../services/consultationService');
+// @ts-nocheck
+import consultationService from '../services/consultationService.js';
 const consultationController = {
     async getTaskDashboard(req, res, next) {
         try {
@@ -12,4 +11,5 @@ const consultationController = {
         }
     }
 };
-module.exports = consultationController;
+export default consultationController;
+;

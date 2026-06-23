@@ -1,18 +1,17 @@
 // @ts-nocheck
-export {};
-// AS-TASK-09: Middleware de autorización por rol
+// AS-TASK-09: Middleware de autorizaciï¿½n por rol
 // Responsabilidad: Verificar que el usuario tenga el rol adecuado para acceder a un endpoint
-// Principio SOLID: Single Responsibility - Solo valida autorización por rol
+// Principio SOLID: Single Responsibility - Solo valida autorizaciï¿½n por rol
 
-const jwt = require('jsonwebtoken');
-const { ROLES, hasPermission } = require('../config/roles');
+import jwt from 'jsonwebtoken';
+import { ROLES, hasPermission } from '../config/roles.js';
 
 /**
- * Middleware de autorización por rol
+ * Middleware de autorizaciï¿½n por rol
  * Extrae el token JWT, lo verifica y valida permisos del rol
  * 
- * @param {string} moduloRequerido - Módulo del sistema (proyectos, tareas, reportes)
- * @param {string} accionRequerida - Acción requerida (crear, editar, ver, etc.)
+ * @param {string} moduloRequerido - Mï¿½dulo del sistema (proyectos, tareas, reportes)
+ * @param {string} accionRequerida - Acciï¿½n requerida (crear, editar, ver, etc.)
  * @returns {Function} - Middleware function
  */
 const checkRole = (moduloRequerido, accionRequerida) => {
@@ -38,11 +37,11 @@ const checkRole = (moduloRequerido, accionRequerida) => {
       const parts = authHeader.split(' ');
       
       if (parts.length !== 2 || parts[0] !== 'Bearer') {
-        console.warn(`[AUTHORIZATION-AUDIT] Acceso denegado - Formato de token inválido - IP: ${req.ip} - Timestamp: ${new Date().toISOString()}`);
+        console.warn(`[AUTHORIZATION-AUDIT] Acceso denegado - Formato de token invï¿½lido - IP: ${req.ip} - Timestamp: ${new Date().toISOString()}`);
         
         return res.status(401).json({
           success: false,
-          message: 'Formato de token inválido. Use: Authorization: Bearer <token>',
+          message: 'Formato de token invï¿½lido. Use: Authorization: Bearer <token>',
           taskId: 'AS-TASK-09',
           data: {}
         });
@@ -57,12 +56,12 @@ const checkRole = (moduloRequerido, accionRequerida) => {
       try {
         decoded = jwt.verify(token, JWT_SECRET);
       } catch (error) {
-        console.warn(`[AUTHORIZATION-AUDIT] Acceso denegado - Token inválido/expirado - Error: ${error.message} - IP: ${req.ip} - Timestamp: ${new Date().toISOString()}`);
+        console.warn(`[AUTHORIZATION-AUDIT] Acceso denegado - Token invï¿½lido/expirado - Error: ${error.message} - IP: ${req.ip} - Timestamp: ${new Date().toISOString()}`);
         
         if (error.name === 'TokenExpiredError') {
           return res.status(401).json({
             success: false,
-            message: 'Token expirado. Por favor inicie sesión nuevamente',
+            message: 'Token expirado. Por favor inicie sesiï¿½n nuevamente',
             taskId: 'AS-TASK-09',
             data: {}
           });
@@ -70,7 +69,7 @@ const checkRole = (moduloRequerido, accionRequerida) => {
         
         return res.status(401).json({
           success: false,
-          message: 'Token inválido',
+          message: 'Token invï¿½lido',
           taskId: 'AS-TASK-09',
           data: {}
         });
@@ -92,18 +91,18 @@ const checkRole = (moduloRequerido, accionRequerida) => {
         });
       }
 
-      // 5. Validar permisos del rol para el módulo y acción requeridos
+      // 5. Validar permisos del rol para el mï¿½dulo y acciï¿½n requeridos
       const tienePermiso = hasPermission(userRole, moduloRequerido, accionRequerida);
 
       if (!tienePermiso) {
         const responseTime = Date.now() - startTime;
         
-        // Log de auditoría: Acceso bloqueado por falta de permisos
-        console.warn(`[AUTHORIZATION-AUDIT] [ERROR] Acceso BLOQUEADO - UserID: ${userId} - Email: ${userEmail} - Rol: ${userRole} - Módulo: ${moduloRequerido} - Acción: ${accionRequerida} - Endpoint: ${req.method} ${req.path} - IP: ${req.ip} - Tiempo: ${responseTime}ms - Timestamp: ${new Date().toISOString()}`);
+        // Log de auditorï¿½a: Acceso bloqueado por falta de permisos
+        console.warn(`[AUTHORIZATION-AUDIT] [ERROR] Acceso BLOQUEADO - UserID: ${userId} - Email: ${userEmail} - Rol: ${userRole} - Mï¿½dulo: ${moduloRequerido} - Acciï¿½n: ${accionRequerida} - Endpoint: ${req.method} ${req.path} - IP: ${req.ip} - Tiempo: ${responseTime}ms - Timestamp: ${new Date().toISOString()}`);
         
         return res.status(403).json({
           success: false,
-          message: `Acceso denegado. Su rol "${userRole}" no tiene permiso para "${accionRequerida}" en el módulo "${moduloRequerido}"`,
+          message: `Acceso denegado. Su rol "${userRole}" no tiene permiso para "${accionRequerida}" en el mï¿½dulo "${moduloRequerido}"`,
           taskId: 'AS-TASK-09',
           data: {
             rolActual: userRole,
@@ -114,7 +113,7 @@ const checkRole = (moduloRequerido, accionRequerida) => {
         });
       }
 
-      // 6. Permiso concedido - Agregar información del usuario al request
+      // 6. Permiso concedido - Agregar informaciï¿½n del usuario al request
       req.user = {
         id: userId,
         email: userEmail,
@@ -124,12 +123,12 @@ const checkRole = (moduloRequerido, accionRequerida) => {
 
       const responseTime = Date.now() - startTime;
       
-      // Log de auditoría: Acceso autorizado
-      console.log(`[AUTHORIZATION-AUDIT] [OK] Acceso AUTORIZADO - UserID: ${userId} - Email: ${userEmail} - Rol: ${userRole} - Módulo: ${moduloRequerido} - Acción: ${accionRequerida} - Endpoint: ${req.method} ${req.path} - Tiempo: ${responseTime}ms - Timestamp: ${new Date().toISOString()}`);
+      // Log de auditorï¿½a: Acceso autorizado
+      console.log(`[AUTHORIZATION-AUDIT] [OK] Acceso AUTORIZADO - UserID: ${userId} - Email: ${userEmail} - Rol: ${userRole} - Mï¿½dulo: ${moduloRequerido} - Acciï¿½n: ${accionRequerida} - Endpoint: ${req.method} ${req.path} - Tiempo: ${responseTime}ms - Timestamp: ${new Date().toISOString()}`);
 
       next();
     } catch (error) {
-      console.error(`[AUTHORIZATION-AUDIT] [ERROR] Error en middleware de autorización - Error: ${error.message} - Endpoint: ${req.method} ${req.path} - IP: ${req.ip} - Timestamp: ${new Date().toISOString()}`);
+      console.error(`[AUTHORIZATION-AUDIT] [ERROR] Error en middleware de autorizaciï¿½n - Error: ${error.message} - Endpoint: ${req.method} ${req.path} - IP: ${req.ip} - Timestamp: ${new Date().toISOString()}`);
       
       return res.status(500).json({
         success: false,
@@ -142,9 +141,9 @@ const checkRole = (moduloRequerido, accionRequerida) => {
 };
 
 /**
- * Obtener roles que tienen permiso para una acción en un módulo
- * @param {string} modulo - Módulo del sistema
- * @param {string} accion - Acción requerida
+ * Obtener roles que tienen permiso para una acciï¿½n en un mï¿½dulo
+ * @param {string} modulo - Mï¿½dulo del sistema
+ * @param {string} accion - Acciï¿½n requerida
  * @returns {Array<string>} - Array de roles con permiso
  */
 const getRequiredRolesForAction = (modulo, accion) => {
@@ -160,26 +159,26 @@ const getRequiredRolesForAction = (modulo, accion) => {
 };
 
 /**
- * Middleware específico: Solo GESTOR puede crear/editar proyectos
+ * Middleware especï¿½fico: Solo GESTOR puede crear/editar proyectos
  * Uso: router.post('/proyectos', checkRoleGestor, createProject)
  */
 const checkRoleGestor = checkRole('proyectos', 'crear');
 
 /**
- * Middleware específico: Solo PROFESIONAL puede actualizar tareas
+ * Middleware especï¿½fico: Solo PROFESIONAL puede actualizar tareas
  * Uso: router.put('/tareas/:id', checkRoleProfesional, updateTask)
  */
 const checkRoleProfesional = checkRole('tareas', 'actualizar');
 
 /**
- * Middleware específico: Solo DIRECTIVO puede consultar KPIs
+ * Middleware especï¿½fico: Solo DIRECTIVO puede consultar KPIs
  * Uso: router.get('/reportes/kpis', checkRoleDirectivo, getKPIs)
  */
 const checkRoleDirectivo = checkRole('reportes', 'kpis');
 
 /**
- * Middleware para verificar solo autenticación (sin validar permisos específicos)
- * Extrae token y valida, pero no verifica permisos de módulo/acción
+ * Middleware para verificar solo autenticaciï¿½n (sin validar permisos especï¿½ficos)
+ * Extrae token y valida, pero no verifica permisos de mï¿½dulo/acciï¿½n
  * @returns {Function} - Middleware function
  */
 const checkAuthentication = () => {
@@ -214,7 +213,7 @@ const checkAuthentication = () => {
     } catch (error) {
       return res.status(401).json({
         success: false,
-        message: error.name === 'TokenExpiredError' ? 'Token expirado' : 'Token inválido',
+        message: error.name === 'TokenExpiredError' ? 'Token expirado' : 'Token invï¿½lido',
         taskId: 'AS-TASK-09',
         data: {}
       });
@@ -222,13 +221,4 @@ const checkAuthentication = () => {
   };
 };
 
-module.exports = {
-  checkRole,
-  checkRoleGestor,
-  checkRoleProfesional,
-  checkRoleDirectivo,
-  checkAuthentication,
-  getRequiredRolesForAction
-};
-
-
+export { checkRole, checkRoleGestor, checkRoleProfesional, checkRoleDirectivo, checkAuthentication, getRequiredRolesForAction };

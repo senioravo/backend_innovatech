@@ -1,0 +1,19 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: bff-config
+  labels:
+    app.kubernetes.io/name: bff
+    app.kubernetes.io/part-of: innovatech
+    app.kubernetes.io/component: bff
+data:
+  PORT: "3010"
+  NODE_ENV: "production"
+  API_GATEWAY_PREFIX: "/api/v1"
+  AUTH_SERVICE_BASE_URL: "http://ms-auth:3001"
+  AUTH_API_PREFIX: "/api/auth"
+  PROJECT_MANAGER_BASE_URL: "http://ms-project-manager:3002"
+  PROJECT_MANAGER_API_PREFIX: "/api/v1"
+  KPI_SERVICE_BASE_URL: "http://ms-kpi:3004"
+  KPI_API_PREFIX: "/api/v1"
+  JWT_ISSUER: "innovatech-auth"

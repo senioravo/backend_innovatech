@@ -1,10 +1,13 @@
 // @ts-nocheck
-export {};
-const express = require('express');
+import path from 'path';
+import { fileURLToPath } from 'url';
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
+import express from 'express';
 const router = express.Router();
-const fs = require('fs');
-const path = require('path');
-const crypto = require('crypto');
+import fs from 'fs';
+import path from 'path';
+import crypto from 'crypto';
 
 /**
  * Endpoint JWKS (JSON Web Key Set) - RFC 7517
@@ -12,6 +15,16 @@ const crypto = require('crypto');
  * 
  * KrakenD consulta este endpoint para obtener la clave pública RSA
  * y verificar la firma de los tokens JWT
+ */
+/**
+ * @openapi
+ * /.well-known/jwks.json:
+ *   get:
+ *     tags: [JWKS]
+ *     summary: Clave pública RSA en formato JWK para verificación de tokens
+ *     responses:
+ *       200:
+ *         description: JWKS con clave pública
  */
 router.get('/.well-known/jwks.json', (req, res) => {
   try {
@@ -47,4 +60,4 @@ router.get('/.well-known/jwks.json', (req, res) => {
   }
 });
 
-module.exports = router;
+export default router;

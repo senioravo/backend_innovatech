@@ -1,0 +1,67 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: ms-project-manager
+  labels:
+    app.kubernetes.io/name: ms-project-manager
+    app.kubernetes.io/part-of: innovatech
+    app.kubernetes.io/component: microservice
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: ms-project-manager
+  template:
+    metadata:
+      labels:
+        app.kubernetes.io/name: ms-project-manager
+        app.kubernetes.io/part-of: innovatech
+        app.kubernetes.io/component: microservice
+    spec:
+      containers:
+        - name: ms-project-manager
+          image: innovatech/ms-project-manager:1.0.1
+          imagePullPolicy: IfNotPresent
+          ports:
+            - name: http
+              containerPort: 3002
+          envFrom:
+            - configMapRef:
+                name: ms-project-manager-config
+          env:
+            - name: DATABASE_URL
+              valueFrom:
+                secretKeyRef:
+                  name: innovatech-secrets
+                  key: DATABASE_URL_PM
+          volumeMounts:
+            - name: jwt-public-key
+              mountPath: /app/keys/public.key
+              subPath: public.key
+              readOnly: true
+          readinessProbe:
+            httpGet:
+              path: /health
+              port: http
+            initialDelaySeconds: 15
+            periodSeconds: 10
+          livenessProbe:
+            httpGet:
+              path: /health
+              port: http
+            initialDelaySeconds: 30
+            periodSeconds: 20
+          resources:
+            requests:
+              cpu: 100m
+              memory: 128Mi
+            limits:
+              cpu: 500m
+              memory: 512Mi
+      volumes:
+        - name: jwt-public-key
+          secret:
+            secretName: innovatech-jwt-keys
+            items:
+              - key: public.key
+                path: public.key

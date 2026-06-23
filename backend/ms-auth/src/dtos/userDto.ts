@@ -1,6 +1,4 @@
 // @ts-nocheck
-export {};
-
 /**
  * userDto.ts - Data Transfer Objects para Usuario
  * 
@@ -22,13 +20,15 @@ export {};
  * @returns {Object} - Datos limpios y validados
  */
 function createRegisterDto(body) {
-  const { nombre, email, password, rol } = body;
-  
+  const name = body?.name ?? body?.nombre;
+  const role = body?.role ?? body?.rol;
+  const { email, password } = body ?? {};
+
   return {
-    nombre: typeof nombre === 'string' ? nombre.trim() : null,
+    name: typeof name === 'string' ? name.trim() : null,
     email: typeof email === 'string' ? email.trim().toLowerCase() : null,
     password: typeof password === 'string' ? password : null,
-    rol: typeof rol === 'string' ? rol.trim() : null
+    role: typeof role === 'string' ? role.trim() : null
   };
 }
 
@@ -56,9 +56,9 @@ function userToDto(user) {
 
   return {
     id: user.id,
-    nombre: user.nombre,
+    name: user.name ?? user.nombre,
     email: user.email,
-    rol: user.rol,
+    role: user.role ?? user.rol,
     createdAt: user.createdAt || user.created_at,
     updatedAt: user.updatedAt || user.updated_at
   };
@@ -125,28 +125,28 @@ function errorResponseDto(message, details = null) {
  * @param {Object} userData - Datos a validar
  * @returns {Object} - { valid: boolean, errors: string[] }
  */
+const EMAIL_REGEX = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+const VALID_ROLES = ['gestor', 'profesional', 'directivo'];
+
 function validateUserData(userData) {
   const errors = [];
-  const { nombre, email, password, rol } = userData;
+  const name = userData?.name ?? userData?.nombre;
+  const role = userData?.role ?? userData?.rol;
+  const { email, password } = userData ?? {};
 
-  // Validar nombre
-  if (!nombre || typeof nombre !== 'string' || nombre.trim().length < 2) {
+  if (!name || typeof name !== 'string' || name.trim().length < 2) {
     errors.push('El nombre debe tener al menos 2 caracteres');
   }
 
-  // Validar email
-  const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-  if (!email || !emailRegex.test(email)) {
+  if (!email || !EMAIL_REGEX.test(email)) {
     errors.push('Email inválido');
   }
 
-  // Validar password
   if (!password || typeof password !== 'string' || password.length < 6) {
     errors.push('La contraseña debe tener al menos 6 caracteres');
   }
 
-  // Validar rol (si se proporciona)
-  if (rol && !['gestor', 'profesional', 'directivo'].includes(rol)) {
+  if (role && !VALID_ROLES.includes(role)) {
     errors.push('Rol inválido. Valores permitidos: gestor, profesional, directivo');
   }
 
@@ -156,7 +156,25 @@ function validateUserData(userData) {
   };
 }
 
-module.exports = {
+function validateLoginData(credentials) {
+  const errors = [];
+  const { email, password } = credentials;
+
+  if (!email || !password) {
+    errors.push('Email y contraseña son requeridos');
+  }
+
+  if (email && !EMAIL_REGEX.test(email)) {
+    errors.push('Formato de email inválido');
+  }
+
+  return {
+    valid: errors.length === 0,
+    errors
+  };
+}
+
+export {
   createRegisterDto,
   createLoginDto,
   userToDto,
@@ -164,5 +182,6 @@ module.exports = {
   authResponseDto,
   registerResponseDto,
   errorResponseDto,
-  validateUserData
+  validateUserData,
+  validateLoginData
 };

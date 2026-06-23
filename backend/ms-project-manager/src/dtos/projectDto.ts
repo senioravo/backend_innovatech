@@ -1,5 +1,4 @@
 // @ts-nocheck
-export {};
 function formatDate(v) {
   if (v == null) return null;
   if (typeof v === 'string') return v;
@@ -24,6 +23,7 @@ function projectToDto(project) {
     name: project.name,
     description: project.description,
     assigneeId: project.assigneeId ?? null,
+    status: project.status ?? 'active',
     startDate: formatDate(project.startDate),
     endDate: formatDate(project.endDate),
     createdAt: project.createdAt,
@@ -49,9 +49,4 @@ function pickProjectScheduleFields(body) {
   return out;
 }
 
-module.exports = {
-  createProjectDto,
-  projectToDto,
-  projectsToDto,
-  pickProjectScheduleFields
-};
+export { createProjectDto, projectToDto, projectsToDto, pickProjectScheduleFields };

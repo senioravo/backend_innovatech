@@ -1,6 +1,5 @@
 // @ts-nocheck
-export {};
-const { sendAuditToElasticsearch } = require('../clients/elasticAuditClient');
+import { sendAuditToElasticsearch } from '../clients/elasticAuditClient.js';
 
 /**
  * Auditoría básica: consola (JSON) + Elasticsearch opcional (ELASTICSEARCH_NODE).
@@ -28,4 +27,4 @@ function auditFromRequest(req, partial) {
   });
 }
 
-module.exports = { auditLog, auditFromRequest };
+export { auditLog, auditFromRequest };

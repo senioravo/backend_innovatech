@@ -1,4 +1,5 @@
-const requireRole = require('../src/presentation/http/middlewares/requireRoleMiddleware');
+import { jest } from '@jest/globals';
+import requireRole from '../src/presentation/http/middlewares/requireRoleMiddleware.js';
 
 function mockRes() {
   const res = { statusCode: 200 };

@@ -1,5 +1,6 @@
-"use strict";
-Object.defineProperty(exports, "__esModule", { value: true });
+// @ts-nocheck
+import { isValidTaskStatus, normalizeTaskStatus, TASK_STATUSES } from '../constants/taskStatuses.js';
+import { isValidProjectStatus, normalizeProjectStatus, PROJECT_STATUSES } from '../constants/projectStatuses.js';
 class ValidationService {
     static hasOwn(data, key) {
         return Object.prototype.hasOwnProperty.call(data, key);
@@ -100,7 +101,6 @@ class ValidationService {
     }
     static validateTaskStatusInput(data) {
         const errors = [];
-        const { isValidTaskStatus, normalizeTaskStatus, TASK_STATUSES } = require('../constants/taskStatuses');
         const s = data.status;
         if (s === undefined || s === null || (typeof s === 'string' && !s.trim())) {
             errors.push('status is required');
@@ -142,7 +142,6 @@ class ValidationService {
             errors.push('completed must be a boolean');
         }
         if (hasStatus) {
-            const { isValidTaskStatus, TASK_STATUSES } = require('../constants/taskStatuses');
             if (!isValidTaskStatus(data.status)) {
                 errors.push(`status must be one of: ${TASK_STATUSES.join(', ')}`);
             }
@@ -155,6 +154,22 @@ class ValidationService {
         return {
             isValid: errors.length === 0,
             errors
+        };
+    }
+    static validateProjectStatusInput(data) {
+        const errors = [];
+        const s = data.status;
+        if (s === undefined || s === null || (typeof s === 'string' && !s.trim())) {
+            errors.push('status is required');
+        }
+        else if (!isValidProjectStatus(s)) {
+            errors.push(`status must be one of: ${PROJECT_STATUSES.join(', ')}`);
+        }
+        const normalized = errors.length === 0 ? normalizeProjectStatus(s) : undefined;
+        return {
+            isValid: errors.length === 0,
+            errors,
+            normalized
         };
     }
     static validateAssigneeInput(data) {
@@ -175,4 +190,5 @@ class ValidationService {
         };
     }
 }
-module.exports = ValidationService;
+export default ValidationService;
+;
