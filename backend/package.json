@@ -12,6 +12,7 @@
     "dev:bff": "npm run dev --prefix bff",
     "smoke": "node scripts/smoke-e2e.mjs",
     "k8s:dev": "powershell -ExecutionPolicy Bypass -File scripts/k8s-dev-up.ps1",
+    "k8s:fix-kpi": "powershell -ExecutionPolicy Bypass -File scripts/k8s-fix-kpi.ps1",
     "k8s:validate": "kubectl kustomize .",
     "k8s:validate:infra": "kubectl kustomize k8s"
   }
