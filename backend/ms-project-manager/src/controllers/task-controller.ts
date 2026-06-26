@@ -44,6 +44,7 @@ const taskController = {
         req.params.projectId,
         req.params.taskId,
         req.user.id,
+        req.user.role,
         req.body
       );
 
@@ -66,7 +67,8 @@ const taskController = {
       const task = await taskService.getTask(
         req.params.projectId,
         req.params.taskId,
-        req.user.id
+        req.user.id,
+        req.user.role
       );
       res.json(taskToDto(task));
     } catch (error) {

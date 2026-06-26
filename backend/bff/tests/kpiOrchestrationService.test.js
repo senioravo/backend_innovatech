@@ -1,12 +1,11 @@
-jest.mock('../src/infrastructure/clients/kpiUpstreamClient', () => ({
-  getDashboard: jest.fn()
-}));
-
-const kpiUpstreamClient = require('../src/infrastructure/clients/kpiUpstreamClient');
-const kpiOrchestrationService = require('../src/application/kpi/kpiOrchestrationService');
+import { jest } from '@jest/globals';
+import kpiUpstreamClient from '../src/infrastructure/clients/kpiUpstreamClient.js';
+import kpiOrchestrationService from '../src/application/kpi/kpiOrchestrationService.js';
 
 describe('kpiOrchestrationService', () => {
-  beforeEach(() => jest.clearAllMocks());
+  beforeEach(() => {
+    jest.clearAllMocks();
+  });
 
   test('getDashboard transforma respuesta upstream al contrato frontend', async () => {
     kpiUpstreamClient.getDashboard.mockResolvedValue({

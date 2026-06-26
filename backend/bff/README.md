@@ -13,14 +13,14 @@
 
 ## Descripción
 
-Capa de orquestación entre el frontend y los microservicios internos (`ms-auth`, `ms-project-manager`). Adapta respuestas al contrato del cliente (campos en inglés, agregación de proyectos/tareas/KPIs) sin duplicar lógica de dominio.
+Capa de orquestación entre el frontend y los microservicios internos (`ms-auth`, `ms-project-manager`, `ms-kpi`). Adapta respuestas al contrato del cliente (campos en inglés, agregación de proyectos/tareas/KPIs) sin duplicar lógica de dominio.
 
 ## Ejecución
 
 ### Requisitos
 
 - Node.js 20+
-- Microservicios `ms-auth` (:3001) y `ms-project-manager` (:3002) en ejecución, o stack Docker Compose completo
+- Microservicios `ms-auth` (:3001), `ms-project-manager` (:3002) y `ms-kpi` (:3004) en ejecución, o stack Docker Compose completo
 
 ### Instalación y desarrollo local
 
@@ -66,8 +66,11 @@ npm run test:coverage
 | `API_GATEWAY_PREFIX` | Prefijo de rutas | `/api/v1` |
 | `AUTH_SERVICE_BASE_URL` | URL base de ms-auth | `http://localhost:3001` |
 | `PROJECT_MANAGER_BASE_URL` | URL base de ms-project-manager | `http://localhost:3002` |
+| `KPI_SERVICE_BASE_URL` | URL base de ms-kpi | `http://localhost:3004` |
 
 ## Documentación relacionada
 
+- [Guía central del proyecto](../../docs/README.md)
 - [Backend general](../README.md)
+- [ms-kpi](../ms-kpi/README.md)
 - [Manifiestos Kubernetes](./k8s/README.md)

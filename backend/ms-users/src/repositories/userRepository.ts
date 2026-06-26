@@ -1,5 +1,5 @@
 import { query } from '../config/database.js';
-import { mapUserRow, mapUserRows } from '../utils/userRowMapper.js';
+import { mapUserRow, mapUserRows } from '../models/userModel.js';
 import { getAllRoles } from '../config/roles.js';
 const VALID_ROLES = getAllRoles();
 

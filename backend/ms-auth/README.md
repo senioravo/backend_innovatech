@@ -12,7 +12,8 @@
 | **Pruebas** | Jest 30 + Supertest 7 + ts-jest (119+ tests) |
 
 > **Guía de estudio (presentación / aprendizaje):** [README-ESTUDIO.md](./README-ESTUDIO.md)  
-> **Documentación del backend completo:** [../../docs/README.md](../../docs/README.md)
+> **Guía central del proyecto:** [docs/README.md](../../docs/README.md)  
+> **Documentación del backend:** [backend/README.md](../README.md)
 
 **Task ID:** AS-TASK-20
 
@@ -24,7 +25,7 @@ Microservicio de autenticación y autorización para la plataforma InnovaTech. P
 
 - **Framework:** Express.js v4.18.2
 - **Base de datos:** PostgreSQL (Neon Cloud Database)
-- **Autenticación:** JWT (JSON Web Tokens)
+- **Autenticación:** JWT RS256 (firma con clave privada; validación en KrakenD vía JWKS)
 - **Hashing:** bcrypt con 10 salt rounds
 - **Testing:** Jest v30.4.2 + Supertest v7.2.2
 - **Logging:** Winston v3.19.0
@@ -35,7 +36,7 @@ Microservicio de autenticación y autorización para la plataforma InnovaTech. P
 
 ### Software Requerido
 
-- **Node.js:** v22.19.0 o superior
+- **Node.js:** v20+ (recomendado LTS)
 - **npm:** v10.x o superior
 - **PostgreSQL:** Neon Cloud Database (o PostgreSQL local v14+)
 - **Docker:** (Opcional) Para contenedores y Grafana

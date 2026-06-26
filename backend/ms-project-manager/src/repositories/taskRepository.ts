@@ -39,6 +39,11 @@ class TaskRepository {
     }
     const project = await projectRepository.findByIdAndUserId(projectId, userId);
     if (!project) return null;
+    return this.findByIdInProject(projectId, taskId);
+  }
+
+  async findByIdInProject(projectId, taskId) {
+    if (!projectId || !taskId) throw new Error('projectId and taskId are required');
     const pool = getPool();
     const { rows } = await pool.query(
       `SELECT * FROM "TASK" WHERE id = $1 AND project_id = $2`,
@@ -114,6 +119,57 @@ class TaskRepository {
       ]
     );
     return mapTaskRow(rows[0]);
+  }
+
+  async updateInProject(projectId, taskId, updates) {
+    const sets = [];
+    const vals = [taskId, projectId];
+    let n = 3;
+    if (updates.title !== undefined) {
+      sets.push(`title = $${n}`);
+      vals.push(updates.title);
+      n += 1;
+    }
+    if (updates.description !== undefined) {
+      sets.push(`description = $${n}`);
+      vals.push(updates.description);
+      n += 1;
+    }
+    if (updates.completed !== undefined) {
+      sets.push(`completed = $${n}`);
+      vals.push(updates.completed);
+      n += 1;
+    }
+    if (updates.status !== undefined) {
+      sets.push(`status = $${n}`);
+      vals.push(updates.status);
+      n += 1;
+    }
+    if (updates.assigneeId !== undefined) {
+      sets.push(`responsable_id = $${n}`);
+      vals.push(updates.assigneeId);
+      n += 1;
+    }
+    if (updates.startDate !== undefined) {
+      sets.push(`fecha_inicio = $${n}`);
+      vals.push(updates.startDate);
+      n += 1;
+    }
+    if (updates.endDate !== undefined) {
+      sets.push(`fecha_termino = $${n}`);
+      vals.push(updates.endDate);
+      n += 1;
+    }
+    if (sets.length === 0) {
+      return this.findByIdInProject(projectId, taskId);
+    }
+    sets.push('updated_at = now()');
+    const pool = getPool();
+    const sql = `UPDATE "TASK" SET ${sets.join(', ')}
+      WHERE id = $1 AND project_id = $2
+      RETURNING *`;
+    const { rows } = await pool.query(sql, vals);
+    return rows[0] ? mapTaskRow(rows[0]) : null;
   }
 
   async update(taskId, userId, updates) {

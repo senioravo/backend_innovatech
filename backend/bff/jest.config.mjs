@@ -28,6 +28,7 @@ export default {
     '^(.*/infrastructure/clients/authUpstreamClient)\\.js$': '<rootDir>/tests/mocks/authUpstreamClient.js',
     '^(.*/infrastructure/clients/projectManagerUpstreamClient)\\.js$':
       '<rootDir>/tests/mocks/projectManagerUpstreamClient.js',
+    '^(.*/infrastructure/clients/kpiUpstreamClient)\\.js$': '<rootDir>/tests/mocks/kpiUpstreamClient.js',
     '^(\\.{1,2}/.*)\\.js$': '$1'
   },
   transform: {

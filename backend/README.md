@@ -2,7 +2,7 @@
 
 Plataforma backend basada en **microservicios** para autenticación, gestión de usuarios y administración de proyectos/tareas. El frontend se comunica **únicamente** con el **API Gateway (KrakenD)** en `/api/v1`. KrakenD valida JWT, aplica roles y reenvía al **BFF**, que orquesta las llamadas internas.
 
-> **Rama de trabajo actual:** `refactor/rosales` — integración dashboard, JWT RS256 + KrakenD, Docker local completo y refactor de capas (controllers delgados, repository pattern, validación centralizada).
+> **Guía central del proyecto:** [docs/README.md](../docs/README.md) · **Inicio rápido:** [docs/INSTRUCCIONES-INICIO.md](../docs/INSTRUCCIONES-INICIO.md)
 
 ---
 
@@ -65,6 +65,7 @@ flowchart TB
     AUTH[ms-auth :3001]
     USERS[ms-users :3003]
     PM[ms-project-manager :3002]
+    KPI[ms-kpi :3004]
   end
 
   subgraph Datos
@@ -78,7 +79,9 @@ flowchart TB
   GW -->|JWT + X-User-*| BFF
   BFF --> AUTH
   BFF --> PM
+  BFF --> KPI
   AUTH -->|login/register| USERS
+  KPI -->|consulta proyectos/tareas| PM
   USERS --> UDB
   PM --> PMDB
   GW -->|JWKS| AUTH
@@ -143,7 +146,8 @@ sequenceDiagram
 | **BFF** | 3010 (interno) | Orquestación hacia auth y PM | `presentation` → `application` → `infrastructure` |
 | **ms-auth** | 3001 (interno) | Login, logout, registro, JWT, blacklist, JWKS | Controller → **AuthService** → usersClient |
 | **ms-users** | 3003 (interno) | CRUD usuarios, endpoints internos para auth | Controller → **UserService** → **UserRepository** |
-| **ms-project-manager** | 3002 (interno) | Proyectos, tareas, estados, auditoría | Controller → Service → **Repository** |
+| **ms-project-manager** | 3002 (interno) | Proyectos, tareas, colaboración, consultas | Controller → Service → **Repository** |
+| **ms-kpi** | 3004 (interno) | KPIs y dashboard de progreso (agrega datos de PM) | Controller → **KpiService** → projectManagerClient |
 
 ### Endpoints de referencia (vía KrakenD)
 
@@ -156,6 +160,8 @@ sequenceDiagram
 | Crear proyecto | POST | `/api/v1/projects` |
 | Tareas de un proyecto | GET | `/api/v1/projects/{id}/tasks` |
 | Cambiar estado tarea | PATCH | `/api/v1/projects/{id}/tasks/{taskId}/status` |
+| Dashboard KPIs | GET | `/api/v1/kpis/dashboard` |
+| Consultas KPI (legacy PM) | GET | `/api/v1/consultations/kpis` |
 | JWKS (clave pública) | GET | `/.well-known/jwks.json` |
 
 ### Usuarios de prueba (seed local)
@@ -326,6 +332,7 @@ kubectl port-forward -n innovatech svc/api-gateway 8010:8080
 | `ms-auth` | 3001 | Solo interno |
 | `ms-users` | 3003 | Solo interno |
 | `ms-project-manager` | 3002 | Solo interno |
+| `ms-kpi` | 3004 | Solo interno |
 
 Guía detallada: [k8s/README.md](k8s/README.md)
 
@@ -333,34 +340,42 @@ Guía detallada: [k8s/README.md](k8s/README.md)
 
 ## Testing
 
-Estrategia **Jest + Supertest** (ESM). Umbral de cobertura global **50%** en auth, PM y BFF.
+Estrategia **Jest + Supertest** (ESM en ms-auth, ms-users, ms-project-manager y BFF). Umbral de cobertura **≥ 60%** (rúbrica EP3).
 
 ```bash
 cd backend
 
-# Los tres servicios
+# Todos los microservicios + BFF
 npm test
 
 # Por servicio
 cd ms-auth && npm test
+cd ms-users && npm test
 cd ms-project-manager && npm test
+cd ms-kpi && npm test
 cd bff && npm test
 
 # CI
 npm run test:ci
+
+# Smoke E2E (stack Docker levantado)
+npm run smoke
 ```
 
 | Servicio | Qué se prueba |
 |----------|---------------|
 | **ms-auth** | DTOs, JWT RS256, bcrypt, roles, JWKS, login/register (mock de ms-users) |
+| **ms-users** | CRUD, DTOs, repository, roles, endpoints internos |
 | **ms-project-manager** | Servicios, validación, transiciones de estado, middleware |
-| **BFF** | Orquestación, upstream mock, rutas protegidas |
+| **ms-kpi** | Agregación de KPIs, dashboard, cliente upstream a PM |
+| **BFF** | Orquestación, upstream mock, rutas protegidas, KPIs |
 
 **Notas:**
 
 - Los tests de integración **no requieren PostgreSQL real** (mocks en `tests/setup.*`).
 - `ms-auth` usa mock de `usersClient` para simular ms-users en ESM (`tests/mocks/usersClient.js`).
 - La app no abre puerto en modo test (`NODE_ENV=test`).
+- Frontend: `cd ../frontend && npm run test:coverage` (Vitest).
 
 ---
 
@@ -370,7 +385,9 @@ npm run test:ci
 backend/
 ├── README.md                    ← este documento
 ├── docker-compose.yml           ← stack local completo
-├── package.json                 ← npm test en los 3 servicios
+├── package.json                 ← npm test, smoke, k8s:dev
+├── kustomization.yaml           ← despliegue K8s completo (Flyway + servicios)
+├── scripts/                     ← smoke-e2e, k8s-dev-up, utilidades ESM
 ├── .env.docker.example
 ├── api-gateway/
 │   ├── krakend.json             ← rutas, JWT, CORS, roles
@@ -378,7 +395,7 @@ backend/
 ├── bff/
 │   ├── src/
 │   │   ├── presentation/        ← controllers, middlewares, routes
-│   │   ├── application/         ← orchestration services
+│   │   ├── application/         ← orchestration services (auth, PM, KPI)
 │   │   └── infrastructure/      ← HTTP clients upstream
 │   └── k8s/
 ├── ms-auth/
@@ -394,7 +411,7 @@ backend/
 │   │   ├── services/
 │   │   ├── repositories/        ← userRepository.ts
 │   │   └── dtos/
-│   ├── database/                ← schema + seed
+│   ├── db/flyway/               ← migraciones SQL
 │   └── k8s/
 ├── ms-project-manager/
 │   ├── src/
@@ -402,11 +419,15 @@ backend/
 │   │   ├── services/            ← validación + negocio
 │   │   ├── repositories/
 │   │   └── dtos/
-│   ├── db/migrations/
+│   ├── db/flyway/
+│   └── k8s/
+├── ms-kpi/
+│   ├── src/                     ← KPIs y dashboard (consulta PM)
 │   └── k8s/
 └── k8s/
     ├── namespace.yaml
     ├── ingress.yaml             ← Ingress NGINX
+    ├── postgres/                ← BD in-cluster + jobs Flyway
     └── kustomization.yaml
 ```
 
@@ -416,11 +437,15 @@ backend/
 
 | Tema | Ubicación |
 |------|-----------|
+| Guía central EP3 | [docs/README.md](../docs/README.md) |
+| Inicio rápido | [docs/INSTRUCCIONES-INICIO.md](../docs/INSTRUCCIONES-INICIO.md) |
 | Despliegue K8s | [k8s/README.md](k8s/README.md) |
 | Auth (operativo) | [ms-auth/README.md](ms-auth/README.md) |
 | ms-users | [ms-users/README.md](ms-users/README.md) |
-| Guías de estudio BFF / Auth / PM | `*/README-ESTUDIO.md` |
-| Migración JWT RSA | [docs/JWT_RSA_MIGRATION.md](../docs/JWT_RSA_MIGRATION.md) |
+| ms-kpi | [ms-kpi/README.md](ms-kpi/README.md) |
+| BFF / Gateway / PM | [bff/README.md](bff/README.md), [api-gateway/README.md](api-gateway/README.md), [ms-project-manager/README.md](ms-project-manager/README.md) |
+| Guías de estudio | `*/README-ESTUDIO.md` |
+| Frontend | [frontend/README.md](../frontend/README.md) |
 
 ---
 

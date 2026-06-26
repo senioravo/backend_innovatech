@@ -9,7 +9,9 @@
 | **Librerías** | bcrypt, pg, jsonwebtoken, winston, prom-client, opossum, cors, dotenv, swagger-jsdoc, swagger-ui-express, @elastic/elasticsearch |
 | **Patrones de diseño** | Repository, capa de servicio, DTO + validación, controlador delgado, RBAC, circuit breaker, database per service |
 | **Base de datos** | PostgreSQL (Neon Cloud o local; `innovatech_users` / `users-db`) |
-| **Pruebas** | Jest 30 + Supertest 7 + ts-jest |
+| **Pruebas** | Jest 30 + Supertest 7 + ts-jest (ESM) |
+
+> **Guía central:** [docs/README.md](../../docs/README.md) · **Inicio rápido:** [docs/INSTRUCCIONES-INICIO.md](../../docs/INSTRUCCIONES-INICIO.md)
 
 ## Descripción
 
@@ -26,7 +28,7 @@ Microservicio de gestión de usuarios para la plataforma InnovaTech. Proporciona
 ## Arquitectura
 
 - **Framework:** Express.js v4.18.2
-- **Base de datos:** PostgreSQL (Neon Cloud Database)
+- **Base de datos:** PostgreSQL (`users-db` / Flyway en `db/flyway/`)
 - **Autenticación:** Verificación de JWT (tokens generados por ms-auth)
 - **Hashing:** bcrypt con 10 salt rounds
 - **Testing:** Jest v30.4.2 + Supertest v7.2.2
@@ -280,8 +282,8 @@ ms-users/
 - Separa responsabilidades claramente
 
 ### API Gateway (KrakenD)
-- Enruta `/api/users/*` → ms-users:3003
-- Enruta `/api/auth/*` → ms-auth:3001
+- Enruta peticiones de auth y usuarios vía **BFF** (no expone ms-users directamente al frontend)
+- ms-users expone endpoints **internos** para ms-auth (`/api/users/internal/*`)
 
 ## Seguridad
 
@@ -312,3 +314,10 @@ ms-users/
 ## Licencia
 
 ISC
+
+## Documentación relacionada
+
+- [Guía central del proyecto](../../docs/README.md)
+- [Backend general](../README.md)
+- [Migraciones Flyway](./db/flyway/README.md)
+- [Separación auth/users](./docs/README-SEPARACION.md)

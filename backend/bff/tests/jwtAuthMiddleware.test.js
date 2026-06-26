@@ -27,7 +27,7 @@ describe('jwtAuthMiddleware', () => {
 
     expect(next).toHaveBeenCalled();
     expect(req.user).toEqual({
-      id: 7,
+      id: '7',
       email: 'gestor@test.cl',
       role: 'gestor'
     });

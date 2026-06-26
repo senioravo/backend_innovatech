@@ -1,6 +1,6 @@
 # Despliegue Kubernetes — Innovatech Backend
 
-Stack: **api-gateway (KrakenD)** → **bff** → **ms-auth** | **ms-project-manager** | **ms-users**
+Stack: **api-gateway (KrakenD)** → **bff** → **ms-auth** | **ms-project-manager** | **ms-users** | **ms-kpi**
 
 ## Estructura
 
@@ -20,7 +20,8 @@ backend/
 ├── bff/k8s/
 ├── ms-auth/k8s/
 ├── ms-users/k8s/
-└── ms-project-manager/k8s/
+├── ms-project-manager/k8s/
+└── ms-kpi/k8s/
 ```
 
 Cada microservicio incluye:

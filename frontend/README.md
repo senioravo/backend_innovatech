@@ -13,7 +13,7 @@
 
 ## Descripción
 
-Aplicación web de presentación para la plataforma InnovaTech. Permite iniciar sesión, visualizar proyectos y tareas, consultar KPIs, gestionar colaboración (comentarios/adjuntos) y operar según el rol del usuario (`gestor`, `profesional`, `directivo`).
+Aplicación web de presentación para la plataforma InnovaTech. Permite iniciar sesión, visualizar proyectos y tareas, consultar KPIs (dashboard vía **ms-kpi**), gestionar colaboración (comentarios/adjuntos) y operar según el rol del usuario (`gestor`, `profesional`, `directivo`).
 
 Toda la comunicación con el backend se realiza contra el **API Gateway (KrakenD)** bajo el prefijo `/api/v1`, nunca directamente a los microservicios internos.
 
@@ -113,6 +113,7 @@ Contraseña para todos: **`Secret123`**
 
 ## Documentación relacionada
 
+- [README raíz del repositorio](../README.md)
 - [Guía central del proyecto](../docs/README.md)
 - [Backend y Docker Compose](../backend/README.md)
 - [Inicio rápido](../docs/INSTRUCCIONES-INICIO.md)

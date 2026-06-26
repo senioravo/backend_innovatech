@@ -28,21 +28,25 @@ describe('taskService', () => {
 
   test('updateTaskStatus avanza estado válido', async () => {
     jest.spyOn(resourceAvailabilityService, 'assertTaskInProject').mockResolvedValue({
-      id: '1',
-      status: 'PENDING'
+      task: { id: '1', status: 'PENDING', assigneeId: null },
+      project: { userId: '3' }
     });
-    taskRepository.update.mockResolvedValue({ id: '1', status: 'IN_PROGRESS' });
+    taskRepository.updateInProject.mockResolvedValue({ id: '1', status: 'IN_PROGRESS' });
 
-    const task = await taskService.updateTaskStatus(1, 2, 3, 'IN_PROGRESS');
+    const task = await taskService.updateTaskStatus(1, 2, 3, 'gestor', 'IN_PROGRESS');
     expect(task.status).toBe('IN_PROGRESS');
+    expect(taskRepository.updateInProject).toHaveBeenCalledWith(1, 2, {
+      status: 'IN_PROGRESS',
+      completed: false
+    });
   });
 
   test('updateTaskStatus rechaza transición inválida', async () => {
     jest.spyOn(resourceAvailabilityService, 'assertTaskInProject').mockResolvedValue({
-      id: '1',
-      status: 'PENDING'
+      task: { id: '1', status: 'PENDING', assigneeId: null },
+      project: { userId: '3' }
     });
-    await expect(taskService.updateTaskStatus(1, 2, 3, 'DONE')).rejects.toBeInstanceOf(
+    await expect(taskService.updateTaskStatus(1, 2, 3, 'gestor', 'DONE')).rejects.toBeInstanceOf(
       ValidationError
     );
   });

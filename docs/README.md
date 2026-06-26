@@ -29,7 +29,7 @@ flowchart LR
 | **1. Presentación** | Frontend (Vite / React / TypeScript) | `:5173` | UI: login, proyectos, tareas, KPIs, colaboración |
 | **2. Gateway** | KrakenD | `:8010` | Entrada única, CORS, validación JWT, RBAC, propagación de identidad |
 | **3. Orquestación** | BFF | `:3010` (interno) | Adapta respuestas al contrato del frontend; agrega llamadas |
-| **4. Negocio** | ms-auth, ms-users, ms-project-manager | internos | Autenticación, usuarios, proyectos/tareas/KPIs |
+| **4. Negocio** | ms-auth, ms-users, ms-project-manager, **ms-kpi** | internos | Autenticación, usuarios, proyectos/tareas, **KPIs y dashboard** |
 | **5. Datos** | PostgreSQL (`users-db`, `pm-db`) | `:5433`, `:5434` | Persistencia independiente por microservicio |
 
 **Entrada HTTP pública:** `http://localhost:8010/api/v1/`
@@ -120,6 +120,7 @@ La rúbrica exige **≥ 60% de cobertura** en pruebas unitarias. El proyecto **s
 | ms-auth | ~87% | Jest + Supertest |
 | ms-users | ~92% | Jest + Supertest |
 | ms-project-manager | ~91% | Jest + Supertest |
+| ms-kpi | ≥60% | Jest + Supertest |
 | BFF | ~91% | Jest + Supertest |
 
 ### Comandos
@@ -153,12 +154,14 @@ El repositorio expone **tres carpetas principales**:
 
 ```
 InnovaTech/
+├── README.md                 ← Punto de entrada (enlaza a docs/)
 ├── backend/                  ← Microservicios, BFF, Gateway, Docker, K8s
 │   ├── api-gateway/          KrakenD (krakend.json)
 │   ├── bff/                  Backend for Frontend
 │   ├── ms-auth/              Autenticación y JWT
 │   ├── ms-users/             Usuarios y perfiles
-│   ├── ms-project-manager/   Proyectos, tareas, KPIs, colaboración
+│   ├── ms-project-manager/   Proyectos, tareas, colaboración
+│   ├── ms-kpi/               KPIs y dashboard de progreso
 │   ├── k8s/                  Manifiestos Kubernetes (Ingress, namespace)
 │   ├── scripts/              Smoke E2E y utilidades de migración ESM
 │   ├── docker-compose.yml
@@ -183,6 +186,7 @@ InnovaTech/
 | ms-auth | [`backend/ms-auth/README.md`](../backend/ms-auth/README.md) |
 | ms-users | [`backend/ms-users/README.md`](../backend/ms-users/README.md) |
 | ms-project-manager | [`backend/ms-project-manager/README.md`](../backend/ms-project-manager/README.md) |
+| ms-kpi | [`backend/ms-kpi/README.md`](../backend/ms-kpi/README.md) |
 | API Gateway | [`backend/api-gateway/README.md`](../backend/api-gateway/README.md) |
 | Kubernetes | [`backend/k8s/README.md`](../backend/k8s/README.md) |
 
@@ -201,7 +205,7 @@ Repositorio: [senioravo/backend_innovatech](https://github.com/senioravo/backend
 | Requisito | Estado |
 |-----------|--------|
 | Estructura `/backend`, `/frontend`, `/docs` | ✅ |
-| Microservicios + BFF + Gateway | ✅ |
+| Microservicios + BFF + Gateway + ms-kpi | ✅ |
 | Database per Service + Flyway | ✅ |
 | Frontend TypeScript | ✅ |
 | Swagger por servicio | ✅ |

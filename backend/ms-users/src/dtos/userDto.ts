@@ -1,3 +1,4 @@
+import UserModel from '../models/userModel.js';
 import { pickName, pickRole } from '../utils/userRowMapper.js';
 
 const EMAIL_REGEX = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
@@ -17,8 +18,12 @@ type ValidateOptions = {
   partial?: boolean;
 };
 
-function userToDto(user: Record<string, unknown> | null) {
+function userToDto(user: UserModel | Record<string, unknown> | null) {
   if (!user) return null;
+
+  if (user instanceof UserModel) {
+    return user.toSafeObject();
+  }
 
   return {
     id: user.id,

@@ -34,13 +34,14 @@ const resourceAvailabilityService = {
     return project;
   },
 
-  async assertTaskInProject(projectId, taskId, userId) {
+  async assertTaskInProject(projectId, taskId, userId, role) {
     if (!projectId || !taskId || !userId) {
       throw new Error('projectId, taskId and userId are required');
     }
-    const task = await taskRepository.findByProjectIdAndTaskId(projectId, taskId, userId);
+    const project = await this.assertProjectAvailable(projectId, userId, role);
+    const task = await taskRepository.findByIdInProject(projectId, taskId);
     if (!task) throw new NotFoundError('Task not found in this project');
-    return task;
+    return { task, project };
   }
 };
 

@@ -13,7 +13,7 @@
 
 ## Descripción
 
-Microservicio de gestión de proyectos, tareas, colaboración (comentarios/adjuntos), KPIs, notificaciones y auditoría. Persiste datos en PostgreSQL y expone API REST bajo `/api/v1`.
+Microservicio de gestión de proyectos, tareas, colaboración (comentarios/adjuntos), consultas exportables y auditoría. Los **KPIs del dashboard** se calculan en **ms-kpi** (`/api/v1/kpis/dashboard` vía BFF); este servicio mantiene consultas legacy en `/api/v1/consultations/kpis`.
 
 ## Ejecución
 
@@ -78,12 +78,16 @@ npm run test:coverage
 | Crear proyecto | POST | `/api/v1/projects` |
 | Tareas de proyecto | GET | `/api/v1/projects/:id/tasks` |
 | Cambiar estado tarea | PATCH | `/api/v1/projects/:id/tasks/:taskId/status` |
-| KPIs | GET | `/api/v1/consultations/kpis` |
+| KPIs (legacy / export) | GET | `/api/v1/consultations/kpis` |
 | Health | GET | `/health` |
 | Métricas | GET | `/metrics` |
 
+> **Dashboard KPIs:** el frontend consume `GET /api/v1/kpis/dashboard` (BFF → **ms-kpi**).
+
 ## Documentación relacionada
 
+- [Guía central del proyecto](../../docs/README.md)
 - [Backend general](../README.md)
+- [ms-kpi](../ms-kpi/README.md)
 - [Migraciones Flyway](./db/flyway/README.md)
 - [Manifiestos Kubernetes](./k8s/README.md)

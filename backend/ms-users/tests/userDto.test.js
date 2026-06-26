@@ -1,3 +1,4 @@
+import UserModel from '../src/models/userModel.js';
 import {
   createUserDto,
   errorResponseDto,
@@ -9,6 +10,22 @@ import {
 } from '../src/dtos/userDto.js';
 
 describe('userDto', () => {
+  test('userToDto accepts UserModel entities from repository', () => {
+    const entity = new UserModel({
+      id: 2,
+      name: 'Carlos',
+      email: 'carlos@test.cl',
+      role: 'profesional',
+      skills: 'Java',
+      availability: 'parcial',
+      weeklyAvailableHours: 25,
+      createdAt: '2026-02-01',
+      updatedAt: '2026-02-02'
+    });
+
+    expect(userToDto(entity)).toEqual(entity.toSafeObject());
+  });
+
   test('userToDto maps professional profile fields', () => {
     const dto = userToDto({
       id: 1,

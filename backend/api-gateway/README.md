@@ -20,7 +20,7 @@ Punto único de entrada HTTP para el frontend. Valida tokens JWT consultando el 
 ### Requisitos
 
 - Docker Desktop (recomendado), o binario KrakenD 2.7+
-- Stack interno: BFF, ms-auth, ms-users, ms-project-manager
+- Stack interno: BFF, ms-auth, ms-users, ms-project-manager, ms-kpi
 
 ### Docker Compose (recomendado)
 
@@ -62,10 +62,12 @@ Archivo: `krakend.json`
 - **JWT:** RS256 vía `http://auth:3001/.well-known/jwks.json`
 - **Claims propagados:** `id` → `X-User-Id`, `email` → `X-User-Email`, `role` → `X-User-Role`
 - **Rutas públicas:** `/api/v1/auth/login`, `/api/v1/auth/register`
-- **Rutas protegidas:** proyectos, tareas, KPIs, notificaciones → BFF
+- **Rutas protegidas:** proyectos, tareas, KPIs (`/api/v1/kpis/dashboard`), notificaciones → BFF
 
 ## Documentación relacionada
 
+- [Guía central del proyecto](../../docs/README.md)
 - [Backend general](../README.md)
+- [ms-kpi](../ms-kpi/README.md)
 - [Implementación JWT](./KRAKEND_JWT_IMPLEMENTATION.md)
 - [Manifiestos Kubernetes](./k8s/README.md)

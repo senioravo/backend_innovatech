@@ -334,6 +334,7 @@ Schemas:
 
 ```
 InnovaTech/
+├── README.md                  Punto de entrada (enlaza a docs/)
 ├── backend/
 │   ├── README.md              Documentacion backend detallada
 │   ├── docker-compose.yml
@@ -343,6 +344,7 @@ InnovaTech/
 │   ├── ms-auth/
 │   ├── ms-users/
 │   ├── ms-project-manager/
+│   ├── ms-kpi/
 │   └── k8s/                   Manifiestos Kubernetes
 ├── frontend/                  React + Vite + TypeScript + Vitest
 └── docs/
@@ -407,14 +409,11 @@ Para despliegue en cluster, ver [backend/k8s/README.md](../backend/k8s/README.md
 Resumen:
 
 ```powershell
-cd backend\ms-auth
-node scripts\generate-keys.js
-
-kubectl create secret generic innovatech-jwt-keys -n innovatech `
-  --from-file=private.key=ms-auth/keys/private.key `
-  --from-file=public.key=ms-auth/keys/public.key
-
-kubectl apply -k k8s/
+cd backend
+npm run k8s:dev
+# o manualmente:
+# kubectl apply -f k8s/secrets.local.yaml
+# kubectl apply -k .
 ```
 
 Acceso local al gateway en cluster:
@@ -438,6 +437,7 @@ kubectl port-forward -n innovatech svc/api-gateway 8010:8080
 | Contenedores | Docker Compose |
 | Tests backend | Jest, Supertest |
 | Observabilidad | Prometheus (compose local) |
+| KPIs | ms-kpi (:3004) vía BFF `/api/v1/kpis/dashboard` |
 
 ---
 

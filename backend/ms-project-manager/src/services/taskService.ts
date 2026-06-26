@@ -6,7 +6,8 @@ import ValidationService from './validationService.js';
 import { createTaskDto, pickTaskScheduleFields } from '../dtos/taskDto.js';
 import { isAllowedTaskStatusTransition,
   normalizeTaskStatus } from '../constants/taskStatuses.js';
-import { NotFoundError, ValidationError } from '../utils/errorHandler.js';
+import { NotFoundError, ValidationError, ForbiddenError } from '../utils/errorHandler.js';
+import { canModifyTaskStatus } from '../utils/roleAccess.js';
 
 class TaskService {
   async createTask(projectId, userId, payload) {
@@ -42,10 +43,10 @@ class TaskService {
     });
   }
 
-  async updateTaskStatusFromRequest(projectId, taskId, userId, body) {
+  async updateTaskStatusFromRequest(projectId, taskId, userId, role, body) {
     const validation = ValidationService.validateTaskStatusInput(body);
     if (!validation.isValid) throw new ValidationError(validation.errors);
-    return this.updateTaskStatus(projectId, taskId, userId, validation.normalized);
+    return this.updateTaskStatus(projectId, taskId, userId, role, validation.normalized);
   }
 
   async updateTaskFromRequest(taskId, userId, body) {
@@ -84,31 +85,41 @@ class TaskService {
     return taskRepository.findByProjectId(projectId);
   }
 
-  async getTask(projectId, taskId, userId) {
+  async getTask(projectId, taskId, userId, role) {
     if (!projectId || !taskId || !userId) {
       throw new Error('projectId, taskId and userId are required');
     }
-    return resourceAvailabilityService.assertTaskInProject(projectId, taskId, userId);
+    const { task } = await resourceAvailabilityService.assertTaskInProject(
+      projectId,
+      taskId,
+      userId,
+      role
+    );
+    return task;
   }
 
-  async updateTaskStatus(projectId, taskId, userId, status) {
+  async updateTaskStatus(projectId, taskId, userId, role, status) {
     if (!projectId || !taskId || !userId || !status) {
       throw new Error('projectId, taskId, userId and status are required');
     }
-    const current = await resourceAvailabilityService.assertTaskInProject(
+    const { task, project } = await resourceAvailabilityService.assertTaskInProject(
       projectId,
       taskId,
-      userId
+      userId,
+      role
     );
-    const from = normalizeTaskStatus(current.status ?? 'PENDING');
+    if (!canModifyTaskStatus(userId, role, task, project)) {
+      throw new ForbiddenError('You do not have permission to modify this task');
+    }
+    const from = normalizeTaskStatus(task.status ?? 'PENDING');
     if (!isAllowedTaskStatusTransition(from, status)) {
       throw new ValidationError([
         `Invalid status transition (${from} → ${status}). Allowed: same state or next step in order.`
       ]);
     }
     const completed = status === 'DONE';
-    const task = await taskRepository.update(taskId, userId, { status, completed });
-    if (!task) throw new NotFoundError('Task not found');
+    const updated = await taskRepository.updateInProject(projectId, taskId, { status, completed });
+    if (!updated) throw new NotFoundError('Task not found');
 
     try {
       await collaborationService.notifyUser(
@@ -121,7 +132,7 @@ class TaskService {
       // Notificación best-effort si la tabla aún no existe
     }
 
-    return task;
+    return updated;
   }
 
   async updateTask(taskId, userId, updates) {
