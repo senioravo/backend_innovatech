@@ -1,4 +1,3 @@
-// @ts-nocheck
 import path from 'path';
 import { fileURLToPath } from 'url';
 const __filename = fileURLToPath(import.meta.url);
@@ -83,6 +82,7 @@ if (process.env.NODE_ENV !== 'test') {
       // Caso 1: Conexión exitosa
       app.listen(PORT, () => {
         console.log(`🚀 Project Manager ejecutándose en puerto ${PORT}`);
+        console.log(`📚 Swagger: http://localhost:${PORT}/api-docs`);
       });
     })
     .catch((err) => {
@@ -90,6 +90,7 @@ if (process.env.NODE_ENV !== 'test') {
       console.warn('⚠️ Advertencia: Project Manager iniciará sin verificación de PostgreSQL:', err.message);
       app.listen(PORT, () => {
         console.log(`🚀 Project Manager ejecutándose en puerto ${PORT}`);
+        console.log(`📚 Swagger: http://localhost:${PORT}/api-docs`);
       });
     });
 }

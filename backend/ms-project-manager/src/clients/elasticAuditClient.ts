@@ -1,4 +1,3 @@
-// @ts-nocheck
 import { Client } from '@elastic/elasticsearch';
 import config from '../config/index.js';
 
@@ -7,7 +6,7 @@ let initAttempted;
 
 function buildClientOptions() {
   const { node, apiKey, username, password, tlsInsecure } = config.elasticsearch;
-  const opts = { node };
+  const opts: Record<string, unknown> = { node };
   if (apiKey) {
     opts.auth = { apiKey };
   } else if (username) {

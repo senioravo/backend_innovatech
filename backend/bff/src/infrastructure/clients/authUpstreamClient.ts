@@ -1,4 +1,3 @@
-// @ts-nocheck
 import config from '../../config/index.js';
 import { joinUrl, upstreamJson } from '../http/httpUpstream.js';
 

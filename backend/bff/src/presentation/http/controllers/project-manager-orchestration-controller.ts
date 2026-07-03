@@ -1,4 +1,3 @@
-// @ts-nocheck
 import projectManagerOrchestrationService from '../../../application/projectManager/projectManagerOrchestrationService.js';
 
 const projectManagerOrchestrationController = {

@@ -1,4 +1,3 @@
-// @ts-nocheck
 const TASK_STATUSES = Object.freeze([
   'PENDING',
   'IN_PROGRESS',

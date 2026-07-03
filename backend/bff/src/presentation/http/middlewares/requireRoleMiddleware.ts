@@ -1,4 +1,3 @@
-// @ts-nocheck
 /**
  * BFF-TASK-07: Autorización por rol (mismos nombres que Project-manager).
  */

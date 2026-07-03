@@ -1,4 +1,3 @@
-// @ts-nocheck
 // AS-TASK-14: Middleware de métricas con Prometheus
 // Responsabilidad: Capturar métricas de performance y operaciones
 // Principio SOLID: Single Responsibility - Solo maneja captura de métricas

@@ -1,8 +1,6 @@
-// @ts-nocheck
 // AS-TASK-03: Servicio protegido con Circuit Breaker
 // Ejemplo de integración con AuthService y ProjectManager
 
-// @ts-nocheck
 import { createCircuitBreaker, getBreakerStats } from '../utils/circuitBreaker.js';
 
 /**

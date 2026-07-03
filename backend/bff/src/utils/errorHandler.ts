@@ -1,4 +1,3 @@
-// @ts-nocheck
 class ApplicationError extends Error {
   status: number;
 

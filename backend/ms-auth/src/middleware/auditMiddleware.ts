@@ -1,4 +1,3 @@
-// @ts-nocheck
 // AS-TASK-12: Middleware de Auditoría para accesos y operaciones críticas
 // Responsabilidad: Interceptar requests y registrar accesos automáticamente
 // Principio SOLID: Single Responsibility - Solo audita accesos a endpoints

@@ -1,16 +1,11 @@
-// @ts-nocheck
-import path from 'path';
-import { fileURLToPath } from 'url';
-const __filename = fileURLToPath(import.meta.url);
-const __dirname = path.dirname(__filename);
-// Logger Helper con Winston para logs centralizados
-// Responsabilidad: Gestión centralizada de logs con Winston + Elasticsearch
-// Principio SOLID: Single Responsibility - Solo maneja logging y persistencia
-
 import winston from 'winston';
 import DailyRotateFile from 'winston-daily-rotate-file';
 import path from 'path';
+import { fileURLToPath } from 'url';
 import { sendAuditToElasticsearch } from '../clients/elasticAuditClient.js';
+
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
 
 /**
  * Clase Logger - Sistema de logging centralizado con Winston + Elasticsearch
@@ -26,14 +21,15 @@ import { sendAuditToElasticsearch } from '../clients/elasticAuditClient.js';
  * - Integración fácil con ELK Stack, CloudWatch, etc.
  */
 class Logger {
+  logsDir: string;
+  winstonLogger: winston.Logger;
+
   constructor() {
     // Directorio de logs
     this.logsDir = path.join(__dirname, '../../logs');
     
     // Formato personalizado que coincida con formato de AS-TASK-12
-    const customFormat = winston.format.printf(({ level, message, timestamp, ...metadata }) => {
-      return message;
-    });
+    const customFormat = winston.format.printf(({ message }) => String(message));
 
     // Transporte: Archivo rotativo para auditoría general
     const auditTransport = new DailyRotateFile({
@@ -91,19 +87,19 @@ class Logger {
   /**
    * API estilo Winston: mensaje + metadata opcional (usado por servicios internos).
    */
-  info(message, meta) {
+  info(message: string, meta?: unknown) {
     this.winstonLogger.info(this._formatSimpleMessage(message, meta));
   }
 
-  warn(message, meta) {
+  warn(message: string, meta?: unknown) {
     this.winstonLogger.warn(this._formatSimpleMessage(message, meta));
   }
 
-  error(message, meta) {
+  error(message: string, meta?: unknown) {
     this.winstonLogger.error(this._formatSimpleMessage(message, meta));
   }
 
-  _formatSimpleMessage(message, meta) {
+  _formatSimpleMessage(message: string, meta?: unknown) {
     if (meta !== undefined && meta !== null && typeof meta === 'object') {
       return `${String(message)} ${JSON.stringify(meta)}`;
     }
@@ -116,7 +112,7 @@ class Logger {
    * @param {Object} options - Opciones del log
    * @returns {string} - Mensaje formateado
    */
-  formatLogMessage(status, options = {}) {
+  formatLogMessage(status: string, options: Record<string, unknown> = {}) {
     const {
       userId = 'N/A',
       operation = 'UNKNOWN',
@@ -154,7 +150,7 @@ class Logger {
    * @param {string} level - Nivel del log (success, error, warning)
    * @param {Object} options - Datos del log
    */
-  sendToElasticsearch(level, options = {}) {
+  sendToElasticsearch(level: string, options: Record<string, unknown> = {}) {
     const doc = {
       ts: new Date().toISOString(),
       type: 'AUDIT',
@@ -178,7 +174,7 @@ class Logger {
    * Log de operación exitosa (auditoría)
    * @param {Object} options - Opciones del log
    */
-  auditSuccess(options = {}) {
+  auditSuccess(options: Record<string, unknown> = {}) {
     const message = this.formatLogMessage('[OK]', options);
     this.winstonLogger.info(message);
     
@@ -190,7 +186,7 @@ class Logger {
    * Log de operación fallida (auditoría)
    * @param {Object} options - Opciones del log
    */
-  auditError(options = {}) {
+  auditError(options: Record<string, unknown> = {}) {
     const message = this.formatLogMessage('[ERROR]', options);
     this.winstonLogger.error(message);
     
@@ -202,7 +198,7 @@ class Logger {
    * Log de advertencia (operaciones sospechosas o rechazadas)
    * @param {Object} options - Opciones del log
    */
-  auditWarning(options = {}) {
+  auditWarning(options: Record<string, unknown> = {}) {
     const message = this.formatLogMessage('[WARNING]', options);
     this.winstonLogger.warn(message);
     
@@ -215,7 +211,7 @@ class Logger {
    * @param {string} operation - Nombre de la operación (REGISTER, LOGIN, LOGOUT, ROLE_CHANGE, DELETE_USER)
    * @param {Object} data - Datos de la operación
    */
-  logCriticalOperation(operation, data = {}) {
+  logCriticalOperation(operation: string, data: Record<string, unknown> = {}) {
     const {
       success = true,
       userId = null,

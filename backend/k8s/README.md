@@ -1,6 +1,6 @@
 # Despliegue Kubernetes — Innovatech Backend
 
-Stack: **api-gateway (KrakenD)** → **bff** → **ms-auth** | **ms-project-manager** | **ms-users**
+Stack: **frontend (nginx + React)** | **api-gateway (KrakenD)** → **bff** → **ms-auth** | **ms-project-manager** | **ms-users** | **ms-kpi**
 
 ## Estructura
 
@@ -20,7 +20,8 @@ backend/
 ├── bff/k8s/
 ├── ms-auth/k8s/
 ├── ms-users/k8s/
-└── ms-project-manager/k8s/
+├── ms-project-manager/k8s/
+└── ../../frontend/k8s/           # SPA React (nginx)
 ```
 
 Cada microservicio incluye:
@@ -35,7 +36,7 @@ Los jobs **Flyway** viven en `k8s/postgres/` (no en `ms-*/k8s/kustomization.yaml
 
 ## Desarrollo local — todo en Kubernetes (sin Docker Compose para BD)
 
-**Requisitos:** cluster K8s (Rancher Desktop, minikube, kind, …), `kubectl`, imágenes Docker construidas localmente.
+**Requisitos:** cluster K8s (Rancher Desktop, minikube, kind, …), `kubectl`, **Docker** (para construir imágenes), Node **26** en imágenes.
 
 ### Opción rápida (PowerShell)
 
@@ -46,11 +47,14 @@ Desde `backend/`:
 ```
 
 El script:
-1. Aplica `k8s/secrets.local.yaml` (URLs `users-db:5432` / `pm-db:5432`)
-2. Genera claves JWT si faltan (`ms-auth/scripts/generate-keys.js`)
-3. Crea/actualiza el secret `innovatech-jwt-keys`
-4. Ejecuta `kubectl apply -k .` (stack completo + ConfigMaps Flyway)
-5. Espera a que terminen los jobs `ms-users-flyway` y `ms-project-manager-flyway`
+1. Construye imágenes Docker (`ms-*`, `bff`, `frontend`) con Node 26
+2. Aplica `k8s/secrets.local.yaml` (URLs `users-db:5432` / `pm-db:5432`)
+3. Genera claves JWT si faltan (`ms-auth/scripts/generate-keys.js`)
+4. Crea/actualiza el secret `innovatech-jwt-keys`
+5. Ejecuta `kubectl apply -k .` (stack completo + ConfigMaps Flyway + frontend)
+6. Espera a que terminen los jobs `ms-users-flyway` y `ms-project-manager-flyway`
+
+Omitir build de imágenes: `.\scripts\k8s-dev-up.ps1 -SkipBuild`
 
 ### Opción manual
 
@@ -74,6 +78,7 @@ docker build -t innovatech/ms-project-manager:1.0.0 ./ms-project-manager
 docker build -t innovatech/ms-kpi:1.0.0 ./ms-kpi
 docker build -t innovatech/bff:1.0.0 ./bff
 docker build -t innovatech/api-gateway:1.0.0 ./api-gateway
+docker build -t innovatech/frontend:1.0.0 ../frontend
 
 # 4. Desplegar stack completo (usar backend/, no solo k8s/)
 kubectl apply -k .
@@ -108,10 +113,12 @@ kubectl apply -k .
 Acceso API (port-forward):
 
 ```powershell
-kubectl port-forward -n innovatech svc/api-gateway 8010:8080
+kubectl port-forward -n innovatech svc/api-gateway 8010:8010
+kubectl port-forward -n innovatech svc/frontend 8080:80
 ```
 
-API: `http://localhost:8010/api/v1/...`
+API: `http://localhost:8010/api/v1/...`  
+App: `http://localhost:8080/` (nginx en el pod proxy `/api` al gateway)
 
 ---
 
@@ -183,7 +190,9 @@ kubectl apply -k .
 | `ms-users`          | 3003   | Gestión de usuarios          |
 | `ms-project-manager`| 3002   | Proyectos y tareas           |
 | `bff`               | 3010   | Orquestación                 |
-| `api-gateway`       | 8080   | Entrada HTTP pública         |
+| `ms-kpi`            | 3004   | KPIs agregados               |
+| `api-gateway`       | 8010   | Entrada HTTP pública (KrakenD) |
+| `frontend`          | 80     | SPA React (nginx)            |
 | `users-db`          | 5432   | PostgreSQL usuarios          |
 | `pm-db`             | 5432   | PostgreSQL project-manager   |
 

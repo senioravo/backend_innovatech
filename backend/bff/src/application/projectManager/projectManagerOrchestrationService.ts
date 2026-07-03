@@ -1,4 +1,3 @@
-// @ts-nocheck
 import projectManagerUpstreamClient from '../../infrastructure/clients/projectManagerUpstreamClient.js';
 
 /**

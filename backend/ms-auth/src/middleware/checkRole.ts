@@ -1,9 +1,9 @@
-// @ts-nocheck
 // AS-TASK-09: Middleware de autorizaci�n por rol
 // Responsabilidad: Verificar que el usuario tenga el rol adecuado para acceder a un endpoint
 // Principio SOLID: Single Responsibility - Solo valida autorizaci�n por rol
 
 import jwt from 'jsonwebtoken';
+import { asAuthPayload } from '../types/authJwtPayload.js';
 import { ROLES, hasPermission } from '../config/roles.js';
 
 /**
@@ -198,7 +198,7 @@ const checkAuthentication = () => {
       const token = authHeader.split(' ')[1];
       const JWT_SECRET = process.env.JWT_SECRET || 'secret_key_default_CHANGE_THIS';
       
-      const decoded = jwt.verify(token, JWT_SECRET);
+      const decoded = asAuthPayload(jwt.verify(token, JWT_SECRET));
       
       req.user = {
         id: decoded.id,

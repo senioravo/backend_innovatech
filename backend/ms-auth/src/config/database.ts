@@ -1,4 +1,3 @@
-// @ts-nocheck
 import dotenv from 'dotenv';
 // AS-TASK-21: Configuraci�n de base de datos production-ready
 // Mejoras: SSL seguro, graceful shutdown, retry logic, Winston logging, m�tricas Prometheus
@@ -40,7 +39,7 @@ const poolConfig = process.env.DATABASE_URL
     }
   : {
       host: process.env.DB_HOST || 'localhost',
-      port: process.env.DB_PORT || 5432,
+      port: Number(process.env.DB_PORT || 5432),
       database: process.env.DB_NAME || 'innovatech_db',
       user: process.env.DB_USER || 'postgres',
       password: process.env.DB_PASSWORD || '',

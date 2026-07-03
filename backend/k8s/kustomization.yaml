@@ -13,3 +13,4 @@ resources:
   - ../ms-kpi/k8s
   - ../bff/k8s
   - ../api-gateway/k8s
+  - ../../frontend/k8s

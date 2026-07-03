@@ -1,5 +1,3 @@
-// @ts-nocheck
-export {};
 const TASK_STATUSES = Object.freeze(['PENDING', 'IN_PROGRESS', 'IN_REVIEW', 'DONE']);
 
 function countByStatus(tasks) {

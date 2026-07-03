@@ -1,4 +1,3 @@
-// @ts-nocheck
 import { sendAuditToElasticsearch } from '../clients/elasticAuditClient.js';
 
 /**

@@ -1,4 +1,3 @@
-// @ts-nocheck
 import authOrchestrationService from '../auth/authOrchestrationService.js';
 import projectManagerUpstreamClient from '../../infrastructure/clients/projectManagerUpstreamClient.js';
 import { UpstreamError } from '../../utils/errorHandler.js';

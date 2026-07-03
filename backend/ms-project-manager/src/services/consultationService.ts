@@ -1,18 +1,14 @@
-// @ts-nocheck
 import taskRepository from '../repositories/taskRepository.js';
 import projectRepository from '../repositories/projectRepository.js';
-import { TASK_STATUSES } from '../constants/taskStatuses.js';
 import { taskToDto } from '../dtos/taskDto.js';
+import {
+  taskDashboardToDto,
+  kpisToDto,
+  exportReportToDto,
+  normalizeExportFormat,
+  type KpisDto
+} from '../dtos/consultationDto.js';
 import { canViewGlobalKpis } from '../utils/roleAccess.js';
-
-function countByStatus(tasks) {
-  const counts = Object.fromEntries(TASK_STATUSES.map((s) => [s, 0]));
-  for (const t of tasks) {
-    const s = t.status ?? 'PENDING';
-    if (Object.prototype.hasOwnProperty.call(counts, s)) counts[s] += 1;
-  }
-  return counts;
-}
 
 const consultationService = {
   async getTaskDashboardForUser(userId, role) {
@@ -24,12 +20,7 @@ const consultationService = {
       ...taskToDto(task),
       projectName
     }));
-    return {
-      userId,
-      total: tasks.length,
-      countByStatus: countByStatus(tasks),
-      tasks
-    };
+    return taskDashboardToDto({ userId, tasks });
   },
 
   async getKpisForUser(userId, role) {
@@ -47,7 +38,7 @@ const consultationService = {
     const horasAsignadas = total * 8;
     const horasDisponibles = Math.max(projects.length * 40, 40);
 
-    return {
+    const payload: KpisDto = {
       userId,
       projectProgressPct: avancePct,
       totalTasks: total,
@@ -66,14 +57,17 @@ const consultationService = {
       countByStatus: counts,
       generatedAt: new Date().toISOString()
     };
+
+    return kpisToDto(payload);
   },
 
   async exportReport(userId, format = 'csv', role) {
+    const exportFormat = normalizeExportFormat(format);
     const kpis = await this.getKpisForUser(userId, role);
     const dashboard = await this.getTaskDashboardForUser(userId, role);
 
-    if (format === 'json') {
-      return { contentType: 'application/json', body: JSON.stringify({ kpis, dashboard }, null, 2) };
+    if (exportFormat === 'json') {
+      return exportReportToDto('json', JSON.stringify({ kpis, dashboard }, null, 2));
     }
 
     const lines = [
@@ -87,7 +81,7 @@ const consultationService = {
       'Estado,Cantidad',
       ...Object.entries(kpis.countByStatus).map(([k, v]) => `${k},${v}`)
     ];
-    return { contentType: 'text/csv', body: lines.join('\n') };
+    return exportReportToDto('csv', lines.join('\n'));
   }
 };
 

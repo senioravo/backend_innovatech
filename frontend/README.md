@@ -21,7 +21,7 @@ Toda la comunicación con el backend se realiza contra el **API Gateway (KrakenD
 
 ### Requisitos
 
-- Node.js 20+
+- Node.js 26 (LTS desde octubre 2026; mínimo 26.0.0)
 - Backend en ejecución (recomendado: stack Docker Compose completo con KrakenD en `http://localhost:8010`)
 
 ### Instalación y desarrollo local
@@ -44,7 +44,39 @@ npm run build
 npm run preview
 ```
 
-Los artefactos estáticos se generan en `dist/`. En Kubernetes o Docker, sirve esa carpeta con nginx u otro servidor estático, apuntando las peticiones `/api/v1` al Ingress o al API Gateway.
+Los artefactos estáticos se generan en `dist/`. En Kubernetes, usa el `Dockerfile` incluido (nginx + proxy `/api` → `api-gateway`).
+
+### Kubernetes
+
+Desde `backend/` (construye imagen + despliega stack completo):
+
+```powershell
+.\scripts\k8s-dev-up.ps1
+```
+
+Solo la imagen del frontend:
+
+```bash
+docker build -t innovatech/frontend:1.0.0 ./frontend
+```
+
+Manifiestos en `frontend/k8s/` (referenciados desde `backend/k8s/kustomization.yaml`).
+
+Acceso local:
+
+```powershell
+kubectl port-forward -n innovatech svc/frontend 8080:80
+# App: http://localhost:8080/  (nginx proxy /api → api-gateway:8010)
+```
+
+Con Ingress NGINX, añade a tu archivo hosts:
+
+```
+127.0.0.1 app.innovatech.local api.innovatech.local
+```
+
+- App: `http://app.innovatech.local/`
+- API: `http://api.innovatech.local/api/v1/...`
 
 ### Tests
 

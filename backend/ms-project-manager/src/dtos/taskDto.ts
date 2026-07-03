@@ -1,14 +1,23 @@
-// @ts-nocheck
-function formatDate(v) {
+/**
+ * DTOs de tarea para ms-project-manager.
+ */
+
+function formatDate(v: unknown) {
   if (v == null) return null;
   if (typeof v === 'string') return v;
   if (v instanceof Date) return v.toISOString().slice(0, 10);
   return String(v);
 }
 
-function createTaskDto(body) {
-  const title = body.title;
-  const description = body.description;
+/**
+ * Normaliza body de creación/actualización de tarea.
+ * @param {Record<string, unknown>|object} body
+ * @returns {{ title: string|null; description: string|null; completed: unknown }}
+ */
+export function createTaskDto(body: Record<string, unknown> | object = {}) {
+  const input = body as Record<string, unknown>;
+  const title = input.title;
+  const description = input.description;
   return {
     title: typeof title === 'string' ? title.trim() : null,
     description:
@@ -17,29 +26,35 @@ function createTaskDto(body) {
         : typeof description === 'string'
           ? description.trim()
           : null,
-    completed: body.completed
+    completed: input.completed
   };
 }
 
-function taskToDto(task) {
+/**
+ * Mapea TaskModel / fila SQL a DTO de respuesta API.
+ * @param {Record<string, unknown>|null|object} task
+ * @returns {object|null}
+ */
+export function taskToDto(task: Record<string, unknown> | null | object) {
   if (!task) return null;
+  const t = task as Record<string, unknown>;
   return {
-    id: task.id,
-    projectId: task.projectId,
-    title: task.title,
-    description: task.description,
-    completed: task.completed,
-    status: task.status ?? 'PENDING',
-    assigneeId: task.assigneeId ?? null,
-    startDate: formatDate(task.startDate),
-    endDate: formatDate(task.endDate),
-    createdAt: task.createdAt,
-    updatedAt: task.updatedAt
+    id: t.id,
+    projectId: t.projectId,
+    title: t.title,
+    description: t.description,
+    completed: t.completed,
+    status: t.status ?? 'PENDING',
+    assigneeId: t.assigneeId ?? null,
+    startDate: formatDate(t.startDate),
+    endDate: formatDate(t.endDate),
+    createdAt: t.createdAt,
+    updatedAt: t.updatedAt
   };
 }
 
-function pickTaskScheduleFields(body) {
-  const out = {};
+export function pickTaskScheduleFields(body: Record<string, unknown> = {}) {
+  const out: Record<string, string | null> = {};
   if (Object.prototype.hasOwnProperty.call(body, 'startDate')) {
     const v = body.startDate;
     out.startDate = v === null || v === '' ? null : String(v).trim();
@@ -50,5 +65,3 @@ function pickTaskScheduleFields(body) {
   }
   return out;
 }
-
-export { createTaskDto, taskToDto, pickTaskScheduleFields };

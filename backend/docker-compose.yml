@@ -102,8 +102,8 @@ services:
       KPI_API_PREFIX: /api/v1
     volumes:
       - ./ms-auth/keys/public.key:/app/keys/public.key:ro
-    expose:
-      - "3010"
+    ports:
+      - "3010:3010"
     depends_on:
       - auth
       - project-manager
@@ -127,8 +127,8 @@ services:
       - ./ms-auth/keys/private.key:/app/keys/private.key:ro
       # Clave PÚBLICA RSA (opcional, para verificación local)
       - ./ms-auth/keys/public.key:/app/keys/public.key:ro
-    expose:
-      - "3001"
+    ports:
+      - "3001:3001"
     depends_on:
       - users
 
@@ -143,8 +143,8 @@ services:
     volumes:
       # Clave PÚBLICA RSA para verificar tokens (solo lectura)
       - ./ms-auth/keys/public.key:/app/keys/public.key:ro
-    expose:
-      - "3002"
+    ports:
+      - "3002:3002"
     depends_on:
       flyway-pm:
         condition: service_completed_successfully
@@ -161,8 +161,8 @@ services:
       PROJECT_MANAGER_API_PREFIX: /api/v1
     volumes:
       - ./ms-auth/keys/public.key:/app/keys/public.key:ro
-    expose:
-      - "3004"
+    ports:
+      - "3004:3004"
 
   users:
     build:
@@ -180,8 +180,8 @@ services:
     volumes:
       # Clave PÚBLICA RSA para verificar tokens (solo lectura)
       - ./ms-auth/keys/public.key:/app/keys/jwt_public.pem:ro
-    expose:
-      - "3003"
+    ports:
+      - "3003:3003"
     depends_on:
       flyway-users:
         condition: service_completed_successfully

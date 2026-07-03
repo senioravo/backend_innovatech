@@ -1,4 +1,3 @@
-// @ts-nocheck
 import { getPool } from './pool.js';
 import config from '../config/index.js';
 

@@ -1,4 +1,3 @@
-// @ts-nocheck
 import authOrchestrationService from '../../../application/auth/authOrchestrationService.js';
 
 function sendUpstream(res, { status, data }) {

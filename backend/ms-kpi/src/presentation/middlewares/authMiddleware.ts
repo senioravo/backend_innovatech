@@ -1,5 +1,3 @@
-// @ts-nocheck
-export {};
 const jwt = require('jsonwebtoken');
 const fs = require('fs');
 const path = require('path');
@@ -14,7 +12,19 @@ try {
   throw new Error('No se pudo cargar la clave pública RSA');
 }
 
+/**
+ * Middleware JWT RS256 para rutas KPI.
+ * Verifica Bearer token con clave pública RSA compartida.
+ * @param {import('express').Request} req
+ * @param {import('express').Response} res
+ * @param {import('express').NextFunction} next
+ */
 function authMiddleware(req, res, next) {
+  const openPaths = ['/health', '/metrics', '/api-docs', '/api-docs.json'];
+  if (openPaths.some((p) => req.path === p || req.path.startsWith(`${p}/`))) {
+    return next();
+  }
+
   const authHeader = req.headers.authorization;
 
   if (!authHeader || !authHeader.startsWith('Bearer ')) {

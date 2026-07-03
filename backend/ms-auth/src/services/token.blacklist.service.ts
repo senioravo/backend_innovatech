@@ -1,4 +1,3 @@
-// @ts-nocheck
 // AS-TASK-07: Servicio de Blacklist de Tokens JWT
 // Responsabilidad: Gestionar tokens invalidados (logout)
 // Principio SOLID: Single Responsibility - Solo gestiona blacklist
@@ -13,6 +12,10 @@ import logger from '../utils/logger.js';
  * Almacena tokens JWT invalidados en memoria
  */
 class TokenBlacklistService {
+  blacklist: Set<string>;
+  metadata: Map<string, { expiresAt?: string; userId?: unknown; email?: unknown; rol?: unknown; blacklistedAt?: string; error?: string }>;
+  cleanupInterval: ReturnType<typeof setInterval> | null;
+
   constructor() {
     // Set para almacenar tokens en blacklist (en memoria)
     this.blacklist = new Set();
@@ -21,6 +24,7 @@ class TokenBlacklistService {
     this.metadata = new Map();
     
     // Limpiar tokens expirados cada 1 hora
+    this.cleanupInterval = null;
     this.startCleanupInterval();
   }
 

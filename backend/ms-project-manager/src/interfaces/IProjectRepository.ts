@@ -1,4 +1,3 @@
-// @ts-nocheck
 /**
  * Contract for project repository implementations.
  */

@@ -1,4 +1,3 @@
-// @ts-nocheck
 // AS-TASK-07: Middleware de Autenticación
 // Responsabilidad: Extraer y validar tokens JWT del header Authorization
 // Principio SOLID: Single Responsibility - Solo valida tokens

@@ -1,16 +1,12 @@
-// @ts-nocheck
-import path from 'path';
-import { fileURLToPath } from 'url';
-const __filename = fileURLToPath(import.meta.url);
-const __dirname = path.dirname(__filename);
-// AS-TASK-06: Helper para gestión de JWT con RSA (RS256)
-// Responsabilidad: Generación, verificación y validación de tokens JWT
-// Principio SOLID: Single Responsibility - Solo maneja operaciones JWT
-// SEGURIDAD: Usa criptografía asimétrica (clave privada para firmar, pública para verificar)
-
 import jwt from 'jsonwebtoken';
 import fs from 'fs';
 import path from 'path';
+import { fileURLToPath } from 'url';
+import type { AuthJwtPayload } from '../types/authJwtPayload.js';
+import { asAuthPayload } from '../types/authJwtPayload.js';
+
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
 
 /**
  * Clase JWTHelper - Gestión centralizada de tokens JWT con RSA
@@ -22,6 +18,15 @@ import path from 'path';
  * - No se comparte secreto sensible entre servicios
  */
 class JWTHelper {
+  expiresIn: string;
+  issuer: string;
+  algorithm: 'RS256';
+  privateKey: string | null;
+  publicKey: string | null;
+  _keysLoaded: boolean;
+  _privateKeyPath: string;
+  _publicKeyPath: string;
+
   constructor() {
     this.expiresIn = process.env.JWT_EXPIRES_IN || '1h';
     this.issuer = process.env.JWT_ISSUER || 'innovatech-auth';
@@ -84,7 +89,7 @@ class JWTHelper {
       };
 
       // Generar y firmar token con CLAVE PRIVADA
-      const token = jwt.sign(payload, this.privateKey, options);
+      const token = jwt.sign(payload, this.privateKey as string, options as jwt.SignOptions);
 
       console.log(`[JWT-HELPER] Token RS256 generado - UserID: ${user.id} - Email: ${user.email} - Expira: ${this.expiresIn}`);
 
@@ -100,7 +105,7 @@ class JWTHelper {
    * @param {string} token - Token a verificar
    * @returns {Object} - Payload decodificado
    */
-  verifyToken(token) {
+  verifyToken(token: string): AuthJwtPayload {
     this._ensureKeys();
 
     try {
@@ -108,15 +113,15 @@ class JWTHelper {
         throw new Error('Token no proporcionado');
       }
 
-      // Verificar firma y validez del token con CLAVE PÚBLICA
-      const decoded = jwt.verify(token, this.publicKey, {
+      const decoded = jwt.verify(token, this.publicKey as string, {
         issuer: this.issuer,
-        algorithms: [this.algorithm] // RS256
+        algorithms: [this.algorithm]
       });
 
-      console.log(`[JWT-HELPER] Token RS256 verificado - UserID: ${decoded.id}`);
+      const payload = asAuthPayload(decoded);
+      console.log(`[JWT-HELPER] Token RS256 verificado - UserID: ${payload.id}`);
 
-      return decoded;
+      return payload;
     } catch (error) {
       if (error.name === 'TokenExpiredError') {
         console.warn('[JWT-HELPER] Token expirado');

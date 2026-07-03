@@ -1,5 +1,16 @@
-// @ts-nocheck
 class TaskModel {
+  id: string | number;
+  projectId: string | number;
+  title: string;
+  description: string;
+  completed: boolean;
+  status: string;
+  createdAt: unknown;
+  updatedAt: unknown;
+  assigneeId: string | number | null;
+  startDate: unknown;
+  endDate: unknown;
+
   constructor({
     id,
     projectId,
@@ -12,19 +23,19 @@ class TaskModel {
     assigneeId,
     startDate,
     endDate
-  }) {
-    this.id = id;
-    this.projectId = projectId;
-    this.title = title;
-    this.description = description ?? '';
+  }: Record<string, unknown>) {
+    this.id = id as string | number;
+    this.projectId = projectId as string | number;
+    this.title = String(title ?? '');
+    this.description = String(description ?? '');
     this.completed = Boolean(completed);
-    this.status = status ?? 'PENDING';
+    this.status = String(status ?? 'PENDING');
     this.createdAt = createdAt;
     this.updatedAt = updatedAt ?? null;
-    this.assigneeId = assigneeId ?? null;
+    this.assigneeId = (assigneeId ?? null) as string | number | null;
     this.startDate = startDate ?? null;
     this.endDate = endDate ?? null;
   }
 }
 
-export default TaskModel;;
+export default TaskModel;

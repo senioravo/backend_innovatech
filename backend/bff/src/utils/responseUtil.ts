@@ -1,4 +1,3 @@
-// @ts-nocheck
 import { ApplicationError, ValidationError, UpstreamError } from './errorHandler.js';
 
 function handleNotFound(req, res) {

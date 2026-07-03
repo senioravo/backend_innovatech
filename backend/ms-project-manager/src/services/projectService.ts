@@ -1,4 +1,3 @@
-// @ts-nocheck
 import projectRepository from '../repositories/projectRepository.js';
 import taskRepository from '../repositories/taskRepository.js';
 import resourceAvailabilityService from './resourceAvailabilityService.js';
@@ -8,6 +7,8 @@ import { NotFoundError, ValidationError } from '../utils/errorHandler.js';
 import { canViewAllProjects } from '../utils/roleAccess.js';
 
 class ProjectService {
+  repository;
+
   constructor(repository = projectRepository) {
     this.repository = repository;
   }
@@ -25,7 +26,7 @@ class ProjectService {
     return resourceAvailabilityService.assertProjectAvailable(projectId, userId);
   }
 
-  async createProject({ name, description, userId, startDate, endDate, assigneeId }) {
+  async createProject({ name, description, userId, startDate = null, endDate = null, assigneeId = null }) {
     if (!name || !description || !userId) {
       throw new Error('name, description and userId are required');
     }
@@ -53,7 +54,7 @@ class ProjectService {
     const validation = ValidationService.validateUpdateInput(body);
     if (!validation.isValid) throw new ValidationError(validation.errors);
 
-    const updates = {};
+    const updates: Record<string, unknown> = {};
     if (Object.prototype.hasOwnProperty.call(body, 'name')) {
       updates.name = String(body.name).trim();
     }
@@ -88,7 +89,7 @@ class ProjectService {
       startDate: updates.startDate,
       endDate: updates.endDate
     };
-    const defined = {};
+    const defined: Record<string, unknown> = {};
     if (patch.name !== undefined) defined.name = patch.name;
     if (patch.description !== undefined) defined.description = patch.description;
     if (patch.startDate !== undefined) defined.startDate = patch.startDate;

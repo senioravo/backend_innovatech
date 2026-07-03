@@ -1,4 +1,3 @@
-// @ts-nocheck
 import taskRepository from '../repositories/taskRepository.js';
 import resourceAvailabilityService from './resourceAvailabilityService.js';
 import collaborationService from './collaborationService.js';
@@ -52,7 +51,7 @@ class TaskService {
     const validation = ValidationService.validateTaskUpdateInput(body);
     if (!validation.isValid) throw new ValidationError(validation.errors);
 
-    const updates = {};
+    const updates: Record<string, unknown> = {};
     if (Object.prototype.hasOwnProperty.call(body, 'title')) {
       updates.title = String(body.title).trim();
     }

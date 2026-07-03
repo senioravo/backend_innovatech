@@ -1,4 +1,3 @@
-// @ts-nocheck
 import resourceAvailabilityService from '../services/resourceAvailabilityService.js';
 
 /**
@@ -11,7 +10,8 @@ function ensureProjectAvailable(paramName = 'id') {
       const projectId = req.params[paramName];
       req.availableProject = await resourceAvailabilityService.assertProjectAvailable(
         projectId,
-        req.user.id
+        req.user.id,
+        req.user.role
       );
       next();
     } catch (err) {

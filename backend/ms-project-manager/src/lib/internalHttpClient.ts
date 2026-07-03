@@ -1,4 +1,3 @@
-// @ts-nocheck
 import { CircuitBreaker } from './circuitBreaker.js';
 
 /**
@@ -19,11 +18,11 @@ function createInternalHttpClient({
     successThreshold
   });
 
-  async function fetchJson(method, url, options = {}) {
-    const timeoutMs = options.timeoutMs ?? defaultTimeoutMs;
-    const headers = {
+  async function fetchJson(method, url, options: Record<string, unknown> = {}) {
+    const timeoutMs = (options.timeoutMs as number | undefined) ?? defaultTimeoutMs;
+    const headers: Record<string, string> = {
       Accept: 'application/json',
-      ...options.headers
+      ...(options.headers as Record<string, string> | undefined)
     };
     if (options.body !== undefined && options.body !== null) {
       headers['Content-Type'] = headers['Content-Type'] || 'application/json';
@@ -57,7 +56,7 @@ function createInternalHttpClient({
         }
 
         if (!res.ok) {
-          const err = new Error(`HTTP ${res.status}`);
+          const err = new Error(`HTTP ${res.status}`) as Error & { status: number; body: unknown };
           err.status = res.status;
           err.body = parsed;
           throw err;
