@@ -1,4 +1,3 @@
-// @ts-nocheck
 const TASK_STATUSES = ['PENDING', 'IN_PROGRESS', 'IN_REVIEW', 'DONE'];
 
 function normalizeRoleKey(role) {

@@ -1,4 +1,3 @@
-// @ts-nocheck
 // AS-TASK-03: Configurar Circuit Breaker para llamadas internas
 // Implementaci�n del patr�n Circuit Breaker usando Opossum
 

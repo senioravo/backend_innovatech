@@ -1,4 +1,3 @@
-// @ts-nocheck
 import authUpstreamClient from '../../infrastructure/clients/authUpstreamClient.js';
 
 /**

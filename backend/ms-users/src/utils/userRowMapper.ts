@@ -1,3 +1,5 @@
+import UserModel from '../models/userModel.js';
+
 type NameRoleInput = {
   name?: string;
   nombre?: string;
@@ -6,27 +8,21 @@ type NameRoleInput = {
 };
 
 /**
- * Maps PostgreSQL row columns (Spanish DB names) to English domain properties.
+ * Maps PostgreSQL row to UserModel entity.
+ * @param {Record<string, unknown>|null|undefined} row
+ * @returns {UserModel|null}
  */
-function mapUserRow(row) {
-  if (!row) return null;
-  return {
-    id: row.id,
-    name: row.nombre,
-    email: row.email,
-    role: row.rol,
-    password: row.password,
-    skills: row.habilidades ?? '',
-    availability: row.disponibilidad ?? 'disponible',
-    weeklyAvailableHours: row.horas_semanales_disponibles ?? 40,
-    createdAt: row.created_at ?? row.createdAt,
-    updatedAt: row.updated_at ?? row.updatedAt
-  };
+function mapUserRow(row: Record<string, unknown> | null | undefined): UserModel | null {
+  return UserModel.fromRow(row);
 }
 
-function mapUserRows(rows) {
+/**
+ * @param {Record<string, unknown>[]} rows
+ * @returns {UserModel[]}
+ */
+function mapUserRows(rows: Record<string, unknown>[]) {
   if (!Array.isArray(rows)) return [];
-  return rows.map(mapUserRow);
+  return rows.map((row) => UserModel.fromRow(row)).filter(Boolean) as UserModel[];
 }
 
 function pickName(body: NameRoleInput = {}) {

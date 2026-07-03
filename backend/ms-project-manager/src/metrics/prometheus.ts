@@ -1,4 +1,3 @@
-// @ts-nocheck
 import client from 'prom-client';
 import config from '../config/index.js';
 

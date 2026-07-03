@@ -1,4 +1,3 @@
-// @ts-nocheck
 import proyectosOrchestrationService from '../../../application/proyectos/proyectosOrchestrationService.js';
 
 const proyectosOrchestrationController = {

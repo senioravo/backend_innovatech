@@ -1,22 +1,34 @@
-// @ts-nocheck
 class CircuitBreakerOpenError extends Error {
-  constructor(serviceName) {
+  serviceName: string;
+
+  constructor(serviceName: string) {
     super(`Circuit breaker abierto: ${serviceName}`);
     this.name = 'CircuitBreakerOpenError';
     this.serviceName = serviceName;
   }
 }
 
-/**
- * Circuit breaker por dependencia (CLOSED → OPEN → HALF_OPEN).
- * Envuelve operaciones async (p. ej. fetch a otro microservicio).
- */
+/** Circuit breaker por dependencia (CLOSED → OPEN → HALF_OPEN). */
 class CircuitBreaker {
+  name: string;
+  failureThreshold: number;
+  resetTimeoutMs: number;
+  successThreshold: number;
+  state: string;
+  failures: number;
+  successes: number;
+  nextAttemptAt: number;
+
   constructor({
     name,
     failureThreshold = 5,
     resetTimeoutMs = 30000,
     successThreshold = 1
+  }: {
+    name: string;
+    failureThreshold?: number;
+    resetTimeoutMs?: number;
+    successThreshold?: number;
   }) {
     this.name = name;
     this.failureThreshold = failureThreshold;
@@ -68,7 +80,7 @@ class CircuitBreaker {
     }
   }
 
-  async execute(operation) {
+  async execute<T>(operation: () => Promise<T>): Promise<T> {
     const now = Date.now();
 
     if (this.state === 'OPEN') {

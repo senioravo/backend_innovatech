@@ -1,4 +1,3 @@
-// @ts-nocheck
 // AS-TASK-14: Rutas de métricas de Prometheus
 // Responsabilidad: Exponer endpoint /metrics para scraping de Prometheus
 // Principio SOLID: Single Responsibility - Solo maneja endpoints de métricas

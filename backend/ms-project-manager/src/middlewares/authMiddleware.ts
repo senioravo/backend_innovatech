@@ -1,11 +1,11 @@
-// @ts-nocheck
 import path from 'path';
 import { fileURLToPath } from 'url';
-const __filename = fileURLToPath(import.meta.url);
-const __dirname = path.dirname(__filename);
 import jwt from 'jsonwebtoken';
 import fs from 'fs';
-import path from 'path';
+import { asAuthPayload } from '../types/authJwtPayload.js';
+
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
 
 const publicKeyPath = path.join(__dirname, '..', '..', 'keys', 'public.key');
 let publicKey: string | null = null;
@@ -17,32 +17,14 @@ if (!fs.existsSync(publicKeyPath)) {
 }
 
 function loadPublicKey() {
-  if (publicKey) {
-    return publicKey;
-  }
-
+  if (publicKey) return publicKey;
   publicKey = fs.readFileSync(publicKeyPath, 'utf8');
-  console.log('[PM-AUTH-MIDDLEWARE] ✅ Clave pública RSA cargada');
   return publicKey;
 }
 
-/**
- * Middleware de autenticación para Project Manager.
- * - Bearer JWT (acceso directo / pruebas)
- * - Headers X-User-* reenviados por el BFF tras validación en KrakenD
- */
 function authMiddleware(req, res, next) {
-  const userId = req.headers['x-user-id'];
-  const userEmail = req.headers['x-user-email'];
-  const userRole = req.headers['x-user-role'];
-
-  if (userId && userEmail && userRole) {
-    req.user = {
-      id: String(userId),
-      email: String(userEmail),
-      role: String(userRole)
-    };
-    console.log(`[PM-AUTH-MIDDLEWARE] Usuario autenticado vía gateway - UserID: ${req.user.id}`);
+  const openPaths = ['/health', '/metrics', '/api-docs', '/swagger.json'];
+  if (openPaths.some((p) => req.path === p || req.path.startsWith(`${p}/`))) {
     return next();
   }
 
@@ -56,14 +38,16 @@ function authMiddleware(req, res, next) {
 
   try {
     const key = loadPublicKey();
-    const decoded = jwt.verify(token, key, {
-      algorithms: ['RS256'], // Solo aceptar RS256
-      issuer: 'innovatech-auth' // Verificar emisor
-    });
+    const decoded = asAuthPayload(
+      jwt.verify(token, key, {
+        algorithms: ['RS256'],
+        issuer: 'innovatech-auth'
+      })
+    );
     req.user = {
       id: String(decoded.id),
-      email: decoded.email,
-      role: decoded.role ?? decoded.rol
+      email: String(decoded.email),
+      role: String(decoded.role ?? decoded.rol)
     };
 
     console.log(`[PM-AUTH-MIDDLEWARE] Token RS256 verificado - UserID: ${decoded.id}`);
@@ -77,4 +61,4 @@ function authMiddleware(req, res, next) {
   }
 }
 
-export default authMiddleware;;
+export default authMiddleware;

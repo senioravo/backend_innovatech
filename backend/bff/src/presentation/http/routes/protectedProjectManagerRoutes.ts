@@ -1,4 +1,3 @@
-// @ts-nocheck
 import express from 'express';
 import jwtAuthMiddleware from '../middlewares/jwtAuthMiddleware.js';
 import requireRole from '../middlewares/requireRoleMiddleware.js';

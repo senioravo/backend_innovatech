@@ -1,4 +1,3 @@
-// @ts-nocheck
 import { getPool } from '../db/pool.js';
 
 class CollaborationRepository {

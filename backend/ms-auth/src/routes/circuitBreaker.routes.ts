@@ -1,4 +1,3 @@
-// @ts-nocheck
 // AS-TASK-03: Rutas para pruebas de Circuit Breaker
 import express from 'express';
 const router = express.Router();

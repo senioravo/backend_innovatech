@@ -1,4 +1,3 @@
-// @ts-nocheck
 import kpiOrchestrationService from '../../../application/kpi/kpiOrchestrationService.js';
 
 const kpiOrchestrationController = {

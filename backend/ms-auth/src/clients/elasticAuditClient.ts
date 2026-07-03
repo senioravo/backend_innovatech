@@ -1,4 +1,3 @@
-// @ts-nocheck
 import { Client } from '@elastic/elasticsearch';
 import config from '../config/environment.js';
 
@@ -6,10 +5,9 @@ let esClient;
 let initAttempted;
 
 function buildClientOptions() {
-  const elasticsearch = config.elasticsearch || {};
-  const { node, apiKey, username, password, tlsInsecure } = elasticsearch;
+  const { node, apiKey, username, password, tlsInsecure } = config.elasticsearch;
   
-  const opts = { node };
+  const opts: Record<string, unknown> = { node };
   
   if (apiKey) {
     opts.auth = { apiKey };
@@ -28,8 +26,7 @@ function getClient() {
   if (initAttempted) return esClient || null;
   initAttempted = true;
   
-  const elasticsearch = config.elasticsearch || {};
-  const { node } = elasticsearch;
+  const { node } = config.elasticsearch;
   
   if (!node) {
     esClient = null;
@@ -54,8 +51,7 @@ async function sendAuditToElasticsearch(doc) {
   const client = getClient();
   if (!client) return;
   
-  const elasticsearch = config.elasticsearch || {};
-  const { index } = elasticsearch;
+  const { index } = config.elasticsearch;
   
   const document = {
     '@timestamp': doc.ts || new Date().toISOString(),

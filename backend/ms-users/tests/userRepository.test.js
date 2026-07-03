@@ -18,16 +18,18 @@ describe('userRepository', () => {
     await expect(userRepository.findById(99)).resolves.toBeNull();
   });
 
-  test('findById maps database row to domain user', async () => {
+  test('findById maps database row to UserModel', async () => {
     query.mockResolvedValueOnce({
       rows: [{ id: 1, nombre: 'Ana', email: 'a@a.cl', rol: 'gestor', created_at: '2026-01-01', updated_at: '2026-01-02' }]
     });
-    await expect(userRepository.findById(1)).resolves.toMatchObject({
+    const user = await userRepository.findById(1);
+    expect(user).toMatchObject({
       id: 1,
       name: 'Ana',
       email: 'a@a.cl',
       role: 'gestor'
     });
+    expect(user?.hasRole('gestor')).toBe(true);
   });
 
   test('findAll paginates results', async () => {

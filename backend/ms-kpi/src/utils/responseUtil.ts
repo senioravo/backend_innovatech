@@ -1,5 +1,3 @@
-// @ts-nocheck
-export {};
 const { ApplicationError } = require('./errorHandler');
 
 function handleNotFound(req, res) {

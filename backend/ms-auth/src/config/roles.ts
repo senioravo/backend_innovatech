@@ -1,4 +1,3 @@
-// @ts-nocheck
 // AS-TASK-08: Configuración de roles del sistema
 // Responsabilidad: Definir y exportar roles y permisos
 // Principio SOLID: Single Responsibility - Solo gestiona roles

@@ -1,6 +1,7 @@
-// @ts-nocheck
 class ApplicationError extends Error {
-  constructor(message, status = 500) {
+  status: number;
+
+  constructor(message: string, status = 500) {
     super(message);
     this.status = status;
     this.name = 'ApplicationError';
@@ -8,7 +9,9 @@ class ApplicationError extends Error {
 }
 
 class ValidationError extends ApplicationError {
-  constructor(errors) {
+  errors: unknown;
+
+  constructor(errors: unknown) {
     super('Validation failed', 400);
     this.errors = errors;
   }

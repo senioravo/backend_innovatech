@@ -1,4 +1,3 @@
-// @ts-nocheck
 import { UpstreamError } from '../../utils/errorHandler.js';
 
 type UpstreamOptions = {

@@ -1,7 +1,7 @@
-// @ts-nocheck
 import fs from 'fs';
 import path from 'path';
 import jwt from 'jsonwebtoken';
+import { asAuthPayload } from '../../../types/authJwtPayload.js';
 
 const publicKeyPath = path.join(process.cwd(), 'keys', 'public.key');
 
@@ -37,10 +37,12 @@ function userFromBearerToken(req) {
 
   try {
     const token = authHeader.slice(7);
-    const decoded = jwt.verify(token, loadPublicKey(), {
-      algorithms: ['RS256'],
-      issuer: process.env.JWT_ISSUER || 'innovatech-auth'
-    });
+    const decoded = asAuthPayload(
+      jwt.verify(token, loadPublicKey(), {
+        algorithms: ['RS256'],
+        issuer: process.env.JWT_ISSUER || 'innovatech-auth'
+      })
+    );
     if (!decoded?.id || !decoded?.email || !(decoded?.role ?? decoded?.rol)) return null;
     return {
       id: String(decoded.id),

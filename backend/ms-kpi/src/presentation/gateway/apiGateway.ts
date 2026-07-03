@@ -1,5 +1,3 @@
-// @ts-nocheck
-export {};
 const express = require('express');
 const kpiRoutes = require('../routes/kpiRoutes');
 

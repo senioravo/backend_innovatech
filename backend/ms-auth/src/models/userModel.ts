@@ -1,61 +1,70 @@
-// @ts-nocheck
 /**
- * UserModel - Entidad de Usuario
- * Representa la estructura de datos de un usuario tal como existe en la base de datos
- * 
- * PROPÓSITO:
- * - Modelo de dominio que representa un usuario del sistema
- * - Encapsula la estructura de la tabla 'usuarios' en PostgreSQL
- * - Proporciona una representación tipada y consistente
- * 
- * CAMPOS:
- * - id: Identificador único del usuario
- * - nombre: Nombre completo del usuario
- * - email: Correo electrónico (único, usado para login)
- * - password: Contraseña hasheada con bcrypt (NUNCA se expone en DTOs)
- * - rol: Rol del usuario (gestor, profesional, directivo)
- * - createdAt: Fecha de creación del registro
- * - updatedAt: Fecha de última actualización
+ * UserModel - Entidad de Usuario en ms-auth.
+ * Representa datos recibidos de ms-users (HTTP); no persiste en BD local.
  */
 class UserModel {
-  constructor({
-    id,
-    nombre,
-    email,
-    password,
-    rol,
-    createdAt,
-    updatedAt
+  id: unknown;
+  name: unknown;
+  email: unknown;
+  password: unknown;
+  role: unknown;
+  createdAt: unknown;
+  updatedAt: unknown;
+
+  constructor(data: {
+    id: unknown;
+    name?: unknown;
+    nombre?: unknown;
+    email?: unknown;
+    password?: unknown;
+    role?: unknown;
+    rol?: unknown;
+    createdAt?: unknown;
+    updatedAt?: unknown;
   }) {
-    this.id = id;
-    this.nombre = nombre;
-    this.email = email;
-    this.password = password; // Hasheada con bcrypt
-    this.rol = rol;
-    this.createdAt = createdAt;
-    this.updatedAt = updatedAt ?? null;
+    this.id = data.id;
+    this.name = data.name ?? data.nombre;
+    this.email = data.email;
+    this.password = data.password;
+    this.role = data.role ?? data.rol;
+    this.createdAt = data.createdAt ?? null;
+    this.updatedAt = data.updatedAt ?? null;
   }
 
   /**
-   * Método auxiliar para verificar si el usuario tiene un rol específico
+   * Crea entidad desde respuesta JSON de ms-users.
+   * @param {Record<string, unknown>|null|undefined} data
+   * @returns {UserModel|null}
    */
-  hasRole(roleName) {
-    return this.rol === roleName;
+  static fromPlain(data: Record<string, unknown> | null | undefined): UserModel | null {
+    if (!data || data.id == null) return null;
+    return new UserModel({
+      id: data.id,
+      name: data.name ?? data.nombre,
+      email: data.email,
+      password: data.password,
+      role: data.role ?? data.rol,
+      createdAt: data.createdAt ?? data.created_at,
+      updatedAt: data.updatedAt ?? data.updated_at
+    });
   }
 
-  /**
-   * Método auxiliar para obtener datos seguros (sin password)
-   */
+  /** @param {string} roleName */
+  hasRole(roleName: string) {
+    return this.role === roleName;
+  }
+
+  /** Datos seguros (sin password) para logs o respuestas. */
   toSafeObject() {
     return {
       id: this.id,
-      nombre: this.nombre,
+      name: this.name,
       email: this.email,
-      rol: this.rol,
+      role: this.role,
       createdAt: this.createdAt,
       updatedAt: this.updatedAt
     };
   }
 }
 
-export default UserModel;;
+export default UserModel;

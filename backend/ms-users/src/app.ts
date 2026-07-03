@@ -96,6 +96,7 @@ app.use((err, req, res, next) => {
 app.listen(PORT, () => {
   logger.info(`🚀 Microservicio Users ejecutándose en puerto ${PORT}`);
   console.log(`🚀 Microservicio Users ejecutándose en puerto ${PORT}`);
+  console.log(`📚 Swagger: http://localhost:${PORT}/api-docs`);
 });
 
 export default app;

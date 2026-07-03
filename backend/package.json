@@ -2,6 +2,9 @@
   "name": "innovatech-backend",
   "private": true,
   "type": "module",
+  "engines": {
+    "node": ">=26.0.0"
+  },
   "description": "Monorepo scripts for InnovaTech microservices",
   "scripts": {
     "test": "npm test --prefix ms-auth && npm test --prefix ms-users && npm test --prefix ms-project-manager && npm test --prefix ms-kpi && npm test --prefix bff",

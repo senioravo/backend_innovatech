@@ -1,4 +1,3 @@
-// @ts-nocheck
 // AS-TASK-03: Controlador para probar Circuit Breaker
 // Endpoints de prueba y monitoreo
 

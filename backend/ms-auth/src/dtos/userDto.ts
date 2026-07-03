@@ -1,28 +1,25 @@
-// @ts-nocheck
 /**
- * userDto.ts - Data Transfer Objects para Usuario
- * 
- * PROPÓSITO:
- * - Transformar datos de entrada (request body) a formato limpio y validado
- * - Transformar entidades (UserModel) a respuestas seguras (sin password)
- * - Centralizar la lógica de formateo y validación
- * 
- * VENTAJAS:
- * 1. Seguridad: Nunca expone el password en las respuestas
- * 2. Validación: Limpia y valida datos de entrada
- * 3. Consistencia: Formato uniforme en todas las respuestas
- * 4. Mantenibilidad: Un solo lugar para cambiar el formato de respuesta
+ * DTOs de usuario para ms-auth: entrada, respuesta y validación.
+ * Normalizan campos en inglés/español y nunca exponen password en respuestas.
  */
 
+import type UserModel from '../models/userModel.js';
+
+type UserRecord = Record<string, unknown>;
+type UserEntityLike = Record<string, unknown> | UserModel;
+
+const EMAIL_REGEX = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+const VALID_ROLES = ['gestor', 'profesional', 'directivo'];
+
 /**
- * Valida y limpia datos para registro de usuario
- * @param {Object} body - Request body con datos del usuario
- * @returns {Object} - Datos limpios y validados
+ * Normaliza el body de registro (name/nombre, role/rol, email, password).
+ * @param {UserRecord} body - Body del request POST /api/auth/register
+ * @returns {{ name: string|null; email: string|null; password: string|null; role: string|null }}
  */
-function createRegisterDto(body) {
+export function createRegisterDto(body: UserRecord = {}) {
   const name = body?.name ?? body?.nombre;
   const role = body?.role ?? body?.rol;
-  const { email, password } = body ?? {};
+  const { email, password } = body;
 
   return {
     name: typeof name === 'string' ? name.trim() : null,
@@ -33,13 +30,13 @@ function createRegisterDto(body) {
 }
 
 /**
- * Valida y limpia datos para login
- * @param {Object} body - Request body con credenciales
- * @returns {Object} - Credenciales limpias
+ * Normaliza credenciales de login.
+ * @param {UserRecord} body - Body del request POST /api/auth/login
+ * @returns {{ email: string|null; password: string|null }}
  */
-function createLoginDto(body) {
+export function createLoginDto(body: UserRecord = {}) {
   const { email, password } = body;
-  
+
   return {
     email: typeof email === 'string' ? email.trim().toLowerCase() : null,
     password: typeof password === 'string' ? password : null
@@ -47,40 +44,36 @@ function createLoginDto(body) {
 }
 
 /**
- * Convierte UserModel a DTO de respuesta (SIN password)
- * @param {Object} user - UserModel o resultado de BD
- * @returns {Object|null} - Usuario sin campos sensibles
+ * Mapea entidad usuario a DTO seguro (sin password).
+ * @param {UserRecord|null} user - Registro de usuario desde BD o ms-users
+ * @returns {object|null} Usuario serializable para API
  */
-function userToDto(user) {
+export function userToDto(user: UserEntityLike | null) {
   if (!user) return null;
 
+  const u = user as Record<string, unknown>;
+
   return {
-    id: user.id,
-    name: user.name ?? user.nombre,
-    email: user.email,
-    role: user.role ?? user.rol,
-    createdAt: user.createdAt || user.created_at,
-    updatedAt: user.updatedAt || user.updated_at
+    id: u.id,
+    name: u.name ?? u.nombre,
+    email: u.email,
+    role: u.role ?? u.rol,
+    createdAt: u.createdAt || u.created_at,
+    updatedAt: u.updatedAt || u.updated_at
   };
 }
 
-/**
- * Convierte array de usuarios a DTOs
- * @param {Array} users - Array de UserModel o resultados de BD
- * @returns {Array} - Array de usuarios sin campos sensibles
- */
-function usersToDto(users) {
+export function usersToDto(users: unknown) {
   if (!Array.isArray(users)) return [];
-  return users.map(userToDto);
+  return users.map((user) => userToDto(user as UserRecord));
 }
 
 /**
- * Formato de respuesta para autenticación exitosa (con token)
- * @param {Object} user - Usuario autenticado
- * @param {string} token - Token JWT generado
- * @returns {Object} - Respuesta de autenticación completa
+ * Respuesta estándar de login exitoso con JWT.
+ * @param {UserRecord} user - Usuario autenticado
+ * @param {string} token - JWT RS256 firmado
  */
-function authResponseDto(user, token) {
+export function authResponseDto(user: UserEntityLike, token: string) {
   return {
     success: true,
     message: 'Autenticación exitosa',
@@ -91,12 +84,7 @@ function authResponseDto(user, token) {
   };
 }
 
-/**
- * Formato de respuesta para registro exitoso
- * @param {Object} user - Usuario recién creado
- * @returns {Object} - Respuesta de registro
- */
-function registerResponseDto(user) {
+export function registerResponseDto(user: UserEntityLike) {
   return {
     success: true,
     message: 'Usuario registrado exitosamente',
@@ -106,13 +94,7 @@ function registerResponseDto(user) {
   };
 }
 
-/**
- * Formato de respuesta de error
- * @param {string} message - Mensaje de error
- * @param {Object} details - Detalles adicionales del error
- * @returns {Object} - Respuesta de error formateada
- */
-function errorResponseDto(message, details = null) {
+export function errorResponseDto(message: string, details: unknown = null) {
   return {
     success: false,
     message,
@@ -121,24 +103,21 @@ function errorResponseDto(message, details = null) {
 }
 
 /**
- * Valida estructura de datos de usuario
- * @param {Object} userData - Datos a validar
- * @returns {Object} - { valid: boolean, errors: string[] }
+ * Valida datos de registro (nombre, email, password, rol opcional).
+ * @param {UserRecord} userData - DTO normalizado de createRegisterDto
+ * @returns {{ valid: boolean; errors: string[] }}
  */
-const EMAIL_REGEX = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-const VALID_ROLES = ['gestor', 'profesional', 'directivo'];
-
-function validateUserData(userData) {
-  const errors = [];
+export function validateUserData(userData: UserRecord = {}) {
+  const errors: string[] = [];
   const name = userData?.name ?? userData?.nombre;
   const role = userData?.role ?? userData?.rol;
-  const { email, password } = userData ?? {};
+  const { email, password } = userData;
 
   if (!name || typeof name !== 'string' || name.trim().length < 2) {
     errors.push('El nombre debe tener al menos 2 caracteres');
   }
 
-  if (!email || !EMAIL_REGEX.test(email)) {
+  if (!email || typeof email !== 'string' || !EMAIL_REGEX.test(email)) {
     errors.push('Email inválido');
   }
 
@@ -146,7 +125,7 @@ function validateUserData(userData) {
     errors.push('La contraseña debe tener al menos 6 caracteres');
   }
 
-  if (role && !VALID_ROLES.includes(role)) {
+  if (role && typeof role === 'string' && !VALID_ROLES.includes(role)) {
     errors.push('Rol inválido. Valores permitidos: gestor, profesional, directivo');
   }
 
@@ -156,15 +135,15 @@ function validateUserData(userData) {
   };
 }
 
-function validateLoginData(credentials) {
-  const errors = [];
+export function validateLoginData(credentials: UserRecord = {}) {
+  const errors: string[] = [];
   const { email, password } = credentials;
 
   if (!email || !password) {
     errors.push('Email y contraseña son requeridos');
   }
 
-  if (email && !EMAIL_REGEX.test(email)) {
+  if (email && typeof email === 'string' && !EMAIL_REGEX.test(email)) {
     errors.push('Formato de email inválido');
   }
 
@@ -173,15 +152,3 @@ function validateLoginData(credentials) {
     errors
   };
 }
-
-export {
-  createRegisterDto,
-  createLoginDto,
-  userToDto,
-  usersToDto,
-  authResponseDto,
-  registerResponseDto,
-  errorResponseDto,
-  validateUserData,
-  validateLoginData
-};

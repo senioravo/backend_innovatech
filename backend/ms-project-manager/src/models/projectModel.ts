@@ -1,5 +1,15 @@
-// @ts-nocheck
 class ProjectModel {
+  id: string | number;
+  userId: string | number;
+  name: string;
+  description: string;
+  createdAt: unknown;
+  updatedAt: unknown;
+  assigneeId: string | number | null;
+  startDate: unknown;
+  endDate: unknown;
+  status: string;
+
   constructor({
     id,
     userId,
@@ -11,18 +21,18 @@ class ProjectModel {
     startDate,
     endDate,
     status
-  }) {
-    this.id = id;
-    this.userId = userId;
-    this.name = name;
-    this.description = description;
+  }: Record<string, unknown>) {
+    this.id = id as string | number;
+    this.userId = userId as string | number;
+    this.name = String(name ?? '');
+    this.description = String(description ?? '');
     this.createdAt = createdAt;
     this.updatedAt = updatedAt ?? null;
-    this.assigneeId = assigneeId ?? null;
+    this.assigneeId = (assigneeId ?? null) as string | number | null;
     this.startDate = startDate ?? null;
     this.endDate = endDate ?? null;
-    this.status = status ?? 'active';
+    this.status = String(status ?? 'active');
   }
 }
 
-export default ProjectModel;;
+export default ProjectModel;

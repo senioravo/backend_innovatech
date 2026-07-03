@@ -1,7 +1,15 @@
 import { pickName, pickRole } from '../utils/userRowMapper.js';
+import type UserModel from '../models/userModel.js';
+
+/**
+ * DTOs de usuario para ms-users: entrada, respuesta y validación.
+ * Soporta campos en inglés (name, role) y español (nombre, rol).
+ */
 
 const EMAIL_REGEX = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 const VALID_ROLES = ['gestor', 'profesional', 'directivo'];
+
+type UserLike = Record<string, unknown> | UserModel;
 
 type UserInput = {
   name?: string | null;
@@ -17,19 +25,26 @@ type ValidateOptions = {
   partial?: boolean;
 };
 
-function userToDto(user: Record<string, unknown> | null) {
+/**
+ * Mapea fila de BD a DTO seguro (sin password).
+ * @param {Record<string, unknown>|null} user
+ * @returns {object|null}
+ */
+function userToDto(user: UserLike | null) {
   if (!user) return null;
 
+  const u = user as Record<string, unknown>;
+
   return {
-    id: user.id,
-    name: user.name ?? user.nombre,
-    email: user.email,
-    role: user.role ?? user.rol,
-    skills: user.skills ?? user.habilidades ?? '',
-    availability: user.availability ?? user.disponibilidad ?? 'disponible',
-    weeklyAvailableHours: user.weeklyAvailableHours ?? user.horas_semanales_disponibles ?? 40,
-    createdAt: user.createdAt ?? user.created_at,
-    updatedAt: user.updatedAt ?? user.updated_at
+    id: u.id,
+    name: u.name ?? u.nombre,
+    email: u.email,
+    role: u.role ?? u.rol,
+    skills: u.skills ?? u.habilidades ?? '',
+    availability: u.availability ?? u.disponibilidad ?? 'disponible',
+    weeklyAvailableHours: u.weeklyAvailableHours ?? u.horas_semanales_disponibles ?? 40,
+    createdAt: u.createdAt ?? u.created_at,
+    updatedAt: u.updatedAt ?? u.updated_at
   };
 }
 
@@ -38,6 +53,11 @@ function usersToDto(users) {
   return users.map(userToDto);
 }
 
+/**
+ * Normaliza body de creación de usuario.
+ * @param {UserInput} body
+ * @returns {{ name: string|null; email: string|null; password: string|null; role: string|null }}
+ */
 function createUserDto(body) {
   const name = pickName(body);
   const role = pickRole(body);
@@ -89,6 +109,12 @@ function errorResponseDto(message, details = null) {
   };
 }
 
+/**
+ * Valida datos de usuario (creación o actualización parcial).
+ * @param {UserInput} userData
+ * @param {ValidateOptions} [options]
+ * @returns {{ valid: boolean; errors: string[] }}
+ */
 function validateUserData(userData: UserInput, options: ValidateOptions = {}) {
   const { requirePassword = false, partial = false } = options;
   const errors = [];

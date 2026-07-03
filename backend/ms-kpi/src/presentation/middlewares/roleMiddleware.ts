@@ -1,5 +1,3 @@
-// @ts-nocheck
-export {};
 function requireRole(...allowedRoles) {
   return (req, res, next) => {
     const userRole = req.user?.role;

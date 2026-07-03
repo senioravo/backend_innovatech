@@ -1,7 +1,7 @@
-// @ts-nocheck
-export {};
 class CircuitBreakerOpenError extends Error {
-  constructor(serviceName) {
+  serviceName: string;
+
+  constructor(serviceName: string) {
     super(`Circuit breaker abierto: ${serviceName}`);
     this.name = 'CircuitBreakerOpenError';
     this.serviceName = serviceName;
@@ -9,7 +9,26 @@ class CircuitBreakerOpenError extends Error {
 }
 
 class CircuitBreaker {
-  constructor({ name, failureThreshold = 5, resetTimeoutMs = 30000, successThreshold = 1 }) {
+  name: string;
+  failureThreshold: number;
+  resetTimeoutMs: number;
+  successThreshold: number;
+  state: string;
+  failures: number;
+  successes: number;
+  nextAttemptAt: number;
+
+  constructor({
+    name,
+    failureThreshold = 5,
+    resetTimeoutMs = 30000,
+    successThreshold = 1
+  }: {
+    name: string;
+    failureThreshold?: number;
+    resetTimeoutMs?: number;
+    successThreshold?: number;
+  }) {
     this.name = name;
     this.failureThreshold = failureThreshold;
     this.resetTimeoutMs = resetTimeoutMs;
@@ -53,7 +72,7 @@ class CircuitBreaker {
     if (this.failures >= this.failureThreshold) this.open();
   }
 
-  async execute(operation) {
+  async execute<T>(operation: () => Promise<T>): Promise<T> {
     const now = Date.now();
     if (this.state === 'OPEN') {
       if (now < this.nextAttemptAt) throw new CircuitBreakerOpenError(this.name);

@@ -1,4 +1,3 @@
-// @ts-nocheck
 
 function normalizeRole(role) {
   return String(role || '').trim().toLowerCase();

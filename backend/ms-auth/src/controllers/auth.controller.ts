@@ -1,4 +1,3 @@
-// @ts-nocheck
 import authService from '../services/auth.service.js';
 import logger from '../utils/logger.js';
 import { recordCriticalOperation } from '../middleware/metricsMiddleware.js';
@@ -11,7 +10,7 @@ import {
 
 function mapServiceError(error) {
   if (error instanceof ValidationError) {
-    const message = error.errors.length === 1
+    const message = (Array.isArray(error.errors) ? error.errors : []).length === 1
       ? error.errors[0]
       : 'Datos inválidos';
     return {
@@ -49,7 +48,7 @@ const register = async (req, res) => {
       userId: newUser.id,
       email: newUser.email,
       ip: req.ip,
-      detail: `Usuario registrado - Rol: ${newUser.rol}`,
+      detail: `Usuario registrado - Rol: ${newUser.role}`,
       responseTime,
       taskId: 'AS-TASK-13'
     });
@@ -95,7 +94,7 @@ const login = async (req, res) => {
       userId: user.id,
       email: user.email,
       ip: req.ip,
-      detail: `Login exitoso - Rol: ${user.rol} - Expira: ${expiresIn}`,
+      detail: `Login exitoso - Rol: ${user.role} - Expira: ${expiresIn}`,
       responseTime,
       taskId: 'AS-TASK-13'
     });

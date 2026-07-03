@@ -1,4 +1,3 @@
-// @ts-nocheck
 import { isValidTaskStatus, normalizeTaskStatus, TASK_STATUSES } from '../constants/taskStatuses.js';
 import { isValidProjectStatus, normalizeProjectStatus, PROJECT_STATUSES } from '../constants/projectStatuses.js';
 

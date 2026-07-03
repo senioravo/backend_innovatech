@@ -1,4 +1,3 @@
-// @ts-nocheck
 import path from 'path';
 import { fileURLToPath } from 'url';
 const __filename = fileURLToPath(import.meta.url);
@@ -76,6 +75,7 @@ const PORT = process.env.PORT || 3001;
 if (process.env.NODE_ENV !== 'test') {
   app.listen(PORT, () => {
     console.log(`🚀 Microservicio Auth ejecutándose en puerto ${PORT}`);
+    console.log(`📚 Swagger: http://localhost:${PORT}/api-docs`);
   });
 }
 

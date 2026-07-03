@@ -1,4 +1,3 @@
-// @ts-nocheck
 const PROJECT_STATUSES = Object.freeze(['active', 'terminated']);
 
 const PROJECT_STATUS_SET = new Set(PROJECT_STATUSES);

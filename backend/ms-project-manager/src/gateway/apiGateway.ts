@@ -1,4 +1,3 @@
-// @ts-nocheck
 import express from 'express';
 import projectRoutes from '../routes/projectRoutes.js';
 import taskRoutes from '../routes/taskRoutes.js';

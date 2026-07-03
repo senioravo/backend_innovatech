@@ -1,4 +1,3 @@
-// @ts-nocheck
 import bcrypt from 'bcrypt';
 import logger from '../utils/logger.js';
 import { DEFAULT_ROLE } from '../config/roles.js';

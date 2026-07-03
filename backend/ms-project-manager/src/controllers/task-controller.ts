@@ -1,4 +1,3 @@
-// @ts-nocheck
 import taskService from '../services/taskService.js';
 import { taskToDto } from '../dtos/taskDto.js';
 import { auditFromRequest } from '../utils/auditLog.js';

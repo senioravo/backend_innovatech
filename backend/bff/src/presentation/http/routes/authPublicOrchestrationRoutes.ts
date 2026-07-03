@@ -1,4 +1,3 @@
-// @ts-nocheck
 import express from 'express';
 import authOrchestrationController from '../controllers/auth-orchestration-controller.js';
 

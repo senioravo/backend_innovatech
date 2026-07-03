@@ -1,13 +1,16 @@
-// @ts-nocheck
 // Cliente HTTP para comunicación con ms-users
 // Responsabilidad: Facilitar llamadas entre microservicios
 
 import logger from '../utils/logger.js';
+import UserModel from '../models/userModel.js';
 
 /**
  * Cliente para interactuar con el microservicio ms-users
  */
 class UsersClient {
+  baseUrl: string;
+  apiPrefix: string;
+
   constructor() {
     // URL base del microservicio de usuarios
     this.baseUrl = process.env.USERS_SERVICE_URL || 'http://users:3003';
@@ -36,7 +39,7 @@ class UsersClient {
       });
 
       if (response.status === 404) {
-        logger.info(`[UsersClient] Usuario no encontrado - Email: ${email}`);
+        logger.info(`[UsersClient] Usuario no encontrado - Email: ${email}`, {});
         return null;
       }
 
@@ -52,9 +55,9 @@ class UsersClient {
         return null;
       }
 
-      logger.info(`[UsersClient] Usuario encontrado - ID: ${user.id}`);
+      logger.info(`[UsersClient] Usuario encontrado - ID: ${user.id}`, {});
 
-      return user;
+      return UserModel.fromPlain(user);
     } catch (error) {
       logger.error('[UsersClient] Error al consultar ms-users', { 
         error: error.message,
@@ -100,9 +103,9 @@ class UsersClient {
         throw new Error('Respuesta inválida de ms-users al crear usuario');
       }
 
-      logger.info(`[UsersClient] Usuario creado exitosamente - ID: ${user.id}`);
+      logger.info(`[UsersClient] Usuario creado exitosamente - ID: ${user.id}`, {});
 
-      return user;
+      return UserModel.fromPlain(user);
     } catch (error) {
       logger.error('[UsersClient] Error al crear usuario en ms-users', { 
         error: error.message 

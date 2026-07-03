@@ -1,4 +1,3 @@
-// @ts-nocheck
 import { ApplicationError, ValidationError, UnauthorizedError } from './appError.js';
 
 function handleNotFound(req, res) {
@@ -16,7 +15,7 @@ function handleError(err, req, res, next) {
   if (err instanceof ValidationError) {
     return res.status(err.status).json({
       success: false,
-      message: err.errors?.length === 1 ? err.errors[0] : 'Validation failed',
+      message: Array.isArray(err.errors) && err.errors.length === 1 ? err.errors[0] : 'Validation failed',
       data: { errors: err.errors }
     });
   }

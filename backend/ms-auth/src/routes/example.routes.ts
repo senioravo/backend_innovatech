@@ -1,4 +1,3 @@
-// @ts-nocheck
 // AS-TASK-09: Rutas de ejemplo para demostrar middleware de autorización
 // Estas rutas son ejemplos de cómo usar checkRole en endpoints protegidos
 

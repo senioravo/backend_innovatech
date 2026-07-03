@@ -13,10 +13,17 @@ const SALT_ROUNDS = 10;
 const VALID_ROLES = getAllRoles();
 
 class UserService {
+  /** @returns {string} Rol por defecto al crear usuarios sin rol explícito */
   getDefaultRole() {
     return DEFAULT_ROLE;
   }
 
+  /**
+   * Crea un usuario con password hasheado en PostgreSQL.
+   * @param {Record<string, unknown>} body - name, email, password, role
+   * @returns {Promise<object>} Usuario creado (sin password)
+   * @throws {ValidationError} Si datos inválidos o email duplicado
+   */
   async createUser(body: Record<string, unknown>) {
     const userData = createUserDto(body);
 

@@ -1,4 +1,3 @@
-// @ts-nocheck
 // AS-TASK-02: Integrar con API Gateway
 // Rutas de autenticación y autorización
 

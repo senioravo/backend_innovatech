@@ -1,4 +1,3 @@
-// @ts-nocheck
 import usersClient from '../clients/usersClient.js';
 import userService from './user.service.js';
 import jwtHelper from '../utils/jwt.helper.js';
@@ -53,7 +52,7 @@ class AuthService {
     const token = jwtHelper.generateToken({
       id: user.id,
       email: user.email,
-      role: user.role ?? user.rol
+      role: user.role
     });
 
     return { user, token, expiresIn: jwtHelper.getConfig().expiresIn };
@@ -63,7 +62,7 @@ class AuthService {
     const blacklisted = tokenBlacklistService.addToBlacklist(token, {
       id: user.id,
       email: user.email,
-      role: user.role ?? user.rol
+      role: user.role
     });
 
     if (!blacklisted) {

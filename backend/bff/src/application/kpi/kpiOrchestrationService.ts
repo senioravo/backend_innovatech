@@ -1,4 +1,3 @@
-// @ts-nocheck
 import kpiUpstreamClient from '../../infrastructure/clients/kpiUpstreamClient.js';
 import { buildUsuarioSesion } from '../transformers/frontendResponseTransformers.js';
 

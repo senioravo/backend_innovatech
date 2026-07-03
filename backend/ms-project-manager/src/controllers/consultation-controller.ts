@@ -1,5 +1,5 @@
-// @ts-nocheck
 import consultationService from '../services/consultationService.js';
+import { normalizeExportFormat } from '../dtos/consultationDto.js';
 
 const consultationController = {
   async getTaskDashboard(req, res, next) {
@@ -22,7 +22,7 @@ const consultationController = {
 
   async exportReport(req, res, next) {
     try {
-      const format = String(req.query.format || 'csv').toLowerCase();
+      const format = normalizeExportFormat(req.query.format);
       const { contentType, body } = await consultationService.exportReport(
         req.user.id,
         format,

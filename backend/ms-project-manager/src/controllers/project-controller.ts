@@ -1,4 +1,3 @@
-// @ts-nocheck
 import projectService from '../services/projectService.js';
 import { projectToDto } from '../dtos/projectDto.js';
 import { auditFromRequest } from '../utils/auditLog.js';

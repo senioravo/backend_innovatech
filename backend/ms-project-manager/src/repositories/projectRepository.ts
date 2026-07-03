@@ -1,4 +1,3 @@
-// @ts-nocheck
 import ProjectModel from '../models/projectModel.js';
 import IProjectRepository from '../interfaces/IProjectRepository.js';
 import { getPool } from '../db/pool.js';

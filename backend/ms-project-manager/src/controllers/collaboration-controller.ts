@@ -1,15 +1,19 @@
-// @ts-nocheck
 import collaborationService from '../services/collaborationService.js';
+import {
+  commentsListResponseDto,
+  attachmentsListResponseDto,
+  notificationsListResponseDto
+} from '../dtos/collaborationDto.js';
 
 const collaborationController = {
   async listComments(req, res, next) {
     try {
-      const data = await collaborationService.listComments(
+      const comments = await collaborationService.listComments(
         req.params.projectId,
         req.params.taskId,
         req.user.id
       );
-      res.json({ comments: data });
+      res.json(commentsListResponseDto(comments));
     } catch (error) {
       next(error);
     }
@@ -31,12 +35,12 @@ const collaborationController = {
 
   async listAttachments(req, res, next) {
     try {
-      const data = await collaborationService.listAttachments(
+      const attachments = await collaborationService.listAttachments(
         req.params.projectId,
         req.params.taskId,
         req.user.id
       );
-      res.json({ attachments: data });
+      res.json(attachmentsListResponseDto(attachments));
     } catch (error) {
       next(error);
     }
@@ -58,8 +62,8 @@ const collaborationController = {
 
   async listNotifications(req, res, next) {
     try {
-      const data = await collaborationService.listNotifications(req.user.id);
-      res.json({ notifications: data });
+      const notifications = await collaborationService.listNotifications(req.user.id);
+      res.json(notificationsListResponseDto(notifications));
     } catch (error) {
       next(error);
     }
