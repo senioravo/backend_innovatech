@@ -1,5 +1,5 @@
 const { CircuitBreaker } = require('./circuitBreaker');
-const { getOutgoingRequestIdHeaders } = require('../observability/requestIdContext');
+const { getOutgoingRequestIdHeaders } = require('../../observability/requestIdContext');
 
 function createInternalHttpClient({
   serviceName,
