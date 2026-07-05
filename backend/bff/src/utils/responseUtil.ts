@@ -1,4 +1,5 @@
 import { ApplicationError, ValidationError, UpstreamError } from './errorHandler.js';
+import { captureException } from '../observability/glitchtip.js';
 
 function handleNotFound(req, res) {
   res.status(404).json({ error: 'Route not found' });
@@ -21,6 +22,9 @@ function handleError(err, req, res, next) {
   }
 
   if (err instanceof UpstreamError) {
+    if (err.status >= 500) {
+      captureException(err, `${req.method} ${req.path} (upstream ${err.status})`);
+    }
     if (err.status === 204) {
       return res.status(204).send();
     }
@@ -33,8 +37,10 @@ function handleError(err, req, res, next) {
     return res.status(err.status).json({ error: err.message });
   }
 
+  captureException(err, `${req.method} ${req.path}`);
   res.status(500).json({
-    error: 'Internal server error'
+    error: 'Internal server error',
+    requestId: res.getHeader('X-Request-Id'),
   });
 }
 

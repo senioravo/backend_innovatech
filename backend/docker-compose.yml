@@ -12,6 +12,12 @@
 #   - ms-auth: usa clave PRIVADA para FIRMAR tokens
 #   - BFF: confía en headers X-User-* que KrakenD ya validó (NO valida tokens)
 
+x-glitchtip-env: &glitchtip-env
+  SENTRY_DSN: ${SENTRY_DSN:-}
+  SENTRY_ENVIRONMENT: ${SENTRY_ENVIRONMENT:-development}
+  SENTRY_RELEASE: ${SENTRY_RELEASE:-1.0.0}
+  SENTRY_TRACES_SAMPLE_RATE: ${SENTRY_TRACES_SAMPLE_RATE:-0.1}
+
 services:
   users-db:
     image: postgres:16-alpine
@@ -90,6 +96,7 @@ services:
     build:
       context: ./bff
     environment:
+      <<: *glitchtip-env
       PORT: "3010"
       API_GATEWAY_PREFIX: /api/v1
       JWT_ISSUER: innovatech-auth
@@ -113,6 +120,7 @@ services:
     build:
       context: ./ms-auth
     environment:
+      <<: *glitchtip-env
       PORT: "3001"
       DATABASE_URL: ${DATABASE_URL_AUTH:-}
       # Ya NO necesita JWT_SECRET - usa clave privada RSA
@@ -136,6 +144,7 @@ services:
     build:
       context: ./ms-project-manager
     environment:
+      <<: *glitchtip-env
       PORT: "3002"
       DATABASE_URL: postgresql://postgres:postgres@pm-db:5432/innovatech_pm?sslmode=disable
       # Ya NO necesita JWT_SECRET - usa clave pública RSA
@@ -155,6 +164,7 @@ services:
     build:
       context: ./ms-kpi
     environment:
+      <<: *glitchtip-env
       PORT: "3004"
       API_GATEWAY_PREFIX: /api/v1
       PROJECT_MANAGER_BASE_URL: http://project-manager:3002
@@ -168,6 +178,7 @@ services:
     build:
       context: ./ms-users
     environment:
+      <<: *glitchtip-env
       PORT: "3003"
       # Docker local: Postgres del servicio users-db (ignora Neon del .env.docker)
       DATABASE_URL: postgresql://postgres:postgres@users-db:5432/innovatech_users?sslmode=disable

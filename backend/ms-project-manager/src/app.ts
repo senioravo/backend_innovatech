@@ -15,6 +15,11 @@ import { handleNotFound, handleError } from './utils/responseUtil.js';
 import { verifyDatabase } from './db/verify.js';
 import { metricsMiddleware, metricsHandler } from './metrics/prometheus.js';
 import { buildSwaggerApiGlobs } from './utils/swaggerPaths.js';
+import { initGlitchTip, flushGlitchTip } from './observability/glitchtip.js';
+import { requestIdMiddleware } from './observability/requestIdMiddleware.js';
+import demoRoutes from './observability/demoRoutes.js';
+
+initGlitchTip('ms-project-manager');
 
 const app = express();
 
@@ -42,6 +47,7 @@ const swaggerSpec = swaggerJsdoc({
 
 app.use(express.json());
 app.use(cors());
+app.use(requestIdMiddleware);
 app.use(metricsMiddleware);
 
 app.use('/api-docs', swaggerUi.serve, swaggerUi.setup(swaggerSpec));
@@ -64,10 +70,12 @@ app.get('/health', async (req, res) => {
   res.json({
     status: 'OK',
     service: 'Project Manager',
+    requestId: res.getHeader('X-Request-Id'),
     dependencies: { auth: await getAuthDependencyStatus() }
   });
 });
 
+app.use('/api/demo', demoRoutes);
 app.use(config.API_GATEWAY_PREFIX, apiGateway);
 
 app.use(handleNotFound);
@@ -76,22 +84,29 @@ app.use(handleError);
 
 const PORT = config.PORT;
 
+function startServer() {
+  const server = app.listen(PORT, () => {
+    console.log(`🚀 Project Manager ejecutándose en puerto ${PORT}`);
+    console.log(`📚 Swagger: http://localhost:${PORT}/api-docs`);
+    console.log(`🔍 GlitchTip demo: http://localhost:${PORT}/api/demo/health`);
+  });
+
+  async function shutdown(signal: string) {
+    console.log(`[ms-project-manager] ${signal} — flushing GlitchTip...`);
+    await flushGlitchTip();
+    server.close(() => process.exit(0));
+  }
+
+  process.on('SIGTERM', () => shutdown('SIGTERM'));
+  process.on('SIGINT', () => shutdown('SIGINT'));
+}
+
 if (process.env.NODE_ENV !== 'test') {
   verifyDatabase()
-    .then(() => {
-      // Caso 1: Conexión exitosa
-      app.listen(PORT, () => {
-        console.log(`🚀 Project Manager ejecutándose en puerto ${PORT}`);
-        console.log(`📚 Swagger: http://localhost:${PORT}/api-docs`);
-      });
-    })
+    .then(() => startServer())
     .catch((err) => {
-      // Caso 2: Error en la conexión, pero el servidor IGUAL arranca
       console.warn('⚠️ Advertencia: Project Manager iniciará sin verificación de PostgreSQL:', err.message);
-      app.listen(PORT, () => {
-        console.log(`🚀 Project Manager ejecutándose en puerto ${PORT}`);
-        console.log(`📚 Swagger: http://localhost:${PORT}/api-docs`);
-      });
+      startServer();
     });
 }
 

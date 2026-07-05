@@ -1,4 +1,5 @@
 import { ApplicationError, ValidationError, UnauthorizedError } from './appError.js';
+import { captureException } from '../observability/glitchtip.js';
 
 function handleNotFound(req, res) {
   res.status(404).json({
@@ -35,10 +36,12 @@ function handleError(err, req, res, next) {
   }
 
   console.error('[Global Error Handler]', err);
+  captureException(err, `${req.method} ${req.path}`);
   res.status(500).json({
     success: false,
     message: 'Internal server error',
-    data: process.env.NODE_ENV === 'development' ? { detail: err.message } : undefined
+    data: process.env.NODE_ENV === 'development' ? { detail: err.message } : undefined,
+    requestId: res.getHeader('X-Request-Id'),
   });
 }
 

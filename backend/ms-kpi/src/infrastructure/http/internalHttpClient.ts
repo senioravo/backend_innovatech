@@ -1,4 +1,5 @@
 const { CircuitBreaker } = require('./circuitBreaker');
+const { getOutgoingRequestIdHeaders } = require('../observability/requestIdContext');
 
 function createInternalHttpClient({
   serviceName,
@@ -18,6 +19,7 @@ function createInternalHttpClient({
     const timeoutMs = (options.timeoutMs as number | undefined) ?? defaultTimeoutMs;
     const headers: Record<string, string> = {
       Accept: 'application/json',
+      ...getOutgoingRequestIdHeaders(),
       ...(options.headers as Record<string, string> | undefined)
     };
     if (options.body != null) {

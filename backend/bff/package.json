@@ -17,6 +17,7 @@
     "test:ci": "node --experimental-vm-modules ./node_modules/jest/bin/jest.js --ci --coverage --maxWorkers=2"
   },
   "dependencies": {
+    "@sentry/node": "^9.47.1",
     "cors": "^2.8.5",
     "dotenv": "^16.6.1",
     "express": "^4.21.2",
@@ -37,8 +38,8 @@
     "supertest": "^7.2.2",
     "ts-jest": "^29.4.11",
     "ts-node-dev": "^2.0.0",
-    "typescript": "^6.0.3",
-    "tsx": "^4.19.4"
+    "tsx": "^4.19.4",
+    "typescript": "^6.0.3"
   },
   "type": "module"
 }

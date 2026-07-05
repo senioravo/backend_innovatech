@@ -9,8 +9,12 @@ import config from './config/index.js';
 import apiGateway from './presentation/http/gateway/apiGateway.js';
 import { handleNotFound, handleError } from './utils/responseUtil.js';
 import { buildSwaggerApiGlobs } from './utils/swaggerPaths.js';
+import { initGlitchTip, flushGlitchTip } from './observability/glitchtip.js';
+import { requestIdMiddleware } from './observability/requestIdMiddleware.js';
+import demoRoutes from './observability/demoRoutes.js';
 
 dotenv.config();
+initGlitchTip('bff');
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -42,6 +46,7 @@ const swaggerSpec = swaggerJsdoc({
 
 app.use(express.json());
 app.use(cors());
+app.use(requestIdMiddleware);
 
 app.use('/api-docs', swaggerUi.serve, swaggerUi.setup(swaggerSpec));
 app.get('/api-docs.json', (req, res) => {
@@ -63,18 +68,30 @@ app.get('/health', (req, res) => {
   res.status(200).json({
     status: 'ok',
     service: 'bff',
+    requestId: res.getHeader('X-Request-Id'),
     timestamp: new Date().toISOString(),
   });
 });
 
+app.use('/api/demo', demoRoutes);
 app.use(config.API_GATEWAY_PREFIX, apiGateway);
 
 app.use(handleNotFound);
 app.use(handleError);
 
-app.listen(PORT, () => {
+const server = app.listen(PORT, () => {
   console.log(`🚀 BFF (Orquestador) escuchando en puerto ${PORT}`);
   console.log(`📚 Swagger: http://localhost:${PORT}/api-docs`);
+  console.log(`🔍 GlitchTip demo: http://localhost:${PORT}/api/demo/health`);
 });
+
+async function shutdown(signal: string) {
+  console.log(`[bff] ${signal} — flushing GlitchTip...`);
+  await flushGlitchTip();
+  server.close(() => process.exit(0));
+}
+
+process.on('SIGTERM', () => shutdown('SIGTERM'));
+process.on('SIGINT', () => shutdown('SIGINT'));
 
 export default app;

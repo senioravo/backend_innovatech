@@ -8,6 +8,12 @@ const config = require('./config');
 const apiGateway = require('./presentation/gateway/apiGateway');
 const { handleNotFound, handleError } = require('./utils/responseUtil');
 const { buildSwaggerApiGlobs } = require('./utils/swaggerPaths');
+const { initGlitchTip, flushGlitchTip } = require('./observability/glitchtip');
+const { requestIdMiddleware } = require('./observability/requestIdMiddleware');
+const demoModule = require('./observability/demoRoutes');
+const demoRoutes = demoModule.default || demoModule;
+
+initGlitchTip('ms-kpi');
 
 const app = express();
 
@@ -95,6 +101,7 @@ const swaggerSpec = swaggerJsdoc({
 
 app.use(express.json());
 app.use(cors());
+app.use(requestIdMiddleware);
 
 app.use('/api-docs', swaggerUi.serve, swaggerUi.setup(swaggerSpec));
 app.get('/api-docs.json', (req, res) => res.json(swaggerSpec));
@@ -123,10 +130,12 @@ app.get('/api-docs.json', (req, res) => res.json(swaggerSpec));
 app.get('/health', (req, res) => {
   res.json({
     status: 'OK',
-    service: 'KPI Service'
+    service: 'KPI Service',
+    requestId: res.getHeader('X-Request-Id'),
   });
 });
 
+app.use('/api/demo', demoRoutes);
 app.use(config.API_GATEWAY_PREFIX, apiGateway);
 app.use(handleNotFound);
 app.use(handleError);
@@ -134,14 +143,24 @@ app.use(handleError);
 const PORT = config.PORT;
 
 if (process.env.NODE_ENV !== 'test') {
-  app.listen(PORT, () => {
+  const server = app.listen(PORT, () => {
     const pathCount = Object.keys(swaggerSpec.paths || {}).length;
     console.log(`KPI Service ejecutándose en puerto ${PORT}`);
     console.log(`📚 Swagger: http://localhost:${PORT}/api-docs (${pathCount} endpoints)`);
+    console.log(`🔍 GlitchTip demo: http://localhost:${PORT}/api/demo/health`);
     if (pathCount === 0) {
       console.warn('[KPI-SWAGGER] ⚠️ No se encontraron rutas @openapi. Revisar buildSwaggerApiGlobs.');
     }
   });
+
+  async function shutdown(signal) {
+    console.log(`[ms-kpi] ${signal} — flushing GlitchTip...`);
+    await flushGlitchTip();
+    server.close(() => process.exit(0));
+  }
+
+  process.on('SIGTERM', () => shutdown('SIGTERM'));
+  process.on('SIGINT', () => shutdown('SIGINT'));
 }
 
 module.exports = app;
