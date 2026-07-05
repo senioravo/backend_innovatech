@@ -3,6 +3,7 @@
 
 import logger from '../utils/logger.js';
 import UserModel from '../models/userModel.js';
+import { getOutgoingRequestIdHeaders } from '../observability/requestIdContext.js';
 
 /**
  * Cliente para interactuar con el microservicio ms-users
@@ -31,6 +32,7 @@ class UsersClient {
       const response = await fetch(url, {
         method: 'GET',
         headers: {
+          ...getOutgoingRequestIdHeaders(),
           'Content-Type': 'application/json',
           // Token interno para comunicación entre servicios
           'X-Internal-Service': 'ms-auth',
@@ -84,6 +86,7 @@ class UsersClient {
       const response = await fetch(url, {
         method: 'POST',
         headers: {
+          ...getOutgoingRequestIdHeaders(),
           'Content-Type': 'application/json',
           'X-Internal-Service': 'ms-auth',
           'X-Internal-Token': process.env.INTERNAL_SERVICE_TOKEN || 'development-token'

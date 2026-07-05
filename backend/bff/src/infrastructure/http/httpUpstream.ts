@@ -1,4 +1,5 @@
 import { UpstreamError } from '../../utils/errorHandler.js';
+import { getOutgoingRequestIdHeaders } from '../../observability/requestIdContext.js';
 
 type UpstreamOptions = {
   method?: string;
@@ -31,7 +32,7 @@ async function parseResponseBody(res: Response) {
  * Petición HTTP JSON hacia un microservicio. Lanza UpstreamError si status no es 2xx.
  */
 async function upstreamJson(url: string, { method = 'GET', headers = {}, body }: UpstreamOptions = {}) {
-  const h = { ...headers };
+  const h = { ...getOutgoingRequestIdHeaders(), ...headers };
   const opts: RequestInit = { method, headers: h, redirect: 'manual' };
   if (body !== undefined && body !== null && method !== 'GET' && method !== 'HEAD') {
     opts.body = typeof body === 'string' ? body : JSON.stringify(body);

@@ -10,8 +10,12 @@ import internalRoutes from './routes/internal.routes.js';
 import metricsRoutes from './routes/metrics.routes.js';
 import logger from './utils/logger.js';
 import { buildSwaggerApiGlobs } from './utils/swaggerPaths.js';
+import { initGlitchTip, flushGlitchTip, captureException } from './observability/glitchtip.js';
+import { requestIdMiddleware } from './observability/requestIdMiddleware.js';
+import demoRoutes from './observability/demoRoutes.js';
 
 dotenv.config();
+initGlitchTip('ms-users');
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -47,6 +51,7 @@ const swaggerSpec = swaggerJsdoc({
 
 app.use(express.json());
 app.use(cors());
+app.use(requestIdMiddleware);
 
 app.use('/api-docs', swaggerUi.serve, swaggerUi.setup(swaggerSpec));
 app.get('/api-docs.json', (req, res) => {
@@ -59,6 +64,7 @@ app.use((req, res, next) => {
   next();
 });
 
+app.use('/api/demo', demoRoutes);
 app.use('/api/users', userRoutes);
 app.use('/api/users/internal', internalRoutes);
 app.use('/metrics', metricsRoutes);
@@ -77,6 +83,7 @@ app.get('/health', (req, res) => {
   res.status(200).json({
     status: 'ok',
     service: 'ms-users',
+    requestId: res.getHeader('X-Request-Id'),
     timestamp: new Date().toISOString()
   });
 });
@@ -87,16 +94,28 @@ app.use((err, req, res, next) => {
     stack: err.stack,
     path: req.path
   });
+  captureException(err, `${req.method} ${req.path}`);
   res.status(500).json({
     error: 'Error interno del servidor',
-    message: process.env.NODE_ENV === 'development' ? err.message : undefined
+    message: process.env.NODE_ENV === 'development' ? err.message : undefined,
+    requestId: res.getHeader('X-Request-Id'),
   });
 });
 
-app.listen(PORT, () => {
+const server = app.listen(PORT, () => {
   logger.info(`🚀 Microservicio Users ejecutándose en puerto ${PORT}`);
   console.log(`🚀 Microservicio Users ejecutándose en puerto ${PORT}`);
   console.log(`📚 Swagger: http://localhost:${PORT}/api-docs`);
+  console.log(`🔍 GlitchTip demo: http://localhost:${PORT}/api/demo/health`);
 });
+
+async function shutdown(signal: string) {
+  console.log(`[ms-users] ${signal} — flushing GlitchTip...`);
+  await flushGlitchTip();
+  server.close(() => process.exit(0));
+}
+
+process.on('SIGTERM', () => shutdown('SIGTERM'));
+process.on('SIGINT', () => shutdown('SIGINT'));
 
 export default app;

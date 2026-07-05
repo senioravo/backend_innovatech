@@ -1,4 +1,5 @@
 import { CircuitBreaker } from './circuitBreaker.js';
+import { getOutgoingRequestIdHeaders } from '../observability/requestIdContext.js';
 
 /**
  * Internal HTTP client with a per-dependency circuit breaker.
@@ -22,6 +23,7 @@ function createInternalHttpClient({
     const timeoutMs = (options.timeoutMs as number | undefined) ?? defaultTimeoutMs;
     const headers: Record<string, string> = {
       Accept: 'application/json',
+      ...getOutgoingRequestIdHeaders(),
       ...(options.headers as Record<string, string> | undefined)
     };
     if (options.body !== undefined && options.body !== null) {

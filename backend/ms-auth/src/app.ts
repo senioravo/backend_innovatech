@@ -8,12 +8,18 @@ import cors from 'cors';
 import swaggerUi from 'swagger-ui-express';
 import swaggerJsdoc from 'swagger-jsdoc';
 import { buildSwaggerApiGlobs } from './utils/swaggerPaths.js';
+import { initGlitchTip, flushGlitchTip } from './observability/glitchtip.js';
+import { requestIdMiddleware } from './observability/requestIdMiddleware.js';
+import demoRoutes from './observability/demoRoutes.js';
+
 dotenv.config();
+initGlitchTip('ms-auth');
 const app = express();
 
 // Middlewares básicos
 app.use(express.json());
 app.use(cors());
+app.use(requestIdMiddleware);
 
 // Configuración Swagger
 const options = {
@@ -62,6 +68,7 @@ import jwksRoutes from './routes/jwks.routes.js';
 import { handleNotFound, handleError } from './utils/responseUtil.js';
 
 // Configurar rutas
+app.use('/api/demo', demoRoutes);
 app.use('/api/auth', authRoutes);
 app.use('/api/metrics', metricsRoutes);
 app.use('/api/circuit-breaker', circuitBreakerRoutes);
@@ -73,10 +80,20 @@ app.use(handleError);
 
 const PORT = process.env.PORT || 3001;
 if (process.env.NODE_ENV !== 'test') {
-  app.listen(PORT, () => {
+  const server = app.listen(PORT, () => {
     console.log(`🚀 Microservicio Auth ejecutándose en puerto ${PORT}`);
     console.log(`📚 Swagger: http://localhost:${PORT}/api-docs`);
+    console.log(`🔍 GlitchTip demo: http://localhost:${PORT}/api/demo/health`);
   });
+
+  async function shutdown(signal: string) {
+    console.log(`[ms-auth] ${signal} — flushing GlitchTip...`);
+    await flushGlitchTip();
+    server.close(() => process.exit(0));
+  }
+
+  process.on('SIGTERM', () => shutdown('SIGTERM'));
+  process.on('SIGINT', () => shutdown('SIGINT'));
 }
 
 export default app;
