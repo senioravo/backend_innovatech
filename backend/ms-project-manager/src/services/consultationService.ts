@@ -1,3 +1,7 @@
+/**
+ * Servicio de consultas y reportes.
+ * Agrega dashboard de tareas, KPIs y exportación CSV/JSON según visibilidad por rol.
+ */
 import taskRepository from '../repositories/taskRepository.js';
 import projectRepository from '../repositories/projectRepository.js';
 import { taskToDto } from '../dtos/taskDto.js';
@@ -11,6 +15,12 @@ import {
 import { canViewGlobalKpis } from '../utils/roleAccess.js';
 
 const consultationService = {
+  /**
+   * Construye el dashboard de tareas del usuario o vista global si el rol lo permite.
+   * @param {string|number} userId - ID del usuario autenticado
+   * @param {string} role - Rol del usuario
+   * @returns {Promise<object>} Dashboard con tareas y conteos por estado
+   */
   async getTaskDashboardForUser(userId, role) {
     if (!userId) throw new Error('userId is required');
     const rows = canViewGlobalKpis(role)
@@ -23,6 +33,12 @@ const consultationService = {
     return taskDashboardToDto({ userId, tasks });
   },
 
+  /**
+   * Calcula KPIs de avance, utilización de recursos y productividad.
+   * @param {string|number} userId - ID del usuario autenticado
+   * @param {string} role - Rol del usuario
+   * @returns {Promise<object>} KPIs agregados en formato DTO
+   */
   async getKpisForUser(userId, role) {
     const dashboard = await this.getTaskDashboardForUser(userId, role);
     const counts = dashboard.countByStatus;
@@ -61,6 +77,13 @@ const consultationService = {
     return kpisToDto(payload);
   },
 
+  /**
+   * Exporta reporte de KPIs y dashboard en CSV o JSON.
+   * @param {string|number} userId - ID del usuario autenticado
+   * @param {string} [format='csv'] - Formato de salida (csv | json)
+   * @param {string} role - Rol del usuario
+   * @returns {Promise<{ contentType: string; body: string }>} Contenido listo para descarga
+   */
   async exportReport(userId, format = 'csv', role) {
     const exportFormat = normalizeExportFormat(format);
     const kpis = await this.getKpisForUser(userId, role);

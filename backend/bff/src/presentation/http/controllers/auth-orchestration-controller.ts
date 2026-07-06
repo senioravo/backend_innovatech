@@ -1,5 +1,14 @@
+/**
+ * Controller de orquestación auth en el BFF.
+ * Reenvía requests al ms-auth y devuelve la respuesta upstream tal cual.
+ */
 import authOrchestrationService from '../../../application/auth/authOrchestrationService.js';
 
+/**
+ * Serializa respuesta upstream (204, JSON o vacío).
+ * @param {import('express').Response} res
+ * @param {{ status: number; data?: unknown }} param1
+ */
 function sendUpstream(res, { status, data }) {
   if (status === 204) {
     return res.status(204).send();
@@ -11,6 +20,7 @@ function sendUpstream(res, { status, data }) {
 }
 
 const authOrchestrationController = {
+  /** POST register → ms-auth */
   async register(req, res, next) {
     try {
       const result = await authOrchestrationService.register(req.body);
@@ -20,6 +30,7 @@ const authOrchestrationController = {
     }
   },
 
+  /** POST login → ms-auth */
   async login(req, res, next) {
     try {
       const result = await authOrchestrationService.login(req.body);
@@ -29,6 +40,7 @@ const authOrchestrationController = {
     }
   },
 
+  /** POST logout → ms-auth (Bearer requerido) */
   async logout(req, res, next) {
     try {
       const result = await authOrchestrationService.logout(req);
@@ -38,6 +50,7 @@ const authOrchestrationController = {
     }
   },
 
+  /** GET roles detallados */
   async getRoles(req, res, next) {
     try {
       const result = await authOrchestrationService.getRoles();
@@ -47,6 +60,7 @@ const authOrchestrationController = {
     }
   },
 
+  /** GET roles/simple */
   async getRolesSimple(req, res, next) {
     try {
       const result = await authOrchestrationService.getRolesSimple();
@@ -56,6 +70,7 @@ const authOrchestrationController = {
     }
   },
 
+  /** PUT usuarios/:id/rol — actualización de rol vía auth */
   async updateUserRole(req, res, next) {
     try {
       const result = await authOrchestrationService.updateUserRole(req.params.id, req.body, req);
@@ -65,6 +80,7 @@ const authOrchestrationController = {
     }
   },
 
+  /** GET health de ms-auth */
   async health(req, res, next) {
     try {
       const result = await authOrchestrationService.health();

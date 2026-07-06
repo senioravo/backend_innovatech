@@ -1,3 +1,7 @@
+/**
+ * Modelo de dominio de proyecto en ms-project-manager.
+ * Representa la entidad persistida con fechas, assignee y estado.
+ */
 class ProjectModel {
   id: string | number;
   userId: string | number;
@@ -10,6 +14,9 @@ class ProjectModel {
   endDate: unknown;
   status: string;
 
+  /**
+   * @param {Record<string, unknown>} fields - Propiedades del proyecto desde BD o DTO
+   */
   constructor({
     id,
     userId,

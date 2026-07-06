@@ -1,6 +1,16 @@
+/**
+ * Middleware de autenticación JWT para rutas públicas de ms-users.
+ */
 import jwtHelper from '../utils/jwt.helper.js';
 import logger from '../utils/logger.js';
 
+/**
+ * Verifica el token Bearer en Authorization y adjunta req.user.
+ * @param {import('express').Request} req
+ * @param {import('express').Response} res
+ * @param {import('express').NextFunction} next
+ * @returns {Promise<void>}
+ */
 const verifyToken = async (req, res, next) => {
   try {
     const authHeader = req.headers.authorization;
@@ -44,6 +54,11 @@ const verifyToken = async (req, res, next) => {
   }
 };
 
+/**
+ * Factory que restringe el acceso a los roles indicados.
+ * @param {string[]} allowedRoles - Roles permitidos para la ruta
+ * @returns {import('express').RequestHandler} Middleware Express
+ */
 const requireRole = (allowedRoles: string[]) => {
   return (req, res, next) => {
     if (!req.user) {

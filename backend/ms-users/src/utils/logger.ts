@@ -1,3 +1,6 @@
+/**
+ * Logger Winston con rotación diaria de archivos audit y error.
+ */
 import winston from 'winston';
 import DailyRotateFile from 'winston-daily-rotate-file';
 import path from 'path';
@@ -7,6 +10,7 @@ class Logger {
   logsDir: string;
   winstonLogger: winston.Logger;
 
+  /** Inicializa transports de archivo rotativo y consola. */
   constructor() {
     this.logsDir = path.join(__dirname, '../../logs');
 
@@ -60,18 +64,42 @@ class Logger {
     this.winstonLogger.info(`[LOGGER] Winston inicializado - Directorio: ${this.logsDir}`);
   }
 
+  /**
+   * Registra mensaje informativo.
+   * @param {string} message
+   * @param {unknown} [meta] - Metadatos opcionales serializados como JSON
+   * @returns {void}
+   */
   info(message: string, meta?: unknown) {
     this.winstonLogger.info(this._formatSimpleMessage(message, meta));
   }
 
+  /**
+   * Registra advertencia.
+   * @param {string} message
+   * @param {unknown} [meta]
+   * @returns {void}
+   */
   warn(message: string, meta?: unknown) {
     this.winstonLogger.warn(this._formatSimpleMessage(message, meta));
   }
 
+  /**
+   * Registra error.
+   * @param {string} message
+   * @param {unknown} [meta]
+   * @returns {void}
+   */
   error(message: string, meta?: unknown) {
     this.winstonLogger.error(this._formatSimpleMessage(message, meta));
   }
 
+  /**
+   * Concatena mensaje con metadatos en una sola línea.
+   * @param {string} message
+   * @param {unknown} [meta]
+   * @returns {string}
+   */
   _formatSimpleMessage(message: string, meta?: unknown) {
     if (meta !== undefined && meta !== null && typeof meta === 'object') {
       return `${String(message)} ${JSON.stringify(meta)}`;

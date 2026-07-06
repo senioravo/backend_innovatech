@@ -1,3 +1,7 @@
+/**
+ * Controller HTTP de autenticación (register, login, logout, roles, health).
+ * Traduce errores de dominio a respuestas JSON y registra operaciones críticas.
+ */
 import authService from '../services/auth.service.js';
 import logger from '../utils/logger.js';
 import { recordCriticalOperation } from '../middleware/metricsMiddleware.js';
@@ -8,6 +12,11 @@ import {
   errorResponseDto
 } from '../dtos/userDto.js';
 
+/**
+ * Mapea excepciones del servicio a status HTTP y body DTO.
+ * @param {unknown} error - Error lanzado por authService
+ * @returns {{ status: number; body: object }|null} Respuesta mapeada o null si no aplica
+ */
 function mapServiceError(error) {
   if (error instanceof ValidationError) {
     const message = (Array.isArray(error.errors) ? error.errors : []).length === 1
@@ -36,6 +45,11 @@ function mapServiceError(error) {
   return null;
 }
 
+/**
+ * POST /api/auth/register — Registra un nuevo usuario vía ms-users.
+ * @param {import('express').Request} req
+ * @param {import('express').Response} res
+ */
 const register = async (req, res) => {
   const startTime = Date.now();
 
@@ -82,6 +96,11 @@ const register = async (req, res) => {
   }
 };
 
+/**
+ * POST /api/auth/login — Valida credenciales y devuelve JWT RS256.
+ * @param {import('express').Request} req
+ * @param {import('express').Response} res
+ */
 const login = async (req, res) => {
   const startTime = Date.now();
 
@@ -128,6 +147,12 @@ const login = async (req, res) => {
   }
 };
 
+/**
+ * POST /api/auth/logout — Invalida el token JWT en la blacklist.
+ * Requiere middleware de autenticación previo (req.token, req.user).
+ * @param {import('express').Request} req
+ * @param {import('express').Response} res
+ */
 const logout = async (req, res) => {
   const startTime = Date.now();
 
@@ -178,6 +203,11 @@ const logout = async (req, res) => {
   }
 };
 
+/**
+ * GET /api/auth/roles — Lista roles con permisos detallados.
+ * @param {import('express').Request} req
+ * @param {import('express').Response} res
+ */
 const getRoles = async (req, res) => {
   try {
     const roles = authService.getRoles();
@@ -197,6 +227,11 @@ const getRoles = async (req, res) => {
   }
 };
 
+/**
+ * GET /api/auth/roles/simple — Lista solo nombres de roles disponibles.
+ * @param {import('express').Request} req
+ * @param {import('express').Response} res
+ */
 const getRolesSimple = async (req, res) => {
   try {
     const rolesArray = authService.getRolesSimple();
@@ -216,6 +251,11 @@ const getRolesSimple = async (req, res) => {
   }
 };
 
+/**
+ * GET /api/auth/health — Health check del microservicio de auth.
+ * @param {import('express').Request} req
+ * @param {import('express').Response} res
+ */
 const health = async (req, res) => {
   res.status(200).json({
     success: true,

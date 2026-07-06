@@ -1,3 +1,6 @@
+/**
+ * Endpoint Prometheus scrape para métricas de ms-users.
+ */
 import express from 'express';
 import { getMetrics } from '../middleware/metricsMiddleware.js';
 

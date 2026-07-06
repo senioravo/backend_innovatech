@@ -1,9 +1,18 @@
+/**
+ * Capa de persistencia PostgreSQL para la tabla `usuarios`.
+ * Mapea filas SQL a objetos de dominio vía userRowMapper.
+ */
 import { query } from '../config/database.js';
 import { mapUserRow, mapUserRows } from '../utils/userRowMapper.js';
 import { getAllRoles } from '../config/roles.js';
 const VALID_ROLES = getAllRoles();
 
 class UserRepository {
+  /**
+   * Verifica si un email ya está registrado.
+   * @param {string} email
+   * @returns {Promise<boolean>}
+   */
   async emailExists(email: string) {
     const result = await query(
       'SELECT id FROM usuarios WHERE email = $1',
@@ -12,6 +21,11 @@ class UserRepository {
     return result.rows.length > 0;
   }
 
+  /**
+   * Inserta un usuario nuevo (password ya hasheado).
+   * @param {{ name: string; email: string; passwordHash: string; role: string }} data
+   * @returns {Promise<object>}
+   */
   async create(data: { name: string; email: string; passwordHash: string; role: string }) {
     const result = await query(
       `INSERT INTO usuarios (nombre, email, password, rol, created_at, updated_at)
@@ -22,6 +36,7 @@ class UserRepository {
     return mapUserRow(result.rows[0]);
   }
 
+  /** @param {number} id @returns {Promise<object|null>} */
   async findById(id: number) {
     const result = await query(
       `SELECT id, nombre, email, rol, habilidades, disponibilidad,
@@ -32,6 +47,7 @@ class UserRepository {
     return result.rows.length > 0 ? mapUserRow(result.rows[0]) : null;
   }
 
+  /** @param {string} email @returns {Promise<object|null>} Sin campo password */
   async findByEmail(email: string) {
     const result = await query(
       'SELECT id, nombre, email, rol, created_at, updated_at FROM usuarios WHERE email = $1',
@@ -40,6 +56,7 @@ class UserRepository {
     return result.rows.length > 0 ? mapUserRow(result.rows[0]) : null;
   }
 
+  /** @param {string} email @returns {Promise<object|null>} Incluye password para login interno */
   async findByEmailWithPassword(email: string) {
     const result = await query(
       'SELECT id, nombre, email, password, rol, created_at, updated_at FROM usuarios WHERE email = $1',
@@ -48,6 +65,11 @@ class UserRepository {
     return result.rows.length > 0 ? mapUserRow(result.rows[0]) : null;
   }
 
+  /**
+   * Lista paginada con filtros opcionales por rol y búsqueda textual.
+   * @param {{ page?: number; limit?: number; role?: string|null; search?: string|null }} options
+   * @returns {Promise<{ users: object[]; pagination: object }>}
+   */
   async findAll(options: {
     page?: number;
     limit?: number;
@@ -94,6 +116,12 @@ class UserRepository {
     };
   }
 
+  /**
+   * Actualiza campos dinámicos del usuario (nombre, email, password, rol).
+   * @param {number} id
+   * @param {Record<string, unknown>} fields
+   * @returns {Promise<object|null>}
+   */
   async update(id: number, fields: Record<string, unknown>) {
     const dbFields: Record<string, unknown> = {};
     if (fields.name !== undefined) dbFields.nombre = fields.name;
@@ -125,6 +153,7 @@ class UserRepository {
     return result.rows.length > 0 ? mapUserRow(result.rows[0]) : null;
   }
 
+  /** @param {number} id @returns {Promise<boolean>} true si se eliminó una fila */
   async delete(id: number) {
     const result = await query(
       'DELETE FROM usuarios WHERE id = $1 RETURNING id',
@@ -133,6 +162,7 @@ class UserRepository {
     return result.rows.length > 0;
   }
 
+  /** @param {number} id @param {string} newRole @returns {Promise<object|null>} */
   async updateRole(id: number, newRole: string) {
     const result = await query(
       `UPDATE usuarios
@@ -145,6 +175,7 @@ class UserRepository {
     return result.rows.length > 0 ? mapUserRow(result.rows[0]) : null;
   }
 
+  /** @returns {Promise<object[]>} Usuarios con rol profesional o gestor */
   async findProfessionals() {
     const result = await query(
       `SELECT id, nombre, email, rol, habilidades, disponibilidad,
@@ -155,6 +186,12 @@ class UserRepository {
     );
     return mapUserRows(result.rows);
   }
+  /**
+   * Actualiza campos de perfil profesional (habilidades, disponibilidad, horas).
+   * @param {number} id
+   * @param {Record<string, unknown>} profile
+   * @returns {Promise<object|null>}
+   */
   async updateProfile(id: number, profile: Record<string, unknown>) {
     const fields: string[] = [];
     const params: unknown[] = [];

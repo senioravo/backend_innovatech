@@ -1,3 +1,6 @@
+/**
+ * Configuración del pool PostgreSQL y helper de consultas para ms-users.
+ */
 import { Pool } from 'pg';
 import { Gauge } from 'prom-client';
 import dotenv from 'dotenv';
@@ -14,6 +17,11 @@ if (!hasDatabaseUrl && !hasLocalDbConfig) {
   });
 }
 
+/**
+ * Determina la configuración SSL según la cadena de conexión.
+ * @param {string} [connectionString] - DATABASE_URL u otra cadena PostgreSQL
+ * @returns {false|{ rejectUnauthorized: boolean }} false si SSL deshabilitado
+ */
 const resolveSsl = (connectionString?: string) => {
   if (!connectionString) return false;
   if (/sslmode=disable/i.test(connectionString)) return false;
@@ -100,6 +108,12 @@ process.on('SIGINT', async () => {
   }
 });
 
+/**
+ * Ejecuta una consulta parametrizada y registra duración y filas afectadas.
+ * @param {string} text - Sentencia SQL
+ * @param {unknown[]} [params] - Parámetros de la consulta
+ * @returns {Promise<import('pg').QueryResult>} Resultado de pool.query
+ */
 async function query(text: string, params?: unknown[]) {
   const start = Date.now();
   try {

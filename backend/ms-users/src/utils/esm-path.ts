@@ -1,3 +1,6 @@
+/**
+ * Helpers ESM para obtener __filename y __dirname en módulos ES.
+ */
 import path from 'path';
 import { fileURLToPath } from 'url';
 

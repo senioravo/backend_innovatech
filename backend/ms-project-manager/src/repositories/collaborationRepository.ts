@@ -1,6 +1,15 @@
+/**
+ * Repositorio de colaboración (PostgreSQL).
+ * Persiste comentarios, adjuntos y notificaciones asociados a tareas y usuarios.
+ */
 import { getPool } from '../db/pool.js';
 
 class CollaborationRepository {
+  /**
+   * Lista comentarios de una tarea ordenados por fecha de creación.
+   * @param {string|number} taskId - ID de la tarea
+   * @returns {Promise<object[]>} Filas de TASK_COMMENT
+   */
   async listComments(taskId) {
     const pool = getPool();
     const { rows } = await pool.query(
@@ -11,6 +20,13 @@ class CollaborationRepository {
     return rows;
   }
 
+  /**
+   * Inserta un comentario en una tarea.
+   * @param {string|number} taskId - ID de la tarea
+   * @param {string|number} userId - ID del autor
+   * @param {string} content - Texto del comentario
+   * @returns {Promise<object>} Fila insertada
+   */
   async addComment(taskId, userId, content) {
     const pool = getPool();
     const { rows } = await pool.query(
@@ -22,6 +38,11 @@ class CollaborationRepository {
     return rows[0];
   }
 
+  /**
+   * Lista adjuntos de una tarea.
+   * @param {string|number} taskId - ID de la tarea
+   * @returns {Promise<object[]>} Filas de TASK_ATTACHMENT
+   */
   async listAttachments(taskId) {
     const pool = getPool();
     const { rows } = await pool.query(
@@ -32,6 +53,14 @@ class CollaborationRepository {
     return rows;
   }
 
+  /**
+   * Registra un adjunto en una tarea.
+   * @param {string|number} taskId - ID de la tarea
+   * @param {string|number} userId - ID del autor
+   * @param {string} documentName - Nombre del documento
+   * @param {string} documentUrl - URL del documento
+   * @returns {Promise<object>} Fila insertada
+   */
   async addAttachment(taskId, userId, documentName, documentUrl) {
     const pool = getPool();
     const { rows } = await pool.query(
@@ -43,6 +72,12 @@ class CollaborationRepository {
     return rows[0];
   }
 
+  /**
+   * Lista notificaciones de un usuario con límite configurable.
+   * @param {string|number} userId - ID del destinatario
+   * @param {number} [limit=50] - Cantidad máxima de filas
+   * @returns {Promise<object[]>} Filas de NOTIFICATION
+   */
   async listNotifications(userId, limit = 50) {
     const pool = getPool();
     const { rows } = await pool.query(
@@ -56,6 +91,14 @@ class CollaborationRepository {
     return rows;
   }
 
+  /**
+   * Crea una notificación para un usuario.
+   * @param {string|number} userId - ID del destinatario
+   * @param {string} type - Tipo de notificación
+   * @param {string} title - Título
+   * @param {string} message - Mensaje
+   * @returns {Promise<object>} Fila insertada
+   */
   async createNotification(userId, type, title, message) {
     const pool = getPool();
     const { rows } = await pool.query(
@@ -67,6 +110,12 @@ class CollaborationRepository {
     return rows[0];
   }
 
+  /**
+   * Marca una notificación como leída si pertenece al usuario.
+   * @param {string|number} notificationId - ID de la notificación
+   * @param {string|number} userId - ID del destinatario
+   * @returns {Promise<object|null>} Fila actualizada o null
+   */
   async markNotificationRead(notificationId, userId) {
     const pool = getPool();
     const { rows } = await pool.query(

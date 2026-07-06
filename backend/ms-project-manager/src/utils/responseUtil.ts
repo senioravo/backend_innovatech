@@ -1,10 +1,26 @@
+/**
+ * Handlers globales de errores y rutas no encontradas para ms-project-manager.
+ * Reporta errores 500 a GlitchTip con contexto del request.
+ */
 import { ApplicationError, ValidationError } from './errorHandler.js';
 import { captureException } from '../observability/glitchtip.js';
 
+/**
+ * Responde 404 para rutas no registradas.
+ * @param {import('express').Request} req
+ * @param {import('express').Response} res
+ */
 function handleNotFound(req, res) {
   res.status(404).json({ error: 'Route not found' });
 }
 
+/**
+ * Middleware de error Express: mapea ApplicationError a JSON y captura 500 en GlitchTip.
+ * @param {unknown} err - Error propagado por next(err)
+ * @param {import('express').Request} req
+ * @param {import('express').Response} res
+ * @param {import('express').NextFunction} next
+ */
 function handleError(err, req, res, next) {
   console.error('Error:', err);
 

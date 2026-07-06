@@ -1,3 +1,6 @@
+/**
+ * Variables de entorno tipadas para ms-auth (JWT, DB, circuit breaker, Elasticsearch).
+ */
 import dotenv from 'dotenv';
 
 dotenv.config();

@@ -1,3 +1,7 @@
+/**
+ * Middleware de autenticación JWT RS256 para ms-kpi.
+ * Verifica Bearer token con clave pública RSA compartida con ms-auth.
+ */
 const jwt = require('jsonwebtoken');
 const fs = require('fs');
 const path = require('path');
@@ -14,10 +18,12 @@ try {
 
 /**
  * Middleware JWT RS256 para rutas KPI.
- * Verifica Bearer token con clave pública RSA compartida.
- * @param {import('express').Request} req
- * @param {import('express').Response} res
- * @param {import('express').NextFunction} next
+ * Omite autenticación en rutas públicas (/health, /metrics, /api-docs).
+ * Verifica Bearer token con clave pública RSA compartida y popula `req.user`.
+ * @param {import('express').Request} req - Request Express entrante.
+ * @param {import('express').Response} res - Response Express para responder 401 si el token es inválido.
+ * @param {import('express').NextFunction} next - Callback para continuar la cadena de middlewares.
+ * @returns {void|import('express').Response} Continúa con `next()` o responde 401 Unauthorized.
  */
 function authMiddleware(req, res, next) {
   const openPaths = ['/health', '/metrics', '/api-docs', '/api-docs.json'];

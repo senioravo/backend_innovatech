@@ -1,3 +1,6 @@
+/**
+ * Utilidad para verificar y decodificar tokens JWT RS256 emitidos por ms-auth.
+ */
 import jwt from 'jsonwebtoken';
 import fs from 'fs';
 import path from 'path';
@@ -10,6 +13,7 @@ class JWTHelper {
   private _publicKeyPath: string;
   private _keysLoaded = false;
 
+  /** Carga issuer, algoritmo y ruta de la clave pública RSA. */
   constructor() {
     this.issuer = process.env.JWT_ISSUER || 'innovatech-auth';
     this.algorithm = 'RS256';
@@ -24,6 +28,11 @@ class JWTHelper {
     }
   }
 
+  /**
+   * Carga la clave pública desde disco si aún no está en memoria.
+   * @returns {void}
+   * @throws {Error} Si el archivo de clave no puede leerse
+   */
   private _ensureKeys() {
     if (this._keysLoaded) {
       return;
@@ -39,6 +48,12 @@ class JWTHelper {
     }
   }
 
+  /**
+   * Verifica firma, issuer y expiración del token JWT.
+   * @param {string} token - JWT en formato Bearer sin prefijo
+   * @returns {string|import('jsonwebtoken').JwtPayload} Payload decodificado
+   * @throws {Error} Token no proporcionado, expirado o inválido
+   */
   verifyToken(token: string) {
     this._ensureKeys();
 
@@ -65,6 +80,11 @@ class JWTHelper {
     }
   }
 
+  /**
+   * Decodifica el token sin verificar firma (solo inspección).
+   * @param {string} token
+   * @returns {string|import('jsonwebtoken').JwtPayload|null} Payload o null si falla
+   */
   decodeToken(token: string) {
     try {
       return jwt.decode(token);

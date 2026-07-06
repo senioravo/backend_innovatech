@@ -1,3 +1,7 @@
+/**
+ * Middleware de autenticación JWT (RS256).
+ * Verifica tokens emitidos por ms-auth usando la clave pública local y adjunta req.user.
+ */
 import path from 'path';
 import { fileURLToPath } from 'url';
 import jwt from 'jsonwebtoken';
@@ -16,12 +20,23 @@ if (!fs.existsSync(publicKeyPath)) {
   console.log('[PM-AUTH-MIDDLEWARE] ℹ️  Este servicio solo puede VERIFICAR tokens, no crearlos');
 }
 
+/**
+ * Carga y cachea la clave pública RSA desde disco.
+ * @returns {string} Contenido PEM de la clave pública
+ */
 function loadPublicKey() {
   if (publicKey) return publicKey;
   publicKey = fs.readFileSync(publicKeyPath, 'utf8');
   return publicKey;
 }
 
+/**
+ * Middleware Express: valida Bearer JWT y popula req.user.
+ * Omite rutas abiertas (/health, /metrics, /api-docs, /swagger.json).
+ * @param {import('express').Request} req
+ * @param {import('express').Response} res
+ * @param {import('express').NextFunction} next
+ */
 function authMiddleware(req, res, next) {
   const openPaths = ['/health', '/metrics', '/api-docs', '/swagger.json'];
   if (openPaths.some((p) => req.path === p || req.path.startsWith(`${p}/`))) {

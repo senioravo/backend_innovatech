@@ -1,3 +1,12 @@
+/**
+ * Errores de dominio HTTP para ms-users (validación, no encontrado, genérico).
+ */
+
+/**
+ * Error base con código de estado HTTP.
+ * @param {string} message - Mensaje descriptivo del error
+ * @param {number} [status=500] - Código HTTP asociado
+ */
 class ApplicationError extends Error {
   status: number;
 
@@ -8,6 +17,10 @@ class ApplicationError extends Error {
   }
 }
 
+/**
+ * Error de validación de datos de entrada (400).
+ * @param {string[]} errors - Lista de mensajes de validación
+ */
 class ValidationError extends ApplicationError {
   errors: string[];
 
@@ -17,6 +30,10 @@ class ValidationError extends ApplicationError {
   }
 }
 
+/**
+ * Recurso no encontrado (404).
+ * @param {string} [message='Usuario no encontrado'] - Mensaje personalizado
+ */
 class NotFoundError extends ApplicationError {
   constructor(message = 'Usuario no encontrado') {
     super(message, 404);

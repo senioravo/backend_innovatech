@@ -1,3 +1,7 @@
+/**
+ * Servicio de dominio de proyectos.
+ * Aplica reglas de visibilidad por rol, disponibilidad de recursos y validación de DTOs.
+ */
 import projectRepository from '../repositories/projectRepository.js';
 import taskRepository from '../repositories/taskRepository.js';
 import resourceAvailabilityService from './resourceAvailabilityService.js';
@@ -7,12 +11,19 @@ import { NotFoundError, ValidationError } from '../utils/errorHandler.js';
 import { canViewAllProjects } from '../utils/roleAccess.js';
 
 class ProjectService {
+  /** @type {import('../repositories/projectRepository.js').default} */
   repository;
 
+  /** @param {import('../repositories/projectRepository.js').default} [repository] */
   constructor(repository = projectRepository) {
     this.repository = repository;
   }
 
+  /**
+   * Lista proyectos visibles según rol (directivo/gestor ven todos).
+   * @param {string|number} userId
+   * @param {string} role
+   */
   async listProjects(userId, role) {
     if (!userId) throw new Error('userId is required');
     if (canViewAllProjects(role)) {
@@ -21,11 +32,13 @@ class ProjectService {
     return this.repository.findByUserId(userId);
   }
 
+  /** Obtiene un proyecto verificando que el usuario tenga acceso */
   async getProject(projectId, userId) {
     if (!projectId || !userId) throw new Error('projectId and userId are required');
     return resourceAvailabilityService.assertProjectAvailable(projectId, userId);
   }
 
+  /** Crea proyecto con datos normalizados y fechas opcionales */
   async createProject({ name, description, userId, startDate = null, endDate = null, assigneeId = null }) {
     if (!name || !description || !userId) {
       throw new Error('name, description and userId are required');
@@ -41,6 +54,7 @@ class ProjectService {
     });
   }
 
+  /** Valida body HTTP y delega en createProject */
   async createProjectFromRequest(body, userId) {
     const validation = ValidationService.validateProjectInput(body);
     if (!validation.isValid) throw new ValidationError(validation.errors);

@@ -1,9 +1,18 @@
+/**
+ * Integración GlitchTip/Sentry para captura de excepciones y mensajes.
+ * Solo se activa cuando `SENTRY_DSN` está definido en el entorno.
+ * Enriquece cada evento con `request_id` y nombre del servicio.
+ */
 import * as Sentry from '@sentry/node';
 import { getOrUnknown } from './requestIdContext.js';
 
 let enabled = false;
 let serviceName = 'service';
 
+/**
+ * Inicializa el SDK de Sentry/GlitchTip para este servicio.
+ * @param {string} name - Nombre lógico del microservicio (ej. `bff`, `ms-auth`)
+ */
 function initGlitchTip(name: string): void {
   serviceName = name;
   const dsn = process.env.SENTRY_DSN?.trim();
@@ -24,14 +33,21 @@ function initGlitchTip(name: string): void {
   console.log(`[${name}] GlitchTip/Sentry inicializado`);
 }
 
+/** @returns {string} Nombre del servicio registrado en initGlitchTip */
 function getServiceName(): string {
   return serviceName;
 }
 
+/** @returns {boolean} true si SENTRY_DSN fue configurado y el SDK está activo */
 function isGlitchTipEnabled(): boolean {
   return enabled;
 }
 
+/**
+ * Prefija el mensaje del error con el requestId actual para correlación en GlitchTip.
+ * @param {Error} err - Error original
+ * @returns {Error} Mismo error con mensaje enriquecido
+ */
 function enrichError(err: Error): Error {
   const requestId = getOrUnknown();
   if (!err.message.includes('[requestId=')) {
@@ -40,6 +56,11 @@ function enrichError(err: Error): Error {
   return err;
 }
 
+/**
+ * Reporta una excepción a GlitchTip con tags de request_id y servicio.
+ * @param {unknown} error - Error o valor a reportar
+ * @param {string} [context] - Contexto adicional (ej. `GET /api/users`)
+ */
 function captureException(error: unknown, context?: string): void {
   if (!enabled) return;
 
@@ -57,6 +78,11 @@ function captureException(error: unknown, context?: string): void {
   });
 }
 
+/**
+ * Envía un mensaje de log estructurado a GlitchTip.
+ * @param {string} message - Texto del mensaje
+ * @param {Sentry.SeverityLevel} [level='info'] - Nivel Sentry (info, warning, error, etc.)
+ */
 function captureMessage(message: string, level: Sentry.SeverityLevel = 'info'): void {
   if (!enabled) return;
 
@@ -67,6 +93,11 @@ function captureMessage(message: string, level: Sentry.SeverityLevel = 'info'): 
   });
 }
 
+/**
+ * Espera a que eventos pendientes se envíen antes de apagar el proceso.
+ * @param {number} [timeoutMs=2000] - Tiempo máximo de espera en ms
+ * @returns {Promise<boolean>} true si el flush completó a tiempo
+ */
 async function flushGlitchTip(timeoutMs = 2000): Promise<boolean> {
   if (!enabled) return true;
   return Sentry.flush(timeoutMs);

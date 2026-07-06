@@ -1,8 +1,13 @@
+/**
+ * Controller REST de proyectos.
+ * Serializa entidades con projectToDto y registra auditoría en operaciones de escritura.
+ */
 import projectService from '../services/projectService.js';
 import { projectToDto } from '../dtos/projectDto.js';
 import { auditFromRequest } from '../utils/auditLog.js';
 
 const projectController = {
+  /** GET /projects — Lista proyectos del usuario o todos si es directivo/gestor */
   async listProjects(req, res, next) {
     try {
       const projects = await projectService.listProjects(req.user.id, req.user.role);
@@ -12,6 +17,7 @@ const projectController = {
     }
   },
 
+  /** GET /projects/:id — Detalle de un proyecto con control de acceso */
   async getProject(req, res, next) {
     try {
       const project = await projectService.getProject(req.params.id, req.user.id);
@@ -21,6 +27,7 @@ const projectController = {
     }
   },
 
+  /** POST /projects — Crea proyecto y audita PROJECT_CREATE */
   async createProject(req, res, next) {
     try {
       const project = await projectService.createProjectFromRequest(req.body, req.user.id);
