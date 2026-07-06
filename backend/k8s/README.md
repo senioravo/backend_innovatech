@@ -110,15 +110,23 @@ kubectl delete job ms-users-flyway ms-project-manager-flyway -n innovatech
 kubectl apply -k .
 ```
 
-Acceso API (port-forward):
+Acceso (LoadBalancer — Docker Desktop asigna IP externa, sin port-forward):
 
 ```powershell
-kubectl port-forward -n innovatech svc/api-gateway 8010:8010
-kubectl port-forward -n innovatech svc/frontend 8080:80
+kubectl get svc -n innovatech frontend api-gateway
 ```
 
-API: `http://localhost:8010/api/v1/...`  
-App: `http://localhost:8080/` (nginx en el pod proxy `/api` al gateway)
+- **App:** `http://<EXTERNAL-IP-frontend>/` (puerto 80)
+- **API directa (KrakenD):** `http://<EXTERNAL-IP-api-gateway>:8010/api/v1/...`
+
+La app en el frontend ya proxy `/api` al gateway dentro del cluster; normalmente solo abres la URL del frontend.
+
+Alternativa dev (port-forward):
+
+```powershell
+kubectl port-forward -n innovatech svc/frontend 8080:80
+# App: http://localhost:8080/
+```
 
 ---
 
@@ -191,8 +199,8 @@ kubectl apply -k .
 | `ms-project-manager`| 3002   | Proyectos y tareas           |
 | `bff`               | 3010   | Orquestación                 |
 | `ms-kpi`            | 3004   | KPIs agregados               |
-| `api-gateway`       | 8010   | Entrada HTTP pública (KrakenD) |
-| `frontend`          | 80     | SPA React (nginx)            |
+| `api-gateway`       | 8010   | Entrada HTTP pública (KrakenD, LoadBalancer) |
+| `frontend`          | 80     | SPA React (nginx, LoadBalancer)            |
 | `users-db`          | 5432   | PostgreSQL usuarios          |
 | `pm-db`             | 5432   | PostgreSQL project-manager   |
 

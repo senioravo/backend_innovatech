@@ -62,11 +62,18 @@ docker build -t innovatech/frontend:1.0.0 ./frontend
 
 Manifiestos en `frontend/k8s/` (referenciados desde `backend/k8s/kustomization.yaml`).
 
-Acceso local:
+Acceso local (LoadBalancer, igual que api-gateway):
+
+```powershell
+kubectl get svc -n innovatech frontend
+# App: http://<EXTERNAL-IP>/  (nginx proxy /api → api-gateway:8010)
+```
+
+Alternativa con port-forward:
 
 ```powershell
 kubectl port-forward -n innovatech svc/frontend 8080:80
-# App: http://localhost:8080/  (nginx proxy /api → api-gateway:8010)
+# App: http://localhost:8080/
 ```
 
 Con Ingress NGINX, añade a tu archivo hosts:
