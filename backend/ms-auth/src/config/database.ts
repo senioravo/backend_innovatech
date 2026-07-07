@@ -1,5 +1,8 @@
+/**
+ * Pool PostgreSQL para ms-auth con métricas Prometheus, retry y graceful shutdown.
+ * Soporta DATABASE_URL (cloud) o variables DB_* locales.
+ */
 import dotenv from 'dotenv';
-// AS-TASK-21: Configuraci�n de base de datos production-ready
 // Mejoras: SSL seguro, graceful shutdown, retry logic, Winston logging, m�tricas Prometheus
 import { Pool } from 'pg';
 import { Gauge } from 'prom-client';

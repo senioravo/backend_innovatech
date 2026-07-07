@@ -1,3 +1,6 @@
+/**
+ * Constantes y utilidades de roles de usuario del sistema Innovatech.
+ */
 const ROLES = {
   GESTOR: 'gestor',
   PROFESIONAL: 'profesional',
@@ -24,22 +27,44 @@ const ROLES_INFO = {
   }
 };
 
+/**
+ * Devuelve todos los valores de rol válidos.
+ * @returns {string[]}
+ */
 function getAllRoles() {
   return Object.values(ROLES);
 }
 
+/**
+ * Indica si un rol pertenece al catálogo del sistema.
+ * @param {string} rol - Identificador de rol (gestor, profesional, directivo)
+ * @returns {boolean}
+ */
 function isValidRole(rol: string) {
   return getAllRoles().includes(rol);
 }
 
+/**
+ * Devuelve metadatos de nombre, descripción y permisos por rol.
+ * @returns {typeof ROLES_INFO}
+ */
 function getAllRolesInfo() {
   return ROLES_INFO;
 }
 
+/**
+ * Obtiene la descripción legible de un rol.
+ * @param {string} rol - Identificador de rol
+ * @returns {string|null} Descripción o null si el rol no existe
+ */
 function getRoleDescription(rol: string) {
   return ROLES_INFO[rol]?.description || null;
 }
 
+/**
+ * Devuelve el rol asignado por defecto al crear usuarios.
+ * @returns {string}
+ */
 function getDefaultRole() {
   return DEFAULT_ROLE;
 }

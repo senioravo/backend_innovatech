@@ -1,3 +1,13 @@
+/**
+ * Middleware de autorización por rol.
+ * Restringe rutas según los roles permitidos declarados en cada endpoint.
+ */
+
+/**
+ * Factory de middleware que exige uno de los roles indicados.
+ * @param {...string} allowedRoles - Roles permitidos (comparación case-insensitive)
+ * @returns {import('express').RequestHandler} Middleware Express
+ */
 function requireRole(...allowedRoles) {
   return (req, res, next) => {
     const userRole = req.user?.role;
@@ -20,4 +30,4 @@ function requireRole(...allowedRoles) {
   };
 }
 
-export default requireRole;;
+export default requireRole;

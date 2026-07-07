@@ -1,3 +1,4 @@
+/** Tests de redirección de ProtectedRoute según isAuthenticated. */
 import { render, screen } from '@testing-library/react';
 import { MemoryRouter, Routes, Route } from 'react-router-dom';
 import ProtectedRoute from './ProtectedRoute';

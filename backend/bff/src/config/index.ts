@@ -1,3 +1,6 @@
+/**
+ * Configuración central del BFF: puertos, prefijos API y URLs de microservicios upstream.
+ */
 import dotenv from 'dotenv';
 
 dotenv.config();

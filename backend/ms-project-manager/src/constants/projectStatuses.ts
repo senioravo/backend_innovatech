@@ -1,12 +1,25 @@
+/**
+ * Estados válidos de proyecto y helpers de normalización/validación.
+ */
+
+/** Estados permitidos en ciclo de vida del proyecto */
 const PROJECT_STATUSES = Object.freeze(['active', 'terminated']);
 
 const PROJECT_STATUS_SET = new Set(PROJECT_STATUSES);
 
+/**
+ * @param {unknown} value - Valor a validar
+ * @returns {boolean}
+ */
 function isValidProjectStatus(value) {
   if (typeof value !== 'string' || !value.trim()) return false;
   return PROJECT_STATUS_SET.has(value.trim().toLowerCase());
 }
 
+/**
+ * @param {unknown} value
+ * @returns {string} Estado en minúsculas trimmeado
+ */
 function normalizeProjectStatus(value) {
   return String(value).trim().toLowerCase();
 }

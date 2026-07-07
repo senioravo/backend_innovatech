@@ -1,7 +1,16 @@
+/**
+ * Repositorio de persistencia de proyectos (PostgreSQL).
+ * Mapea filas de la tabla PROJECT al modelo de dominio ProjectModel.
+ */
 import ProjectModel from '../models/projectModel.js';
 import IProjectRepository from '../interfaces/IProjectRepository.js';
 import { getPool } from '../db/pool.js';
 
+/**
+ * Convierte una fila SQL en instancia de ProjectModel.
+ * @param {object|null} row - Fila de la tabla PROJECT
+ * @returns {ProjectModel|null} Modelo de dominio o null
+ */
 function mapProjectRow(row) {
   if (!row) return null;
   return new ProjectModel({
@@ -19,6 +28,11 @@ function mapProjectRow(row) {
 }
 
 class ProjectRepository extends IProjectRepository {
+  /**
+   * Lista proyectos propiedad de un usuario.
+   * @param {string|number} userId - ID del propietario
+   * @returns {Promise<ProjectModel[]>} Proyectos del usuario
+   */
   async findByUserId(userId) {
     if (!userId) throw new Error('userId is required');
     const pool = getPool();
@@ -29,12 +43,22 @@ class ProjectRepository extends IProjectRepository {
     return rows.map(mapProjectRow);
   }
 
+  /**
+   * Lista todos los proyectos (vista administrativa).
+   * @returns {Promise<ProjectModel[]>} Todos los proyectos
+   */
   async findAll() {
     const pool = getPool();
     const { rows } = await pool.query(`SELECT * FROM "PROJECT" ORDER BY created_at DESC`);
     return rows.map(mapProjectRow);
   }
 
+  /**
+   * Busca proyecto por ID restringido al propietario.
+   * @param {string|number} id - ID del proyecto
+   * @param {string|number} userId - ID del propietario
+   * @returns {Promise<ProjectModel|null>} Proyecto o null
+   */
   async findByIdAndUserId(id, userId) {
     if (!id || !userId) throw new Error('id and userId are required');
     const pool = getPool();
@@ -45,6 +69,11 @@ class ProjectRepository extends IProjectRepository {
     return rows[0] ? mapProjectRow(rows[0]) : null;
   }
 
+  /**
+   * Busca proyecto por ID sin restricción de propietario.
+   * @param {string|number} id - ID del proyecto
+   * @returns {Promise<ProjectModel|null>} Proyecto o null
+   */
   async findById(id) {
     if (!id) throw new Error('id is required');
     const pool = getPool();
@@ -52,6 +81,11 @@ class ProjectRepository extends IProjectRepository {
     return rows[0] ? mapProjectRow(rows[0]) : null;
   }
 
+  /**
+   * Inserta un nuevo proyecto.
+   * @param {object} data - Datos del proyecto (userId, name, description, assigneeId, fechas)
+   * @returns {Promise<ProjectModel>} Proyecto creado
+   */
   async create(data) {
     if (!data || !data.userId) throw new Error('data and userId are required');
     const pool = getPool();
@@ -71,6 +105,13 @@ class ProjectRepository extends IProjectRepository {
     return mapProjectRow(rows[0]);
   }
 
+  /**
+   * Actualiza campos parciales de un proyecto del propietario.
+   * @param {string|number} id - ID del proyecto
+   * @param {string|number} userId - ID del propietario
+   * @param {object} patch - Campos a actualizar
+   * @returns {Promise<ProjectModel|null>} Proyecto actualizado o null
+   */
   async update(id, userId, patch) {
     if (!id || !userId) throw new Error('id and userId are required');
     const sets = [];
@@ -111,6 +152,13 @@ class ProjectRepository extends IProjectRepository {
     return rows[0] ? mapProjectRow(rows[0]) : null;
   }
 
+  /**
+   * Actualiza estado del proyecto solo si el usuario es el responsable asignado.
+   * @param {string|number} id - ID del proyecto
+   * @param {string|number} assigneeId - ID del responsable
+   * @param {string} status - Nuevo estado
+   * @returns {Promise<ProjectModel|null>} Proyecto actualizado o null
+   */
   async updateStatusByAssignee(id, assigneeId, status) {
     if (!id || !assigneeId || !status) {
       throw new Error('id, assigneeId and status are required');
@@ -125,6 +173,12 @@ class ProjectRepository extends IProjectRepository {
     return rows[0] ? mapProjectRow(rows[0]) : null;
   }
 
+  /**
+   * Elimina un proyecto del propietario.
+   * @param {string|number} id - ID del proyecto
+   * @param {string|number} userId - ID del propietario
+   * @returns {Promise<boolean>} true si se eliminó al menos una fila
+   */
   async delete(id, userId) {
     if (!id || !userId) throw new Error('id and userId are required');
     const pool = getPool();
@@ -136,4 +190,4 @@ class ProjectRepository extends IProjectRepository {
   }
 }
 
-export default new ProjectRepository();;
+export default new ProjectRepository();

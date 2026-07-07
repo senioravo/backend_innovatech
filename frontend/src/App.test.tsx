@@ -1,3 +1,4 @@
+/** Tests de smoke de App (ruta login). */
 import { render, screen } from '@testing-library/react';
 import LoginPage from './pages/LoginPage';
 import { MemoryRouter } from 'react-router-dom';

@@ -1,3 +1,7 @@
+/**
+ * Modelo de dominio de tarea asociada a un proyecto.
+ * Incluye estado Kanban, fechas y assignee opcional.
+ */
 class TaskModel {
   id: string | number;
   projectId: string | number;
@@ -11,6 +15,7 @@ class TaskModel {
   startDate: unknown;
   endDate: unknown;
 
+  /** @param {Record<string, unknown>} fields - Propiedades desde BD o DTO */
   constructor({
     id,
     projectId,

@@ -1,3 +1,4 @@
+/** Tests unitarios del cliente BFF (sesión, login, fetch). */
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import {
   getToken,

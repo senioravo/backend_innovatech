@@ -1,3 +1,6 @@
+/**
+ * Middleware y utilidades Prometheus para métricas HTTP y CRUD de ms-users.
+ */
 import promClient from 'prom-client';
 
 const register = new promClient.Registry();
@@ -25,6 +28,13 @@ const crudOperationsTotal = new promClient.Counter({
   registers: [register]
 });
 
+/**
+ * Registra contador e histograma de cada respuesta JSON.
+ * @param {import('express').Request} req
+ * @param {import('express').Response} res
+ * @param {import('express').NextFunction} next
+ * @returns {void}
+ */
 const metricsMiddleware = (req, res, next) => {
   const start = Date.now();
 
@@ -43,10 +53,20 @@ const metricsMiddleware = (req, res, next) => {
   next();
 };
 
+/**
+ * Incrementa el contador de operaciones CRUD de usuarios.
+ * @param {string} operation - Tipo de operación (create, read, update, delete)
+ * @param {string} status - Resultado (success, error)
+ * @returns {void}
+ */
 const recordCrudOperation = (operation: string, status: string) => {
   crudOperationsTotal.inc({ operation, status });
 };
 
+/**
+ * Exporta métricas Prometheus en formato texto.
+ * @returns {Promise<string>} Métricas serializadas del registro
+ */
 const getMetrics = async () => {
   return await register.metrics();
 };

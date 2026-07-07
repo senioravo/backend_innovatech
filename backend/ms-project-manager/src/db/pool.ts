@@ -1,8 +1,13 @@
+/**
+ * Pool PostgreSQL singleton para ms-project-manager.
+ * Lazy-init desde DATABASE_URL en config.
+ */
 import { Pool } from 'pg';
 import config from '../config/index.js';
 
 let pool;
 
+/** @returns {Pool} Instancia compartida del pool pg */
 function getPool() {
   if (!pool) {
     if (!config.databaseUrl) {
@@ -18,6 +23,7 @@ function getPool() {
   return pool;
 }
 
+/** Cierra el pool y libera conexiones (shutdown graceful) */
 async function endPool() {
   if (pool) {
     await pool.end();

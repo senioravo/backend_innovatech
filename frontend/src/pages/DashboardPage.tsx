@@ -1,3 +1,7 @@
+/**
+ * Dashboard principal post-login: proyectos, tareas Kanban, KPIs, notificaciones y colaboración.
+ * Permisos por rol: gestor (CRUD proyecto), profesional (tareas), directivo (KPIs/export).
+ */
 import { useCallback, useEffect, useState, type FormEvent } from 'react';
 import { useNavigate } from 'react-router-dom';
 import {
@@ -19,8 +23,10 @@ import {
 import { useAuth } from '../auth/AuthContext';
 import type { KpisResponse, Project, Task, TasksResponse, UserSession } from '../types/api';
 
+/** Estados Kanban permitidos en el flujo de tareas */
 const STATUSES = ['PENDING', 'IN_PROGRESS', 'IN_REVIEW', 'DONE'];
 
+/** Etiquetas en español para códigos de estado */
 const STATUS_LABELS: Record<string, string> = {
   PENDING: 'Pendiente',
   IN_PROGRESS: 'En progreso',
@@ -28,27 +34,45 @@ const STATUS_LABELS: Record<string, string> = {
   DONE: 'Hecho'
 };
 
+/**
+ * @param {string} code - Código de estado (PENDING, DONE, etc.)
+ * @returns {string} Etiqueta legible
+ */
 function statusLabel(code: string) {
   return STATUS_LABELS[code] ?? code;
 }
 
+/**
+ * Estados seleccionables: actual y siguiente paso del flujo Kanban.
+ * @param {string} currentStatus
+ * @returns {string[]}
+ */
 function allowedStatuses(currentStatus: string) {
   const i = STATUSES.indexOf(currentStatus);
   if (i === -1) return STATUSES;
   return STATUSES.slice(i, Math.min(i + 2, STATUSES.length));
 }
 
+/**
+ * Porcentaje de tareas DONE sobre el total del proyecto.
+ * @param {TasksResponse['summary']} summary
+ * @returns {number} 0–100
+ */
 function calcProgress(summary: TasksResponse['summary']) {
   if (!summary?.total) return 0;
   const done = summary.byStatus?.DONE || 0;
   return Math.round((done / summary.total) * 100);
 }
 
+/** Clave sessionStorage para recordar proyecto seleccionado */
 const SELECTED_PROJECT_KEY = 'innovatech_selected_project';
 
+/** Comentario en panel de colaboración de tarea */
 type TaskComment = { id: string; userId?: string; content: string };
+/** Adjunto URL en panel de colaboración */
 type TaskAttachment = { id: string; documentName: string; documentUrl: string };
 
+/** Props de fila expandible con comentarios y adjuntos */
 type TaskRowProps = {
   task: Task;
   projectId: string;
@@ -56,6 +80,10 @@ type TaskRowProps = {
   onRefresh: () => void;
 };
 
+/**
+ * Fila de tabla de tarea con selector de estado y panel de colaboración.
+ * @param {TaskRowProps} props
+ */
 function TaskRow({ task, projectId, onStatusChange, onRefresh }: TaskRowProps) {
   const [open, setOpen] = useState(false);
   const [comments, setComments] = useState<TaskComment[]>([]);
@@ -64,6 +92,7 @@ function TaskRow({ task, projectId, onStatusChange, onRefresh }: TaskRowProps) {
   const [docName, setDocName] = useState('');
   const [docUrl, setDocUrl] = useState('');
 
+  /** Carga comentarios y adjuntos desde el BFF */
   async function loadDetails() {
     const [c, a] = await Promise.all([
       fetchTaskComments(projectId, task.id),
@@ -73,6 +102,7 @@ function TaskRow({ task, projectId, onStatusChange, onRefresh }: TaskRowProps) {
     setAttachments((a as { attachments?: TaskAttachment[] })?.attachments ?? []);
   }
 
+  /** Expande/colapsa panel y precarga detalles la primera vez */
   async function toggleOpen() {
     if (!open) await loadDetails();
     setOpen(!open);
@@ -172,6 +202,7 @@ function TaskRow({ task, projectId, onStatusChange, onRefresh }: TaskRowProps) {
   );
 }
 
+/** Página principal autenticada con gestión de proyectos y tareas */
 export default function DashboardPage() {
   const { user, logout } = useAuth();
   const navigate = useNavigate();
@@ -207,6 +238,10 @@ export default function DashboardPage() {
     directivo: 'Puedes ver todos los proyectos, KPIs y exportar reportes. No puedes crear proyectos.'
   };
 
+  /**
+   * Carga tareas de un proyecto y persiste selección en sessionStorage.
+   * @param {string} projectId
+   */
   const loadTasks = useCallback(async (projectId: string) => {
     setSelectedProject(projectId);
     sessionStorage.setItem(SELECTED_PROJECT_KEY, projectId);
@@ -222,6 +257,10 @@ export default function DashboardPage() {
     }
   }, []);
 
+  /**
+   * Lista proyectos del BFF; redirige a login si 401.
+   * @param {{ background?: boolean }} [options] - Si true, no muestra spinner global
+   */
   const loadProjects = useCallback(async (options?: { background?: boolean }) => {
     if (!options?.background) {
       setLoading(true);
@@ -245,6 +284,7 @@ export default function DashboardPage() {
     }
   }, [logout, navigate]);
 
+  /** KPIs y notificaciones (solo directivo/gestor); errores se ignoran silenciosamente */
   const loadAnalytics = useCallback(async () => {
     if (!canSeeAnalytics) return;
     try {

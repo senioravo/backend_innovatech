@@ -1,8 +1,18 @@
+/**
+ * Controller HTTP de tareas.
+ * Serializa entidades con taskToDto y registra auditoría en operaciones de escritura.
+ */
 import taskService from '../services/taskService.js';
 import { taskToDto } from '../dtos/taskDto.js';
 import { auditFromRequest } from '../utils/auditLog.js';
 
 const taskController = {
+  /**
+   * GET /api/v1/projects/:projectId/tasks — Lista tareas de un proyecto.
+   * @param {import('express').Request} req
+   * @param {import('express').Response} res
+   * @param {import('express').NextFunction} next
+   */
   async listTasksForProject(req, res, next) {
     try {
       const tasks = await taskService.listTasksByProject(
@@ -16,6 +26,12 @@ const taskController = {
     }
   },
 
+  /**
+   * POST /api/v1/projects/:projectId/tasks — Crea una tarea y audita TASK_CREATE.
+   * @param {import('express').Request} req
+   * @param {import('express').Response} res
+   * @param {import('express').NextFunction} next
+   */
   async createTask(req, res, next) {
     try {
       const task = await taskService.createTaskFromRequest(
@@ -37,6 +53,12 @@ const taskController = {
     }
   },
 
+  /**
+   * PATCH /api/v1/projects/:projectId/tasks/:taskId/status — Actualiza estado y audita TASK_STATUS_UPDATE.
+   * @param {import('express').Request} req
+   * @param {import('express').Response} res
+   * @param {import('express').NextFunction} next
+   */
   async patchTaskStatus(req, res, next) {
     try {
       const task = await taskService.updateTaskStatusFromRequest(
@@ -60,6 +82,12 @@ const taskController = {
     }
   },
 
+  /**
+   * GET /api/v1/projects/:projectId/tasks/:taskId — Detalle de tarea en proyecto.
+   * @param {import('express').Request} req
+   * @param {import('express').Response} res
+   * @param {import('express').NextFunction} next
+   */
   async getTask(req, res, next) {
     try {
       const task = await taskService.getTask(
@@ -73,6 +101,12 @@ const taskController = {
     }
   },
 
+  /**
+   * PUT /api/v1/tasks/:id — Actualiza tarea y audita TASK_UPDATE.
+   * @param {import('express').Request} req
+   * @param {import('express').Response} res
+   * @param {import('express').NextFunction} next
+   */
   async updateTask(req, res, next) {
     try {
       const task = await taskService.updateTaskFromRequest(req.params.id, req.user.id, req.body);
@@ -90,6 +124,12 @@ const taskController = {
     }
   },
 
+  /**
+   * PATCH /api/v1/tasks/:id/assignee — Asigna responsable y audita TASK_ASSIGNEE.
+   * @param {import('express').Request} req
+   * @param {import('express').Response} res
+   * @param {import('express').NextFunction} next
+   */
   async assignAssignee(req, res, next) {
     try {
       const task = await taskService.assignAssigneeFromRequest(
@@ -111,6 +151,12 @@ const taskController = {
     }
   },
 
+  /**
+   * DELETE /api/v1/tasks/:id — Elimina tarea y audita TASK_DELETE.
+   * @param {import('express').Request} req
+   * @param {import('express').Response} res
+   * @param {import('express').NextFunction} next
+   */
   async deleteTask(req, res, next) {
     try {
       await taskService.deleteTask(req.params.id, req.user.id);

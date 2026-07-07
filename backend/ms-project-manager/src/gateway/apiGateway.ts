@@ -1,3 +1,6 @@
+/**
+ * Router interno de ms-project-manager: monta rutas de projects, tasks, consultations y notifications.
+ */
 import express from 'express';
 import projectRoutes from '../routes/projectRoutes.js';
 import taskRoutes from '../routes/taskRoutes.js';

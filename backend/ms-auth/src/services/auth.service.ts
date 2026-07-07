@@ -1,3 +1,7 @@
+/**
+ * Servicio de dominio de autenticación.
+ * Orquesta registro (ms-users), login (JWT), logout (blacklist) y consulta de roles.
+ */
 import usersClient from '../clients/usersClient.js';
 import userService from './user.service.js';
 import jwtHelper from '../utils/jwt.helper.js';
@@ -12,6 +16,11 @@ import {
 } from '../dtos/userDto.js';
 
 class AuthService {
+  /**
+   * Registra un usuario nuevo delegando persistencia a ms-users.
+   * @param {Record<string, unknown>} body - Body del request (name, email, password, role)
+   * @returns {Promise<object>} Usuario creado sin password
+   */
   async register(body) {
     const userData = createRegisterDto(body);
 
@@ -31,6 +40,11 @@ class AuthService {
     return usersClient.createUser(userData);
   }
 
+  /**
+   * Autentica credenciales y emite JWT firmado con RS256.
+   * @param {Record<string, unknown>} body - email y password
+   * @returns {Promise<{ user: object; token: string; expiresIn: string }>}
+   */
   async login(body) {
     const { email, password } = createLoginDto(body);
 
@@ -58,6 +72,12 @@ class AuthService {
     return { user, token, expiresIn: jwtHelper.getConfig().expiresIn };
   }
 
+  /**
+   * Invalida el token JWT agregándolo a la blacklist en memoria.
+   * @param {string} token - JWT Bearer completo
+   * @param {{ id: number|string; email: string; role: string }} user - Usuario autenticado
+   * @returns {{ userId: number|string; email: string; logoutAt: string }}
+   */
   logout(token, user) {
     const blacklisted = tokenBlacklistService.addToBlacklist(token, {
       id: user.id,
@@ -76,6 +96,10 @@ class AuthService {
     };
   }
 
+  /**
+   * Devuelve roles con id, nombre, descripción y permisos.
+   * @returns {Array<{ id: number; name: string; description: string; permissions: unknown }>}
+   */
   getRoles() {
     return getAllRolesInfo().map((role, index) => ({
       id: index + 1,
@@ -85,6 +109,10 @@ class AuthService {
     }));
   }
 
+  /**
+   * Devuelve array simple con nombres de roles válidos.
+   * @returns {string[]}
+   */
   getRolesSimple() {
     return getAllRoles();
   }

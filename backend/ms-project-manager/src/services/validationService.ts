@@ -1,3 +1,7 @@
+/**
+ * Servicio de validación de entradas HTTP.
+ * Valida DTOs de proyectos y tareas (creación, actualización, estados y asignaciones).
+ */
 import { isValidTaskStatus, normalizeTaskStatus, TASK_STATUSES } from '../constants/taskStatuses.js';
 import { isValidProjectStatus, normalizeProjectStatus, PROJECT_STATUSES } from '../constants/projectStatuses.js';
 
@@ -6,6 +10,13 @@ class ValidationService {
     return Object.prototype.hasOwnProperty.call(data, key);
   }
 
+  /**
+   * Valida un campo de fecha ISO opcional (YYYY-MM-DD).
+   * @param {Record<string, unknown>} data - Objeto de entrada
+   * @param {string} field - Nombre del campo
+   * @param {string[]} errors - Array mutable de errores
+   * @returns {string|null|undefined} Fecha normalizada, null o undefined si no aplica
+   */
   static optionalIsoDate(data, field, errors) {
     if (!ValidationService.hasOwn(data, field)) return undefined;
     const v = data[field];
@@ -17,6 +28,11 @@ class ValidationService {
     return v;
   }
 
+  /**
+   * Valida datos de creación de proyecto.
+   * @param {Record<string, unknown>} data - Body del request
+   * @returns {{ isValid: boolean; errors: string[] }} Resultado de validación
+   */
   static validateProjectInput(data) {
     const errors = [];
     const name = data.name;
@@ -46,6 +62,11 @@ class ValidationService {
     };
   }
 
+  /**
+   * Valida actualización parcial de proyecto.
+   * @param {Record<string, unknown>} data - Body del request
+   * @returns {{ isValid: boolean; errors: string[] }} Resultado de validación
+   */
   static validateUpdateInput(data) {
     const errors = [];
     const name = data.name;
@@ -85,6 +106,11 @@ class ValidationService {
     };
   }
 
+  /**
+   * Valida datos de creación de tarea.
+   * @param {Record<string, unknown>} data - Body del request
+   * @returns {{ isValid: boolean; errors: string[] }} Resultado de validación
+   */
   static validateTaskInput(data) {
     const errors = [];
     const title = data.title;
@@ -114,6 +140,11 @@ class ValidationService {
     };
   }
 
+  /**
+   * Valida cambio de estado de tarea y devuelve valor normalizado.
+   * @param {Record<string, unknown>} data - Body con campo status
+   * @returns {{ isValid: boolean; errors: string[]; normalized?: string }} Resultado con estado normalizado
+   */
   static validateTaskStatusInput(data) {
     const errors = [];
     const s = data.status;
@@ -130,6 +161,11 @@ class ValidationService {
     };
   }
 
+  /**
+   * Valida actualización parcial de tarea.
+   * @param {Record<string, unknown>} data - Body del request
+   * @returns {{ isValid: boolean; errors: string[] }} Resultado de validación
+   */
   static validateTaskUpdateInput(data) {
     const errors = [];
     const title = data.title;
@@ -183,6 +219,11 @@ class ValidationService {
     };
   }
 
+  /**
+   * Valida cambio de estado de proyecto y devuelve valor normalizado.
+   * @param {Record<string, unknown>} data - Body con campo status
+   * @returns {{ isValid: boolean; errors: string[]; normalized?: string }} Resultado con estado normalizado
+   */
   static validateProjectStatusInput(data) {
     const errors = [];
     const s = data.status;
@@ -199,6 +240,11 @@ class ValidationService {
     };
   }
 
+  /**
+   * Valida asignación de responsable (assigneeId).
+   * @param {Record<string, unknown>} data - Body con assigneeId
+   * @returns {{ isValid: boolean; errors: string[] }} Resultado de validación
+   */
   static validateAssigneeInput(data) {
     const errors = [];
     const id = data.assigneeId;
@@ -216,4 +262,4 @@ class ValidationService {
   }
 }
 
-export default ValidationService;;
+export default ValidationService;

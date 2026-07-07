@@ -1,7 +1,12 @@
+/**
+ * Página de inicio de sesión.
+ * Envía credenciales al BFF vía AuthContext y redirige a /dashboard.
+ */
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../auth/AuthContext';
 
+/** Formulario email/password con manejo de errores y estado loading */
 export default function LoginPage() {
   const { login } = useAuth();
   const navigate = useNavigate();
@@ -10,6 +15,7 @@ export default function LoginPage() {
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
 
+  /** @param {React.FormEvent} e */
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
     setError('');

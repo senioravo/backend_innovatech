@@ -1,10 +1,26 @@
+/**
+ * Handlers globales de errores del BFF.
+ * Traduce ValidationError, ApplicationError y UpstreamError; reporta 500 a GlitchTip.
+ */
 import { ApplicationError, ValidationError, UpstreamError } from './errorHandler.js';
 import { captureException } from '../observability/glitchtip.js';
 
+/**
+ * Responde 404 JSON para rutas no montadas en el gateway.
+ * @param {import('express').Request} req
+ * @param {import('express').Response} res
+ */
 function handleNotFound(req, res) {
   res.status(404).json({ error: 'Route not found' });
 }
 
+/**
+ * Middleware de error central del BFF.
+ * @param {unknown} err
+ * @param {import('express').Request} req
+ * @param {import('express').Response} res
+ * @param {import('express').NextFunction} next
+ */
 function handleError(err, req, res, next) {
   console.error('Error:', err);
 

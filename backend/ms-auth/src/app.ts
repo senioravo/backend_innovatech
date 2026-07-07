@@ -1,3 +1,6 @@
+/**
+ * Bootstrap Express de ms-auth: middlewares, Swagger, rutas y handlers globales de error.
+ */
 import path from 'path';
 import { fileURLToPath } from 'url';
 const __filename = fileURLToPath(import.meta.url);

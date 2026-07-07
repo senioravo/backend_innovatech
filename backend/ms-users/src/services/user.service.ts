@@ -1,3 +1,7 @@
+/**
+ * Servicio de dominio de usuarios (CRUD, roles, perfil profesional).
+ * Valida DTOs, hashea passwords y delega persistencia al repositorio.
+ */
 import bcrypt from 'bcrypt';
 import logger from '../utils/logger.js';
 import userRepository from '../repositories/userRepository.js';
@@ -13,7 +17,7 @@ const SALT_ROUNDS = 10;
 const VALID_ROLES = getAllRoles();
 
 class UserService {
-  /** @returns {string} Rol por defecto al crear usuarios sin rol explícito */
+  /** @returns {string} Rol por defecto al crear usuarios sin rol expl?cito */
   getDefaultRole() {
     return DEFAULT_ROLE;
   }
@@ -22,7 +26,7 @@ class UserService {
    * Crea un usuario con password hasheado en PostgreSQL.
    * @param {Record<string, unknown>} body - name, email, password, role
    * @returns {Promise<object>} Usuario creado (sin password)
-   * @throws {ValidationError} Si datos inválidos o email duplicado
+   * @throws {ValidationError} Si datos inv?lidos o email duplicado
    */
   async createUser(body: Record<string, unknown>) {
     const userData = createUserDto(body);
@@ -41,11 +45,11 @@ class UserService {
     }
 
     if (!VALID_ROLES.includes(userData.role)) {
-      throw new ValidationError([`Rol inválido. Valores permitidos: ${VALID_ROLES.join(', ')}`]);
+      throw new ValidationError([`Rol inv?lido. Valores permitidos: ${VALID_ROLES.join(', ')}`]);
     }
 
     if (await userRepository.emailExists(userData.email)) {
-      throw new ValidationError(['El email ya está registrado en el sistema']);
+      throw new ValidationError(['El email ya est? registrado en el sistema']);
     }
 
     try {
@@ -66,16 +70,23 @@ class UserService {
     } catch (error) {
       const err = error as Error & { code?: string };
       if (err.code === '23505') {
-        throw new ValidationError(['El email ya está registrado en el sistema']);
+        throw new ValidationError(['El email ya est? registrado en el sistema']);
       }
       logger.error('[UserService] Error al crear usuario', { error: err.message });
       throw error;
     }
   }
 
+  /**
+   * Obtiene un usuario por ID sin incluir password.
+   * @param {number} id - Identificador numérico del usuario
+   * @returns {Promise<object>} Usuario encontrado
+   * @throws {ValidationError} Si el ID no es numérico
+   * @throws {NotFoundError} Si el usuario no existe
+   */
   async getUserById(id: number) {
     if (isNaN(id)) {
-      throw new ValidationError(['ID de usuario inválido']);
+      throw new ValidationError(['ID de usuario inv?lido']);
     }
 
     const user = await userRepository.findById(id);
@@ -86,6 +97,7 @@ class UserService {
     return user;
   }
 
+  /** @param {string} email @throws {NotFoundError} */
   async getUserByEmail(email: string) {
     const user = await userRepository.findByEmail(email);
     if (!user) {
@@ -94,10 +106,12 @@ class UserService {
     return user;
   }
 
+  /** Uso interno ms-auth: incluye hash de password */
   async findByEmailWithPassword(email: string) {
     return userRepository.findByEmailWithPassword(email);
   }
 
+  /** @param {Record<string, unknown>} options - page, limit, rol, search */
   async listUsers(options: Record<string, unknown> = {}) {
     return userRepository.findAll(options as {
       page?: number;
@@ -107,9 +121,17 @@ class UserService {
     });
   }
 
+  /**
+   * Actualiza campos parciales de un usuario (nombre, email, password, rol).
+   * @param {number} id - Identificador del usuario
+   * @param {Record<string, unknown>} body - Campos a modificar
+   * @returns {Promise<object>} Usuario actualizado (sin password)
+   * @throws {ValidationError} Si ID inválido, sin campos o datos incorrectos
+   * @throws {NotFoundError} Si el usuario no existe
+   */
   async updateUser(id: number, body: Record<string, unknown>) {
     if (isNaN(id)) {
-      throw new ValidationError(['ID de usuario inválido']);
+      throw new ValidationError(['ID de usuario inv?lido']);
     }
 
     const updates = updateUserDto(body);
@@ -129,7 +151,7 @@ class UserService {
     }
 
     if (updates.rol && !VALID_ROLES.includes(updates.rol)) {
-      throw new ValidationError([`Rol inválido. Valores permitidos: ${VALID_ROLES.join(', ')}`]);
+      throw new ValidationError([`Rol inv?lido. Valores permitidos: ${VALID_ROLES.join(', ')}`]);
     }
 
     try {
@@ -143,7 +165,7 @@ class UserService {
     } catch (error) {
       const err = error as Error & { code?: string };
       if (err.code === '23505') {
-        throw new ValidationError(['El email ya está en uso por otro usuario']);
+        throw new ValidationError(['El email ya est? en uso por otro usuario']);
       }
       if (error instanceof NotFoundError) {
         throw error;
@@ -153,9 +175,16 @@ class UserService {
     }
   }
 
+  /**
+   * Elimina un usuario por ID.
+   * @param {number} id - Identificador del usuario
+   * @returns {Promise<boolean>} true si se eliminó correctamente
+   * @throws {ValidationError} Si el ID no es numérico
+   * @throws {NotFoundError} Si el usuario no existe
+   */
   async deleteUser(id: number) {
     if (isNaN(id)) {
-      throw new ValidationError(['ID de usuario inválido']);
+      throw new ValidationError(['ID de usuario inv?lido']);
     }
 
     const deleted = await userRepository.delete(id);
@@ -167,9 +196,17 @@ class UserService {
     return true;
   }
 
+  /**
+   * Cambia el rol de un usuario existente.
+   * @param {number} id - Identificador del usuario
+   * @param {string} newRol - Nuevo rol (gestor, profesional, directivo)
+   * @returns {Promise<object>} Usuario con rol actualizado
+   * @throws {ValidationError} Si ID o rol inválidos
+   * @throws {NotFoundError} Si el usuario no existe
+   */
   async changeUserRole(id: number, newRol: string) {
     if (isNaN(id)) {
-      throw new ValidationError(['ID de usuario inválido']);
+      throw new ValidationError(['ID de usuario inv?lido']);
     }
 
     if (!newRol) {
@@ -177,7 +214,7 @@ class UserService {
     }
 
     if (!VALID_ROLES.includes(newRol)) {
-      throw new ValidationError([`Rol inválido. Valores permitidos: ${VALID_ROLES.join(', ')}`]);
+      throw new ValidationError([`Rol inv?lido. Valores permitidos: ${VALID_ROLES.join(', ')}`]);
     }
 
     const updatedUser = await userRepository.updateRole(id, newRol);
@@ -189,13 +226,22 @@ class UserService {
     return updatedUser;
   }
 
+  /** Lista profesionales y gestores para asignaci?n de proyectos */
   async listProfessionals() {
     return userRepository.findProfessionals();
   }
 
+  /**
+   * Actualiza campos del perfil profesional (habilidades, disponibilidad, horas).
+   * @param {number} id - Identificador del usuario
+   * @param {Record<string, unknown>} body - habilidades, disponibilidad, horasSemanalesDisponibles
+   * @returns {Promise<object>} Usuario con perfil actualizado
+   * @throws {ValidationError} Si ID inválido o campos de perfil incorrectos
+   * @throws {NotFoundError} Si el usuario no existe
+   */
   async updateProfile(id: number, body: Record<string, unknown>) {
     if (isNaN(id)) {
-      throw new ValidationError(['ID de usuario inválido']);
+      throw new ValidationError(['ID de usuario inv?lido']);
     }
 
     const profile: Record<string, unknown> = {};

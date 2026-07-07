@@ -1,3 +1,7 @@
+/**
+ * Controller HTTP de usuarios (CRUD, roles, perfil, listado de profesionales).
+ * Mapea errores de dominio a DTOs JSON y registra métricas Prometheus.
+ */
 import userService from '../services/user.service.js';
 import logger from '../utils/logger.js';
 import { recordCrudOperation } from '../middleware/metricsMiddleware.js';
@@ -9,6 +13,11 @@ import {
   errorResponseDto
 } from '../dtos/userDto.js';
 
+/**
+ * Traduce ValidationError/NotFoundError a status y body DTO.
+ * @param {unknown} error
+ * @returns {{ status: number; body: object }|null}
+ */
 function mapServiceError(error) {
   if (error instanceof ValidationError) {
     const message = error.errors.length === 1
@@ -30,6 +39,7 @@ function mapServiceError(error) {
   return null;
 }
 
+/** POST /api/users — Crea usuario */
 const createUser = async (req, res) => {
   try {
     const newUser = await userService.createUser(req.body);
@@ -50,6 +60,7 @@ const createUser = async (req, res) => {
   }
 };
 
+/** GET /api/users/:id — Obtiene usuario por id */
 const getUserById = async (req, res) => {
   try {
     const user = await userService.getUserById(parseInt(req.params.id));
@@ -70,6 +81,7 @@ const getUserById = async (req, res) => {
   }
 };
 
+/** GET /api/users — Lista paginada con filtros rol y search */
 const listUsers = async (req, res) => {
   try {
     const { page = 1, limit = 10, rol = null, search = null } = req.query;
@@ -94,6 +106,7 @@ const listUsers = async (req, res) => {
   }
 };
 
+/** PUT /api/users/:id — Actualiza campos del usuario */
 const updateUser = async (req, res) => {
   try {
     const updatedUser = await userService.updateUser(parseInt(req.params.id), req.body);
@@ -114,6 +127,7 @@ const updateUser = async (req, res) => {
   }
 };
 
+/** DELETE /api/users/:id — Elimina usuario */
 const deleteUser = async (req, res) => {
   try {
     await userService.deleteUser(parseInt(req.params.id));
@@ -132,6 +146,7 @@ const deleteUser = async (req, res) => {
   }
 };
 
+/** PUT /api/users/:id/rol — Cambia rol del usuario */
 const changeUserRole = async (req, res) => {
   try {
     const updatedUser = await userService.changeUserRole(parseInt(req.params.id), req.body.rol);
@@ -152,6 +167,7 @@ const changeUserRole = async (req, res) => {
   }
 };
 
+/** GET /api/users/email/:email — Busca por email */
 const getUserByEmail = async (req, res) => {
   try {
     const user = await userService.getUserByEmail(req.params.email);
@@ -172,6 +188,7 @@ const getUserByEmail = async (req, res) => {
   }
 };
 
+/** GET /api/users/professionals — Lista profesionales y gestores */
 const listProfessionals = async (req, res) => {
   try {
     const professionals = await userService.listProfessionals();
@@ -187,6 +204,7 @@ const listProfessionals = async (req, res) => {
   }
 };
 
+/** PATCH /api/users/:id/profile — Actualiza perfil profesional */
 const updateProfile = async (req, res) => {
   try {
     const updatedUser = await userService.updateProfile(parseInt(req.params.id), req.body);

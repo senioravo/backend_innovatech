@@ -1,8 +1,17 @@
+/**
+ * Controller HTTP para endpoints internos (ms-auth, BFF).
+ * Expone búsqueda con password y creación de usuarios sin JWT.
+ */
 import userService from '../services/user.service.js';
 import logger from '../utils/logger.js';
 import { ValidationError, NotFoundError } from '../utils/errorHandler.js';
 import { errorResponseDto } from '../dtos/userDto.js';
 
+/**
+ * Traduce ValidationError/NotFoundError a status HTTP y body DTO.
+ * @param {unknown} error - Error capturado del servicio
+ * @returns {{ status: number; body: object }|null} Mapeo HTTP o null si no es error conocido
+ */
 function mapServiceError(error) {
   if (error instanceof ValidationError) {
     const message = error.errors.length === 1
@@ -24,6 +33,12 @@ function mapServiceError(error) {
   return null;
 }
 
+/**
+ * GET interno — Obtiene usuario por email incluyendo password (login ms-auth).
+ * @param {import('express').Request} req - params.email; req.internalService opcional
+ * @param {import('express').Response} res
+ * @returns {Promise<void>}
+ */
 const getUserByEmailWithPassword = async (req, res) => {
   try {
     const { email } = req.params;
@@ -61,6 +76,12 @@ const getUserByEmailWithPassword = async (req, res) => {
   }
 };
 
+/**
+ * POST interno — Crea usuario desde otro microservicio.
+ * @param {import('express').Request} req - body con name, email, password, role
+ * @param {import('express').Response} res
+ * @returns {Promise<void>}
+ */
 const createUserInternal = async (req, res) => {
   try {
     const serviceId = req.internalService?.id || 'unknown';

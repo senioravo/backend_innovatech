@@ -1,5 +1,15 @@
+/**
+ * Middleware de autenticación para llamadas entre microservicios internos.
+ */
 import logger from '../utils/logger.js';
 
+/**
+ * Valida headers X-Internal-Token y X-Internal-Service.
+ * @param {import('express').Request} req
+ * @param {import('express').Response} res
+ * @param {import('express').NextFunction} next
+ * @returns {void}
+ */
 const validateInternalToken = (req, res, next) => {
   try {
     const internalToken = req.headers['x-internal-token'];

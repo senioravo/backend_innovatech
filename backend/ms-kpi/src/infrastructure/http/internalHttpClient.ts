@@ -1,6 +1,20 @@
+/**
+ * Cliente HTTP interno con circuit breaker para llamadas entre microservicios.
+ * Envuelve fetch con timeout, headers de trazabilidad y protección ante fallos en cascada.
+ */
 const { CircuitBreaker } = require('./circuitBreaker');
 const { getOutgoingRequestIdHeaders } = require('../../observability/requestIdContext');
 
+/**
+ * Crea un cliente HTTP interno con circuit breaker y timeout configurable.
+ * @param {object} options - Opciones de configuración del cliente.
+ * @param {string} options.serviceName - Nombre del servicio destino (identificador del breaker).
+ * @param {number} options.failureThreshold - Fallos consecutivos antes de abrir el circuito.
+ * @param {number} options.resetTimeoutMs - Milisegundos antes de intentar half-open tras abrir.
+ * @param {number} options.successThreshold - Éxitos requeridos en half-open para cerrar el circuito.
+ * @param {number} options.defaultTimeoutMs - Timeout por defecto de cada petición fetch.
+ * @returns {{ fetchJson: Function; getBreakerState: Function }} Cliente con métodos de petición y estado del breaker.
+ */
 function createInternalHttpClient({
   serviceName,
   failureThreshold,
@@ -15,6 +29,15 @@ function createInternalHttpClient({
     successThreshold
   });
 
+  /**
+   * Ejecuta una petición HTTP JSON protegida por el circuit breaker.
+   * @param {string} method - Método HTTP (GET, POST, etc.).
+   * @param {string} url - URL absoluta del recurso destino.
+   * @param {Record<string, unknown>} [options={}] - Opciones adicionales de la petición.
+   * @returns {Promise<unknown>} Cuerpo parseado como JSON o texto plano si no es JSON válido.
+   * @throws {Error & { status?: number; body?: unknown }} Si la respuesta HTTP no es ok.
+   * @throws {import('./circuitBreaker').CircuitBreakerOpenError} Si el circuit breaker está abierto.
+   */
   async function fetchJson(method, url, options: Record<string, unknown> = {}) {
     const timeoutMs = (options.timeoutMs as number | undefined) ?? defaultTimeoutMs;
     const headers: Record<string, string> = {
