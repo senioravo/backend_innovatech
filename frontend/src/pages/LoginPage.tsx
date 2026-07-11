@@ -31,41 +31,51 @@ export default function LoginPage() {
   }
 
   return (
-    <div style={{ maxWidth: 400, margin: '40px auto', fontFamily: 'sans-serif' }}>
-      <h1>Innovatech — Login</h1>
-      <p>Autenticación vía BFF → Auth</p>
-      <form onSubmit={handleSubmit}>
-        <p>
+    <div className="login-page">
+      <div className="login-page__backdrop" aria-hidden="true" />
+      <div className="card card-panel login-card">
+        <div className="login-brand">
+          <span className="login-brand__mark">IT</span>
+          <div>
+            <p className="brand-subtitle">Plataforma de gestión</p>
+            <h1>Innovatech — Login</h1>
+          </div>
+        </div>
+        <p className="page-description">
+          Autenticación segura vía BFF → Auth. Accede con tu cuenta corporativa.
+        </p>
+
+        <form className="form-grid" onSubmit={handleSubmit}>
           <label>
             Email
-            <br />
             <input
               type="email"
               value={email}
               onChange={(e) => setEmail(e.target.value)}
+              placeholder="tu@empresa.cl"
+              autoComplete="email"
               required
-              style={{ width: '100%', padding: 8 }}
             />
           </label>
-        </p>
-        <p>
           <label>
             Contraseña
-            <br />
             <input
               type="password"
               value={password}
               onChange={(e) => setPassword(e.target.value)}
+              placeholder="••••••••"
+              autoComplete="current-password"
               required
-              style={{ width: '100%', padding: 8 }}
             />
           </label>
-        </p>
-        {error && <p style={{ color: 'crimson' }}>{error}</p>}
-        <button type="submit" disabled={loading}>
-          {loading ? 'Entrando…' : 'Entrar'}
-        </button>
-      </form>
+
+          {error && <div className="error-banner">{error}</div>}
+
+          <button type="submit" className="button-primary button-primary--full" disabled={loading}>
+            {loading ? 'Entrando…' : 'Entrar'}
+          </button>
+        </form>
+      </div>
     </div>
   );
 }
