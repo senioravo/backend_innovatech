@@ -3,7 +3,7 @@
  * Reporta errores 500 a GlitchTip con contexto del request.
  */
 import { ApplicationError, ValidationError, UnauthorizedError } from './appError.js';
-import { captureException } from '../observability/glitchtip.js';
+import { captureException, captureHttpError } from '../observability/glitchtip.js';
 
 /**
  * Responde 404 para rutas no registradas.
@@ -11,6 +11,7 @@ import { captureException } from '../observability/glitchtip.js';
  * @param {import('express').Response} res
  */
 function handleNotFound(req, res) {
+  captureHttpError(404, 'Route not found', `${req.method} ${req.path}`);
   res.status(404).json({
     success: false,
     message: 'Route not found'
@@ -30,14 +31,17 @@ function handleError(err, req, res, next) {
   }
 
   if (err instanceof ValidationError) {
+    const message = Array.isArray(err.errors) && err.errors.length === 1 ? err.errors[0] : 'Validation failed';
+    captureHttpError(err.status, message, `${req.method} ${req.path}`, { errors: err.errors });
     return res.status(err.status).json({
       success: false,
-      message: Array.isArray(err.errors) && err.errors.length === 1 ? err.errors[0] : 'Validation failed',
+      message,
       data: { errors: err.errors }
     });
   }
 
   if (err instanceof UnauthorizedError) {
+    captureHttpError(err.status, err.message, `${req.method} ${req.path}`);
     return res.status(err.status).json({
       success: false,
       message: err.message
@@ -45,6 +49,7 @@ function handleError(err, req, res, next) {
   }
 
   if (err instanceof ApplicationError) {
+    captureHttpError(err.status, err.message, `${req.method} ${req.path}`);
     return res.status(err.status).json({
       success: false,
       message: err.message

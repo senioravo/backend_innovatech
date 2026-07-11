@@ -5,6 +5,7 @@ namespace: innovatech
 
 resources:
   - namespace.yaml
+  - glitchtip-configmap.yaml
   - postgres
   - ingress.yaml
   - ../ms-users/k8s

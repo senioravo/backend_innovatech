@@ -20,7 +20,7 @@ spec:
     spec:
       containers:
         - name: bff
-          image: innovatech/bff:1.0.3
+          image: innovatech/bff:1.0.5-glitchtip
           imagePullPolicy: IfNotPresent
           ports:
             - name: http
@@ -28,6 +28,10 @@ spec:
           envFrom:
             - configMapRef:
                 name: bff-config
+            - configMapRef:
+                name: glitchtip-config
+            - secretRef:
+                name: innovatech-secrets
           volumeMounts:
             - name: jwt-public-key
               mountPath: /app/keys/public.key

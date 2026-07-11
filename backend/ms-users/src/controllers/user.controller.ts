@@ -12,17 +12,19 @@ import {
   successResponseDto,
   errorResponseDto
 } from '../dtos/userDto.js';
+import { captureHttpError } from '../observability/glitchtip.js';
 
 /**
  * Traduce ValidationError/NotFoundError a status y body DTO.
  * @param {unknown} error
  * @returns {{ status: number; body: object }|null}
  */
-function mapServiceError(error) {
+function mapServiceError(error, context = 'ms-users') {
   if (error instanceof ValidationError) {
     const message = error.errors.length === 1
       ? error.errors[0]
       : 'Datos de usuario inválidos';
+    captureHttpError(400, message, context, { errors: error.errors });
     return {
       status: 400,
       body: errorResponseDto(message, { errors: error.errors })
@@ -30,6 +32,7 @@ function mapServiceError(error) {
   }
 
   if (error instanceof NotFoundError) {
+    captureHttpError(404, error.message, context);
     return {
       status: 404,
       body: errorResponseDto(error.message)
@@ -48,7 +51,7 @@ const createUser = async (req, res) => {
       successResponseDto('Usuario creado exitosamente', { user: userToDto(newUser) })
     );
   } catch (error) {
-    const mapped = mapServiceError(error);
+    const mapped = mapServiceError(error, `${req.method} ${req.path}`);
     recordCrudOperation('create', 'error');
     logger.error('[USER-CONTROLLER] Error al crear usuario', { error: error.message });
 
@@ -69,7 +72,7 @@ const getUserById = async (req, res) => {
       successResponseDto('Usuario encontrado', { user: userToDto(user) })
     );
   } catch (error) {
-    const mapped = mapServiceError(error);
+    const mapped = mapServiceError(error, `${req.method} ${req.path}`);
     recordCrudOperation('read', 'error');
     logger.error('[USER-CONTROLLER] Error al obtener usuario', { error: error.message });
 
@@ -115,7 +118,7 @@ const updateUser = async (req, res) => {
       successResponseDto('Usuario actualizado exitosamente', { user: userToDto(updatedUser) })
     );
   } catch (error) {
-    const mapped = mapServiceError(error);
+    const mapped = mapServiceError(error, `${req.method} ${req.path}`);
     recordCrudOperation('update', 'error');
     logger.error('[USER-CONTROLLER] Error al actualizar usuario', { error: error.message });
 
@@ -134,7 +137,7 @@ const deleteUser = async (req, res) => {
     recordCrudOperation('delete', 'success');
     return res.status(200).json(successResponseDto('Usuario eliminado exitosamente'));
   } catch (error) {
-    const mapped = mapServiceError(error);
+    const mapped = mapServiceError(error, `${req.method} ${req.path}`);
     recordCrudOperation('delete', 'error');
     logger.error('[USER-CONTROLLER] Error al eliminar usuario', { error: error.message });
 
@@ -155,7 +158,7 @@ const changeUserRole = async (req, res) => {
       successResponseDto('Rol de usuario actualizado exitosamente', { user: userToDto(updatedUser) })
     );
   } catch (error) {
-    const mapped = mapServiceError(error);
+    const mapped = mapServiceError(error, `${req.method} ${req.path}`);
     recordCrudOperation('update', 'error');
     logger.error('[USER-CONTROLLER] Error al cambiar rol', { error: error.message });
 
@@ -176,7 +179,7 @@ const getUserByEmail = async (req, res) => {
       successResponseDto('Usuario encontrado', { user: userToDto(user) })
     );
   } catch (error) {
-    const mapped = mapServiceError(error);
+    const mapped = mapServiceError(error, `${req.method} ${req.path}`);
     recordCrudOperation('read', 'error');
     logger.error('[USER-CONTROLLER] Error al buscar usuario por email', { error: error.message });
 
@@ -213,7 +216,7 @@ const updateProfile = async (req, res) => {
       successResponseDto('Perfil actualizado', { user: userToDto(updatedUser) })
     );
   } catch (error) {
-    const mapped = mapServiceError(error);
+    const mapped = mapServiceError(error, `${req.method} ${req.path}`);
     recordCrudOperation('update', 'error');
     if (mapped) return res.status(mapped.status).json(mapped.body);
     return res.status(500).json(errorResponseDto(error.message || 'Error al actualizar perfil'));

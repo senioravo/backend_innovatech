@@ -20,7 +20,7 @@ spec:
     spec:
       containers:
         - name: ms-users
-          image: innovatech/ms-users:1.0.0
+          image: innovatech/ms-users:1.0.2-glitchtip
           imagePullPolicy: IfNotPresent
           ports:
             - name: http
@@ -28,6 +28,10 @@ spec:
           envFrom:
             - configMapRef:
                 name: ms-users-config
+            - configMapRef:
+                name: glitchtip-config
+            - secretRef:
+                name: innovatech-secrets
           env:
             - name: DATABASE_URL
               valueFrom:

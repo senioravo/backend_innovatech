@@ -3,7 +3,9 @@
  */
 import { BrowserRouter, Navigate, Route, Routes } from 'react-router-dom';
 import { AuthProvider, useAuth } from './auth/AuthContext';
+import ErrorFallback from './components/ErrorFallback';
 import ProtectedRoute from './components/ProtectedRoute';
+import { Sentry } from './observability/glitchtip';
 import DashboardPage from './pages/DashboardPage';
 import LoginPage from './pages/LoginPage';
 
@@ -23,14 +25,16 @@ function DashboardRoute() {
 /** Componente raíz con rutas públicas y protegidas */
 export default function App() {
   return (
-    <AuthProvider>
-      <BrowserRouter>
-        <Routes>
-          <Route path="/login" element={<LoginPage />} />
-          <Route path="/dashboard" element={<DashboardRoute />} />
-          <Route path="*" element={<Navigate to="/login" replace />} />
-        </Routes>
-      </BrowserRouter>
-    </AuthProvider>
+    <Sentry.ErrorBoundary fallback={<ErrorFallback />}>
+      <AuthProvider>
+        <BrowserRouter>
+          <Routes>
+            <Route path="/login" element={<LoginPage />} />
+            <Route path="/dashboard" element={<DashboardRoute />} />
+            <Route path="*" element={<Navigate to="/login" replace />} />
+          </Routes>
+        </BrowserRouter>
+      </AuthProvider>
+    </Sentry.ErrorBoundary>
   );
 }

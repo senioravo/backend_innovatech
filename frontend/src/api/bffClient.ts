@@ -3,6 +3,7 @@
  * Gestiona sesión en localStorage y expone operaciones de auth, proyectos, tareas y KPIs.
  */
 import type { KpisResponse, ProjectsResponse, TasksResponse, UserSession } from '../types/api';
+import { captureHttpError } from '../observability/glitchtip';
 
 const API_BASE = import.meta.env.VITE_API_BASE_URL || '/api/v1';
 
@@ -47,6 +48,24 @@ type RequestOptions = {
   auth?: boolean;
 };
 
+function buildHttpError(
+  res: Response,
+  data: Record<string, unknown> | undefined,
+  path: string,
+  method: string
+) {
+  const msg =
+    (data?.message as string) ||
+    (Array.isArray(data?.errors) ? (data.errors as string[]).join(', ') : null) ||
+    (data?.error as string) ||
+    `Error HTTP ${res.status}`;
+  const err = new Error(msg) as Error & { status?: number; data?: unknown };
+  err.status = res.status;
+  err.data = data;
+  captureHttpError(res.status, msg, { path, method, data });
+  return err;
+}
+
 /**
  * Petición autenticada con token explícito (p. ej. logout tras clearSession).
  * @template T
@@ -85,15 +104,7 @@ async function requestWithToken<T = unknown>(
   }
 
   if (!res.ok) {
-    const msg =
-      (data?.message as string) ||
-      (Array.isArray(data?.errors) ? (data.errors as string[]).join(', ') : null) ||
-      (data?.error as string) ||
-      `Error HTTP ${res.status}`;
-    const err = new Error(msg) as Error & { status?: number; data?: unknown };
-    err.status = res.status;
-    err.data = data;
-    throw err;
+    throw buildHttpError(res, data, path, method);
   }
 
   return data as T;
@@ -136,15 +147,7 @@ async function request<T = unknown>(path: string, { method = 'GET', body, auth =
   }
 
   if (!res.ok) {
-    const msg =
-      (data?.message as string) ||
-      (Array.isArray(data?.errors) ? (data.errors as string[]).join(', ') : null) ||
-      (data?.error as string) ||
-      `Error HTTP ${res.status}`;
-    const err = new Error(msg) as Error & { status?: number; data?: unknown };
-    err.status = res.status;
-    err.data = data;
-    throw err;
+    throw buildHttpError(res, data, path, method);
   }
 
   return data as T;
@@ -283,7 +286,11 @@ export async function downloadReport(format = 'csv') {
   const res = await fetch(`${API_BASE}/consultations/reports/export?format=${format}`, {
     headers: { Authorization: `Bearer ${token}` }
   });
-  if (!res.ok) throw new Error(`Error al exportar (${res.status})`);
+  if (!res.ok) {
+    const msg = `Error al exportar (${res.status})`;
+    captureHttpError(res.status, msg, { path: '/consultations/reports/export', method: 'GET' });
+    throw new Error(msg);
+  }
   const blob = await res.blob();
   const url = URL.createObjectURL(blob);
   const a = document.createElement('a');

@@ -1,0 +1,11 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: glitchtip-config
+  labels:
+    app.kubernetes.io/part-of: innovatech
+    app.kubernetes.io/component: observability
+data:
+  SENTRY_ENVIRONMENT: "kubernetes"
+  SENTRY_RELEASE: "1.0.0"
+  SENTRY_TRACES_SAMPLE_RATE: "0.1"

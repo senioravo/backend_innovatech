@@ -2,7 +2,7 @@
  * Utilidades de respuesta HTTP y manejo global de errores para ms-kpi.
  */
 const { ApplicationError } = require('./errorHandler');
-const { captureException } = require('../observability/glitchtip');
+const { captureException, captureHttpError } = require('../observability/glitchtip');
 
 /**
  * Responde 404 cuando la ruta solicitada no existe en el servicio.
@@ -11,6 +11,7 @@ const { captureException } = require('../observability/glitchtip');
  * @returns {import('express').Response} Response con JSON `{ error: 'Route not found' }`.
  */
 function handleNotFound(req, res) {
+  captureHttpError(404, 'Route not found', `${req.method} ${req.path}`);
   res.status(404).json({ error: 'Route not found' });
 }
 
@@ -26,6 +27,7 @@ function handleError(err, req, res, next) {
   console.error('[ms-kpi]', err);
 
   if (err instanceof ApplicationError) {
+    captureHttpError(err.status, err.message, `${req.method} ${req.path}`);
     return res.status(err.status).json({ error: err.message });
   }
 
