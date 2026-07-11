@@ -3,7 +3,7 @@
  * Traduce ValidationError, ApplicationError y UpstreamError; reporta 500 a GlitchTip.
  */
 import { ApplicationError, ValidationError, UpstreamError } from './errorHandler.js';
-import { captureException } from '../observability/glitchtip.js';
+import { captureException, captureHttpError } from '../observability/glitchtip.js';
 
 /**
  * Responde 404 JSON para rutas no montadas en el gateway.
@@ -11,6 +11,7 @@ import { captureException } from '../observability/glitchtip.js';
  * @param {import('express').Response} res
  */
 function handleNotFound(req, res) {
+  captureHttpError(404, 'Route not found', `${req.method} ${req.path}`);
   res.status(404).json({ error: 'Route not found' });
 }
 
@@ -25,6 +26,7 @@ function handleError(err, req, res, next) {
   console.error('Error:', err);
 
   if (err instanceof ValidationError) {
+    captureHttpError(err.status, err.message, `${req.method} ${req.path}`, { errors: err.errors });
     return res.status(err.status).json({
       error: err.message,
       errors: err.errors
@@ -32,15 +34,14 @@ function handleError(err, req, res, next) {
   }
 
   if (err instanceof ApplicationError) {
+    captureHttpError(err.status, err.message, `${req.method} ${req.path}`);
     return res.status(err.status).json({
       error: err.message
     });
   }
 
   if (err instanceof UpstreamError) {
-    if (err.status >= 500) {
-      captureException(err, `${req.method} ${req.path} (upstream ${err.status})`);
-    }
+    captureHttpError(err.status, err.message, `${req.method} ${req.path} (upstream ${err.status})`);
     if (err.status === 204) {
       return res.status(204).send();
     }

@@ -94,6 +94,38 @@ function captureMessage(message: string, level: Sentry.SeverityLevel = 'info'): 
 }
 
 /**
+ * Reporta errores HTTP (4xx y 5xx) a GlitchTip como mensaje estructurado.
+ * @param {number} status - Código HTTP
+ * @param {string} message - Descripción del error
+ * @param {string} [context] - Ruta o contexto del request
+ * @param {Record<string, unknown>} [extra] - Datos adicionales
+ */
+function captureHttpError(
+  status: number,
+  message: string,
+  context?: string,
+  extra?: Record<string, unknown>
+): void {
+  if (!enabled) return;
+
+  const level: Sentry.SeverityLevel = status >= 500 ? 'error' : 'warning';
+
+  Sentry.withScope((scope) => {
+    scope.setTag('request_id', getOrUnknown());
+    scope.setTag('service', serviceName);
+    scope.setTag('http_status', String(status));
+    if (context) scope.setExtra('context', context);
+    if (extra) {
+      Object.entries(extra).forEach(([key, value]) => scope.setExtra(key, value));
+    }
+    Sentry.captureMessage(
+      `[requestId=${getOrUnknown()}] HTTP ${status}: ${message}`,
+      level
+    );
+  });
+}
+
+/**
  * Espera a que eventos pendientes se envíen antes de apagar el proceso.
  * @param {number} [timeoutMs=2000] - Tiempo máximo de espera en ms
  * @returns {Promise<boolean>} true si el flush completó a tiempo
@@ -109,5 +141,6 @@ export {
   isGlitchTipEnabled,
   captureException,
   captureMessage,
+  captureHttpError,
   flushGlitchTip,
 };

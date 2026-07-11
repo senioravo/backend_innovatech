@@ -20,7 +20,7 @@ spec:
     spec:
       containers:
         - name: frontend
-          image: innovatech/frontend:1.0.0
+          image: innovatech/frontend:1.0.3-glitchtip
           imagePullPolicy: IfNotPresent
           ports:
             - name: http

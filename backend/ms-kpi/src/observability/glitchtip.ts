@@ -98,6 +98,31 @@ function captureMessage(message: string, level: Sentry.SeverityLevel = 'info'): 
  * @param {number} [timeoutMs=2000] - Tiempo máximo de espera en ms
  * @returns {Promise<boolean>} true si el flush completó a tiempo
  */
+function captureHttpError(
+  status: number,
+  message: string,
+  context?: string,
+  extra?: Record<string, unknown>
+): void {
+  if (!enabled) return;
+
+  const level: Sentry.SeverityLevel = status >= 500 ? 'error' : 'warning';
+
+  Sentry.withScope((scope) => {
+    scope.setTag('request_id', getOrUnknown());
+    scope.setTag('service', serviceName);
+    scope.setTag('http_status', String(status));
+    if (context) scope.setExtra('context', context);
+    if (extra) {
+      Object.entries(extra).forEach(([key, value]) => scope.setExtra(key, value));
+    }
+    Sentry.captureMessage(
+      `[requestId=${getOrUnknown()}] HTTP ${status}: ${message}`,
+      level
+    );
+  });
+}
+
 async function flushGlitchTip(timeoutMs = 2000): Promise<boolean> {
   if (!enabled) return true;
   return Sentry.flush(timeoutMs);
@@ -109,5 +134,6 @@ export {
   isGlitchTipEnabled,
   captureException,
   captureMessage,
+  captureHttpError,
   flushGlitchTip,
 };

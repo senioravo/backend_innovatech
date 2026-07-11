@@ -20,7 +20,7 @@ spec:
     spec:
       containers:
         - name: ms-project-manager
-          image: innovatech/ms-project-manager:1.0.1
+          image: innovatech/ms-project-manager:1.0.3-glitchtip
           imagePullPolicy: IfNotPresent
           ports:
             - name: http
@@ -28,6 +28,10 @@ spec:
           envFrom:
             - configMapRef:
                 name: ms-project-manager-config
+            - configMapRef:
+                name: glitchtip-config
+            - secretRef:
+                name: innovatech-secrets
           env:
             - name: DATABASE_URL
               valueFrom:

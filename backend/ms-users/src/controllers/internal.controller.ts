@@ -6,17 +6,19 @@ import userService from '../services/user.service.js';
 import logger from '../utils/logger.js';
 import { ValidationError, NotFoundError } from '../utils/errorHandler.js';
 import { errorResponseDto } from '../dtos/userDto.js';
+import { captureHttpError } from '../observability/glitchtip.js';
 
 /**
  * Traduce ValidationError/NotFoundError a status HTTP y body DTO.
  * @param {unknown} error - Error capturado del servicio
  * @returns {{ status: number; body: object }|null} Mapeo HTTP o null si no es error conocido
  */
-function mapServiceError(error) {
+function mapServiceError(error, context = 'ms-users-internal') {
   if (error instanceof ValidationError) {
     const message = error.errors.length === 1
       ? error.errors[0]
       : 'Datos inválidos';
+    captureHttpError(400, message, context, { errors: error.errors });
     return {
       status: 400,
       body: errorResponseDto(message, { errors: error.errors })
@@ -24,6 +26,7 @@ function mapServiceError(error) {
   }
 
   if (error instanceof NotFoundError) {
+    captureHttpError(404, error.message, context);
     return {
       status: 404,
       body: errorResponseDto(error.message)
@@ -101,7 +104,7 @@ const createUserInternal = async (req, res) => {
       }
     });
   } catch (error) {
-    const mapped = mapServiceError(error);
+    const mapped = mapServiceError(error, `${req.method} ${req.path}`);
     logger.error('[INTERNAL-CONTROLLER] Error al crear usuario', { error: error.message });
 
     if (mapped) {

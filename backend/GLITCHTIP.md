@@ -94,10 +94,28 @@ SENTRY_TRACES_SAMPLE_RATE=0.1
 
 Las variables se propagan a todos los servicios en `docker-compose.yml`.
 
+## Frontend (React + Vite)
+
+| Variable | Descripción |
+|---|---|
+| `VITE_SENTRY_DSN` | DSN de GlitchTip (puede ser el mismo proyecto u otro dedicado al frontend) |
+| `VITE_SENTRY_ENVIRONMENT` | `development`, `kubernetes`, etc. |
+| `VITE_SENTRY_RELEASE` | Versión del build (ej. `frontend@1.0.0`) |
+
+- **ErrorBoundary:** errores de renderizado React → GlitchTip Issues
+- **bffClient:** todas las respuestas HTTP con error (401, 404, 500, etc.) se reportan automáticamente
+
+Build Docker:
+
+```bash
+docker build -t innovatech/frontend:1.0.0 ./frontend \
+  --build-arg VITE_SENTRY_DSN="https://<key>@app.glitchtip.com/<project-id>"
+```
+
 ## Informe para evaluación (resumen)
 
 1. **Problema:** Los errores en microservicios solo quedaban en consola/archivos locales; no había correlación entre servicios.
-2. **Solución:** Integración GlitchTip vía SDK Sentry en BFF, ms-auth, ms-users, ms-project-manager y ms-kpi.
+2. **Solución:** Integración GlitchTip vía SDK Sentry en backend (Node) y frontend (React).
 3. **Captura centralizada:** El handler global reporta errores 500 a GlitchTip Issues con tag `request_id`.
 4. **Correlación:** Middleware `X-Request-Id` propagado en llamadas HTTP internas.
 5. **Verificación:** Endpoints `/api/demo/*` + búsqueda en GlitchTip por request id.

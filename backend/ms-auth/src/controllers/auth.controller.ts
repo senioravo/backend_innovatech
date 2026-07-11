@@ -11,17 +11,19 @@ import {
   registerResponseDto,
   errorResponseDto
 } from '../dtos/userDto.js';
+import { captureHttpError } from '../observability/glitchtip.js';
 
 /**
  * Mapea excepciones del servicio a status HTTP y body DTO.
  * @param {unknown} error - Error lanzado por authService
  * @returns {{ status: number; body: object }|null} Respuesta mapeada o null si no aplica
  */
-function mapServiceError(error) {
+function mapServiceError(error, context = 'auth-service') {
   if (error instanceof ValidationError) {
     const message = (Array.isArray(error.errors) ? error.errors : []).length === 1
       ? error.errors[0]
       : 'Datos inválidos';
+    captureHttpError(400, message, context, { errors: error.errors });
     return {
       status: 400,
       body: errorResponseDto(message, { errors: error.errors })
@@ -29,6 +31,7 @@ function mapServiceError(error) {
   }
 
   if (error instanceof UnauthorizedError) {
+    captureHttpError(401, error.message, context);
     return {
       status: 401,
       body: errorResponseDto(error.message)
@@ -36,6 +39,7 @@ function mapServiceError(error) {
   }
 
   if (String(error.message).includes('ya está registrado')) {
+    captureHttpError(400, 'El email ya está registrado', context);
     return {
       status: 400,
       body: errorResponseDto('El email ya está registrado')
@@ -71,7 +75,7 @@ const register = async (req, res) => {
     return res.status(201).json(registerResponseDto(newUser));
   } catch (error) {
     const responseTime = Date.now() - startTime;
-    const mapped = mapServiceError(error);
+    const mapped = mapServiceError(error, `${req.method} ${req.path}`);
 
     logger.logCriticalOperation('REGISTER', {
       success: false,
@@ -122,7 +126,7 @@ const login = async (req, res) => {
     return res.status(200).json(authResponseDto(user, token));
   } catch (error) {
     const responseTime = Date.now() - startTime;
-    const mapped = mapServiceError(error);
+    const mapped = mapServiceError(error, `${req.method} ${req.path}`);
 
     logger.logCriticalOperation('LOGIN', {
       success: false,

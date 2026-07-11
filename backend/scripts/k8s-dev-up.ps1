@@ -28,9 +28,23 @@ if (-not $SkipBuild) {
         @{ Tag = "innovatech/bff:1.0.0"; Path = "./bff" },
         @{ Tag = "innovatech/frontend:1.0.0"; Path = "../frontend" }
     )
+    $sentryDsn = $null
+    $bffEnvPath = Join-Path $BackendRoot "bff\.env"
+    if (Test-Path $bffEnvPath) {
+        Get-Content $bffEnvPath | ForEach-Object {
+            if ($_ -match '^\s*SENTRY_DSN=(.+)$') { $sentryDsn = $matches[1].Trim() }
+        }
+    }
     foreach ($img in $images) {
-        Write-Host "  docker build -t $($img.Tag) $($img.Path)" -ForegroundColor DarkGray
-        docker build -t $img.Tag $img.Path
+        if ($img.Path -eq "../frontend" -and $sentryDsn) {
+            Write-Host "  docker build -t $($img.Tag) $($img.Path) (VITE_SENTRY_DSN=***)" -ForegroundColor DarkGray
+            docker build -t $img.Tag $img.Path `
+                --build-arg "VITE_SENTRY_DSN=$sentryDsn" `
+                --build-arg "VITE_SENTRY_ENVIRONMENT=kubernetes"
+        } else {
+            Write-Host "  docker build -t $($img.Tag) $($img.Path)" -ForegroundColor DarkGray
+            docker build -t $img.Tag $img.Path
+        }
         if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
     }
     Write-Host "Docker images built." -ForegroundColor Green
@@ -93,6 +107,10 @@ Write-Host "  PM:     http://localhost:3002/api-docs"
 Write-Host "  Auth:   http://localhost:3001/api-docs"
 Write-Host "  Users:  http://localhost:3003/api-docs"
 Write-Host "  KPI:    http://localhost:3004/api-docs"
+Write-Host ""
+Write-Host "GlitchTip (SENTRY_DSN en k8s/secrets.local.yaml):" -ForegroundColor Green
+Write-Host "  Verifica errores en https://app.glitchtip.com (Issues)"
+Write-Host "  Demo BFF (desde pod): kubectl exec -n innovatech deploy/bff -- wget -qO- http://127.0.0.1:3010/api/demo/error"
 Write-Host ""
 Write-Host "With Ingress (add to hosts file):" -ForegroundColor Green
 Write-Host "  127.0.0.1 app.innovatech.local api.innovatech.local"

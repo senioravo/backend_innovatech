@@ -20,14 +20,18 @@ spec:
     spec:
       containers:
         - name: ms-kpi
-          image: innovatech/ms-kpi:1.0.0
-          imagePullPolicy: Never
+          image: innovatech/ms-kpi:1.0.2-glitchtip
+          imagePullPolicy: IfNotPresent
           ports:
             - name: http
               containerPort: 3004
           envFrom:
             - configMapRef:
                 name: ms-kpi-config
+            - configMapRef:
+                name: glitchtip-config
+            - secretRef:
+                name: innovatech-secrets
           volumeMounts:
             - name: jwt-public-key
               mountPath: /app/keys/public.key
