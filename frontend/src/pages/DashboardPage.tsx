@@ -64,10 +64,18 @@ function calcProgress(summary: TasksResponse['summary']) {
   return Math.round((done / summary.total) * 100);
 }
 
+function statusBadgeClass(status: string) {
+  const map: Record<string, string> = {
+    PENDING: 'kpi-status-pending',
+    IN_PROGRESS: 'kpi-status-in_progress',
+    IN_REVIEW: 'kpi-status-in_review',
+    DONE: 'kpi-status-done'
+  };
+  return `status-badge ${map[status] ?? ''}`;
+}
+
 /** Clave sessionStorage para recordar proyecto seleccionado */
 const SELECTED_PROJECT_KEY = 'innovatech_selected_project';
-
-/** Comentario en panel de colaboración de tarea */
 type TaskComment = { id: string; userId?: string; content: string };
 /** Adjunto URL en panel de colaboración */
 type TaskAttachment = { id: string; documentName: string; documentUrl: string };
@@ -128,7 +136,9 @@ function TaskRow({ task, projectId, onStatusChange, onRefresh }: TaskRowProps) {
     <>
       <tr>
         <td>{task.title}</td>
-        <td>{statusLabel(task.status)}</td>
+        <td>
+          <span className={statusBadgeClass(task.status)}>{statusLabel(task.status)}</span>
+        </td>
         <td>{task.completed ? 'Sí' : 'No'}</td>
         <td>
           <select
@@ -145,33 +155,34 @@ function TaskRow({ task, projectId, onStatusChange, onRefresh }: TaskRowProps) {
           </select>
         </td>
         <td>
-          <button type="button" onClick={toggleOpen}>
+          <button type="button" className="button-secondary" onClick={toggleOpen}>
             {open ? 'Ocultar' : 'Colaboración'}
           </button>
         </td>
       </tr>
       {open && (
         <tr>
-          <td colSpan={5} style={{ background: '#f9f9f9', padding: 12 }}>
-            <strong>Comentarios</strong>
-            <ul>
+          <td colSpan={5} className="collab-panel">
+            <h4>Comentarios</h4>
+            <ul className="collab-list">
               {comments.map((c) => (
                 <li key={c.id}>
                   <small>{c.userId}</small>: {c.content}
                 </li>
               ))}
             </ul>
-            <form onSubmit={submitComment} style={{ marginBottom: 12 }}>
+            <form className="collab-form" onSubmit={submitComment}>
               <input
                 value={commentText}
                 onChange={(e) => setCommentText(e.target.value)}
                 placeholder="Nuevo comentario"
-                style={{ width: '70%', marginRight: 8 }}
               />
-              <button type="submit">Comentar</button>
+              <button type="submit" className="button-primary">
+                Comentar
+              </button>
             </form>
-            <strong>Documentación adjunta</strong>
-            <ul>
+            <h4>Documentación adjunta</h4>
+            <ul className="collab-list">
               {attachments.map((a) => (
                 <li key={a.id}>
                   <a href={a.documentUrl} target="_blank" rel="noreferrer">
@@ -180,20 +191,20 @@ function TaskRow({ task, projectId, onStatusChange, onRefresh }: TaskRowProps) {
                 </li>
               ))}
             </ul>
-            <form onSubmit={submitAttachment}>
+            <form className="collab-form" onSubmit={submitAttachment}>
               <input
                 value={docName}
                 onChange={(e) => setDocName(e.target.value)}
                 placeholder="Nombre documento"
-                style={{ marginRight: 8 }}
               />
               <input
                 value={docUrl}
                 onChange={(e) => setDocUrl(e.target.value)}
                 placeholder="URL del documento"
-                style={{ width: '40%', marginRight: 8 }}
               />
-              <button type="submit">Adjuntar</button>
+              <button type="submit" className="button-secondary">
+                Adjuntar
+              </button>
             </form>
           </td>
         </tr>
@@ -412,224 +423,233 @@ export default function DashboardPage() {
   const progressPct = calcProgress(tasksData?.summary);
 
   return (
-    <div style={{ fontFamily: 'sans-serif', margin: 16, maxWidth: 1000 }}>
-      <header style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-        <h1>Dashboard InnovaTech</h1>
-        <button type="button" onClick={handleLogout}>
+    <div className="app-shell">
+      <header className="app-header">
+        <div>
+          <p className="brand-subtitle">Panel de control</p>
+          <h1>Dashboard InnovaTech</h1>
+        </div>
+        <button type="button" className="button-secondary" onClick={handleLogout}>
           Cerrar sesión
         </button>
       </header>
 
-      {sessionUser && (
-        <p>
-          Sesión: <strong>{sessionUser.email}</strong> — rol: <strong>{sessionUser.role}</strong>
-        </p>
-      )}
+      <main className="app-main">
+        {sessionUser && (
+          <div className="session-bar">
+            <span>
+              Sesión: <span className="session-bar__email">{sessionUser.email}</span>
+            </span>
+            <span className={`role-pill role-pill--${role}`}>{sessionUser.role}</span>
+          </div>
+        )}
 
-      {role && roleHint[role] && (
-        <p style={{ padding: 8, background: '#f5f5f5', border: '1px solid #ddd', fontSize: 14 }}>
-          {roleHint[role]}
-        </p>
-      )}
+        {role && roleHint[role] && <p className="role-banner">{roleHint[role]}</p>}
 
-      {error && (
-        <p style={{ color: 'crimson', padding: 8, border: '1px solid crimson' }}>{error}</p>
-      )}
+        {error && <div className="error-banner">{error}</div>}
 
-      {canSeeAnalytics && kpis && (
-        <section style={{ marginTop: 16, padding: 12, border: '1px solid #4a90d9', background: '#f0f7ff' }}>
-          <h2>KPIs y analítica</h2>
-          <p>
-            Avance global: <strong>{kpis.projectProgressPct}%</strong> — Tareas completadas:{' '}
-            {kpis.completedTasks}/{kpis.totalTasks} — Utilización recursos:{' '}
-            {kpis.resourceUtilization?.utilizationPct}%
-          </p>
-          <button type="button" onClick={() => downloadReport('csv')}>
-            Exportar reporte CSV (Excel)
-          </button>{' '}
-          <button type="button" onClick={() => downloadReport('json')}>
-            Exportar métricas JSON
-          </button>
-        </section>
-      )}
+        {canSeeAnalytics && kpis && (
+          <section className="panel panel--accent">
+            <h2>KPIs y analítica</h2>
+            <div className="kpi-inline">
+              <div className="kpi-inline__stat">
+                Avance global
+                <strong>{kpis.projectProgressPct}%</strong>
+              </div>
+              <div className="kpi-inline__stat">
+                Tareas completadas
+                <strong>
+                  {kpis.completedTasks}/{kpis.totalTasks}
+                </strong>
+              </div>
+              <div className="kpi-inline__stat">
+                Utilización recursos
+                <strong>{kpis.resourceUtilization?.utilizationPct}%</strong>
+              </div>
+            </div>
+            <div className="project-actions">
+              <button type="button" className="button-primary" onClick={() => downloadReport('csv')}>
+                Exportar reporte CSV (Excel)
+              </button>
+              <button type="button" className="button-secondary" onClick={() => downloadReport('json')}>
+                Exportar métricas JSON
+              </button>
+            </div>
+          </section>
+        )}
 
-      {notifications.length > 0 && (
-        <section style={{ marginTop: 16, padding: 12, border: '1px solid #e6a700', background: '#fffbea' }}>
-          <h3>Notificaciones ({notifications.length})</h3>
-          <ul>
-            {notifications.slice(0, 5).map((n) => (
-              <li key={n.id}>
-                <strong>{n.title}</strong>: {n.message}
+        {notifications.length > 0 && (
+          <section className="panel panel--warn">
+            <h3>Notificaciones ({notifications.length})</h3>
+            <ul className="notify-list">
+              {notifications.slice(0, 5).map((n) => (
+                <li key={n.id} className="notify-item">
+                  <strong>{n.title}</strong>: {n.message}
+                </li>
+              ))}
+            </ul>
+          </section>
+        )}
+
+        {loading && <p className="loading-indicator">Cargando proyectos…</p>}
+
+        <section className="panel">
+          <div className="section-title">
+            <h2>Proyectos ({projects.length})</h2>
+          </div>
+
+          {canCreateProject && (
+            <form className="inline-form" onSubmit={handleCreateProject}>
+              <h3>Nuevo proyecto</h3>
+              <input
+                placeholder="Nombre (mínimo 3 caracteres)"
+                value={newProject.name}
+                onChange={(e) => setNewProject((s) => ({ ...s, name: e.target.value }))}
+                required
+                minLength={3}
+              />
+              <textarea
+                placeholder="Descripción (mínimo 10 caracteres)"
+                value={newProject.description}
+                onChange={(e) => setNewProject((s) => ({ ...s, description: e.target.value }))}
+                required
+                minLength={10}
+                rows={2}
+              />
+              <div className="inline-form__row">
+                <label>
+                  Inicio
+                  <input
+                    type="date"
+                    value={newProject.startDate}
+                    onChange={(e) => setNewProject((s) => ({ ...s, startDate: e.target.value }))}
+                  />
+                </label>
+                <label>
+                  Término
+                  <input
+                    type="date"
+                    value={newProject.endDate}
+                    onChange={(e) => setNewProject((s) => ({ ...s, endDate: e.target.value }))}
+                  />
+                </label>
+                <button type="submit" className="button-primary">
+                  Crear
+                </button>
+              </div>
+            </form>
+          )}
+
+          <ul className="project-list">
+            {projects.map((p) => (
+              <li
+                key={p.id}
+                className={`project-card${selectedProject === p.id ? ' project-card--active' : ''}`}
+              >
+                <div className="project-card__actions">
+                  <button type="button" className="button-primary" onClick={() => loadTasks(p.id)}>
+                    Ver tareas
+                  </button>
+                  {canCreateProject && (
+                    <button type="button" className="button-danger" onClick={() => handleDeleteProject(p.id)}>
+                      Eliminar
+                    </button>
+                  )}
+                </div>
+                <h3 className="project-card__title">{p.name}</h3>
+                <p className="project-card__meta">{p.description}</p>
+                {(p.startDate || p.endDate) && (
+                  <p className="project-card__meta">
+                    {p.startDate || '—'} → {p.endDate || '—'}
+                  </p>
+                )}
               </li>
             ))}
           </ul>
         </section>
-      )}
 
-      {loading && <p>Cargando proyectos…</p>}
-
-      <section style={{ marginTop: 24 }}>
-        <h2>Proyectos ({projects.length})</h2>
-
-        {canCreateProject && (
-          <form onSubmit={handleCreateProject} style={{ marginBottom: 16, padding: 12, border: '1px solid #ccc' }}>
-            <h3>Nuevo proyecto</h3>
-            <input
-              placeholder="Nombre (mínimo 3 caracteres)"
-              value={newProject.name}
-              onChange={(e) => setNewProject((s) => ({ ...s, name: e.target.value }))}
-              required
-              minLength={3}
-              style={{ width: '100%', padding: 6, marginBottom: 8 }}
-            />
-            <textarea
-              placeholder="Descripción (mínimo 10 caracteres)"
-              value={newProject.description}
-              onChange={(e) => setNewProject((s) => ({ ...s, description: e.target.value }))}
-              required
-              minLength={10}
-              rows={2}
-              style={{ width: '100%', marginBottom: 8 }}
-            />
-            <label>
-              Inicio:{' '}
-              <input
-                type="date"
-                value={newProject.startDate}
-                onChange={(e) => setNewProject((s) => ({ ...s, startDate: e.target.value }))}
-              />
-            </label>{' '}
-            <label>
-              Término:{' '}
-              <input
-                type="date"
-                value={newProject.endDate}
-                onChange={(e) => setNewProject((s) => ({ ...s, endDate: e.target.value }))}
-              />
-            </label>
-            <button type="submit" style={{ marginLeft: 8 }}>
-              Crear
-            </button>
-          </form>
-        )}
-
-        <ul style={{ listStyle: 'none', padding: 0 }}>
-          {projects.map((p) => (
-            <li key={p.id} style={{ marginBottom: 8, padding: 8, border: '1px solid #ddd' }}>
-              <button type="button" onClick={() => loadTasks(p.id)}>
-                Ver tareas
-              </button>{' '}
-              {canCreateProject && (
-                <button type="button" onClick={() => handleDeleteProject(p.id)}>
-                  Eliminar
-                </button>
-              )}{' '}
-              <strong>{p.name}</strong>
-              <br />
-              <small>{p.description}</small>
-              {(p.startDate || p.endDate) && (
-                <>
-                  <br />
-                  <small>
-                    {p.startDate || '—'} → {p.endDate || '—'}
-                  </small>
-                </>
-              )}
-            </li>
-          ))}
-        </ul>
-      </section>
-
-      {selectedProject && (
-        <section style={{ marginTop: 24, padding: 12, border: '2px solid #333' }}>
-          <h2>Tareas — {selectedProjectDetails?.name || selectedProject}</h2>
-
-          {tasksLoading && <p>Cargando tareas…</p>}
-
-          {tasksData?.summary && (
-            <div style={{ marginBottom: 16 }}>
-              <p>
-                Progreso del proyecto: <strong>{progressPct}%</strong> ({tasksData.summary.total} tareas)
-              </p>
-              <div
-                style={{
-                  height: 16,
-                  background: '#eee',
-                  borderRadius: 4,
-                  overflow: 'hidden',
-                  maxWidth: 400
-                }}
-              >
-                <div
-                  style={{
-                    width: `${progressPct}%`,
-                    height: '100%',
-                    background: '#4caf50',
-                    transition: 'width 0.3s'
-                  }}
-                />
-              </div>
-              <p style={{ fontSize: 14, marginTop: 8 }}>
-                {Object.entries(tasksData.summary.byStatus || {})
-                  .map(([k, v]) => `${statusLabel(k)}: ${v}`)
-                  .join(' · ')}
-              </p>
+        {selectedProject && (
+          <section className="panel panel--tasks">
+            <div className="panel__header">
+              <h2>Tareas — {selectedProjectDetails?.name || selectedProject}</h2>
             </div>
-          )}
 
-          {canCreateTask && (
-          <form onSubmit={handleCreateTask} style={{ marginBottom: 16 }}>
-            <h3>Nueva tarea</h3>
-            <input
-              placeholder="Título"
-              value={newTask.title}
-              onChange={(e) => setNewTask((s) => ({ ...s, title: e.target.value }))}
-              required
-              style={{ width: '100%', padding: 6, marginBottom: 8 }}
-            />
-            <input
-              placeholder="Descripción"
-              value={newTask.description}
-              onChange={(e) => setNewTask((s) => ({ ...s, description: e.target.value }))}
-              style={{ width: '100%', padding: 6, marginBottom: 8 }}
-            />
-            <button type="submit">Crear tarea</button>
-          </form>
-          )}
+            {tasksLoading && <p className="loading-indicator">Cargando tareas…</p>}
 
-          <table border={1} cellPadding={6} style={{ width: '100%', borderCollapse: 'collapse' }}>
-            <thead>
-              <tr>
-                <th>Título</th>
-                <th>Estado</th>
-                <th>Hecho</th>
-                <th>Avance</th>
-                <th>Colaboración</th>
-              </tr>
-            </thead>
-            <tbody>
-              {(tasksData?.tasks ?? []).map((task) => (
-                <TaskRow
-                  key={task.id}
-                  task={task}
-                  projectId={selectedProject}
-                  onStatusChange={handleStatusChange}
-                  onRefresh={() => loadTasks(selectedProject)}
+            {tasksData?.summary && (
+              <div className="kpi-progress-block">
+                <div className="kpi-progress-header">
+                  <span>
+                    Progreso del proyecto: <strong>{progressPct}%</strong> ({tasksData.summary.total} tareas)
+                  </span>
+                </div>
+                <div className="kpi-progress-track">
+                  <div className="kpi-progress-fill" style={{ width: `${progressPct}%` }} />
+                </div>
+                <p className="project-card__meta" style={{ marginTop: 12 }}>
+                  {Object.entries(tasksData.summary.byStatus || {})
+                    .map(([k, v]) => `${statusLabel(k)}: ${v}`)
+                    .join(' · ')}
+                </p>
+              </div>
+            )}
+
+            {canCreateTask && (
+              <form className="inline-form" onSubmit={handleCreateTask}>
+                <h3>Nueva tarea</h3>
+                <input
+                  placeholder="Título"
+                  value={newTask.title}
+                  onChange={(e) => setNewTask((s) => ({ ...s, title: e.target.value }))}
+                  required
                 />
-              ))}
-            </tbody>
-          </table>
+                <input
+                  placeholder="Descripción"
+                  value={newTask.description}
+                  onChange={(e) => setNewTask((s) => ({ ...s, description: e.target.value }))}
+                />
+                <button type="submit" className="button-primary">
+                  Crear tarea
+                </button>
+              </form>
+            )}
 
-          {canCreateProject &&
-            (tasksData?.tasks ?? []).map((task) => (
-            <p key={`del-${task.id}`}>
-              <button type="button" onClick={() => handleDeleteTask(task.id)}>
-                Eliminar tarea: {task.title}
-              </button>
-            </p>
-          ))}
-        </section>
-      )}
+            <div className="data-table-wrap">
+              <table className="data-table">
+                <thead>
+                  <tr>
+                    <th>Título</th>
+                    <th>Estado</th>
+                    <th>Hecho</th>
+                    <th>Avance</th>
+                    <th>Colaboración</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {(tasksData?.tasks ?? []).map((task) => (
+                    <TaskRow
+                      key={task.id}
+                      task={task}
+                      projectId={selectedProject}
+                      onStatusChange={handleStatusChange}
+                      onRefresh={() => loadTasks(selectedProject)}
+                    />
+                  ))}
+                </tbody>
+              </table>
+            </div>
+
+            {canCreateProject &&
+              (tasksData?.tasks ?? []).map((task) => (
+                <p key={`del-${task.id}`} className="task-delete-row">
+                  <button type="button" className="button-danger" onClick={() => handleDeleteTask(task.id)}>
+                    Eliminar tarea: {task.title}
+                  </button>
+                </p>
+              ))}
+          </section>
+        )}
+      </main>
     </div>
   );
 }

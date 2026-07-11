@@ -119,8 +119,8 @@ describe('DashboardPage', () => {
       </MemoryRouter>
     );
     await screen.findByText('Alpha');
-    await user.type(screen.getByPlaceholderText('Nombre'), 'Beta');
-    await user.type(screen.getByPlaceholderText('Descripción'), 'Nuevo proyecto');
+    await user.type(screen.getByPlaceholderText(/Nombre/i), 'Beta');
+    await user.type(screen.getByPlaceholderText(/Descripción/i), 'Nuevo proyecto');
     await user.click(screen.getByRole('button', { name: 'Crear' }));
     await waitFor(() => {
       expect(createProject).toHaveBeenCalledWith(
